@@ -61,11 +61,11 @@ templates:
           - key: digital
             value: '(?i)\b(dd)|(ac3)|(dolby)'
           - key: aac
-            value: '(?i)\b(aac|stereo|2[ .]0)(\b|\d)'
+            value: '(?i)\b(aac|stereo|2.0)(\b|\d)'
           - key: mp3
             value: '(?i)\bmp3(\b|\d)'
           - key: opus
-            value: '(?i)\bOPUS(\b|\d)'
+            value: '(?i)\b(?<!-)OPUS(\b|\d)'
     ignore_blank_results: true
     plex_all: true
     filters:

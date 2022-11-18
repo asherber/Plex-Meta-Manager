@@ -12,7 +12,6 @@ Instead, it is recommended to set an automated scheduling service so that Plex M
 
 <details>
   <summary>Click to Expand</summary>
-  <br />
 
 Using docker is the simplest and most robust solution to automating Plex Meta Manager scheduling.
 
@@ -36,7 +35,6 @@ Further customizations of the docker run command can be used to specify set time
 
 <details>
   <summary>Click to Expand</summary>
-  <br />
 
 ### Task Scheduler
 
@@ -60,7 +58,6 @@ This is the recommended approach as it allows the user additional control over h
 
 <details>
   <summary>Background Run Scheduled Task</summary>
-  <br />
 
 1. Create a `waiter.cmd` file by opening the text editor (i.e. Notepad, TextEdit) and pasting the following code:
 
@@ -114,7 +111,6 @@ This method will start Plex Meta Manager at the desired time, immediately begin 
 
 <details>
   <summary>Single Run Scheduled Task</summary>
-  <br />
 
 1. Create a `runner.cmd` file by opening the text editor (i.e. Notepad, TextEdit) and pasting the following code:
 
@@ -171,19 +167,16 @@ This method will start Plex Meta Manager at the desired time, immediately begin 
 
 Plex Meta Manager will now run at the set date/time you selected in Step 6, and will run each subsequent day at the same time.
 
-</details><br />
+</details>
 </details>
 
 ## MacOS
 
 <details>
   <summary>Click to Expand</summary>
-  <br />
 
-<br />
 <details>
   <summary>Launchd Service</summary>
-  <br />
 
 1. Create launchd service:
 
@@ -278,15 +271,14 @@ Plex Meta Manager will now run at the set date/time you selected in Step 6, and 
    Note that this command uses the *label*, not the plist filename. The -k options means that the service will first be killed, if running.
 
    The agent should now be active and starting the program according to the schedule you set.
-</details><br />
+</details>
 
 
 <details>
   <summary>cron Schedule</summary>
-  <br />
 
 See the cron section below.
-</details><br />
+</details>
 
 </details>
 
@@ -294,12 +286,9 @@ See the cron section below.
 
 <details>
   <summary>Click to Expand</summary>
-  <br />
 
-<br />
 <details>
   <summary>cron Schedule</summary>
-  <br />
 
 1. Decide when you want to run Plex Meta Manager
 
@@ -326,11 +315,10 @@ See the cron section below.
 3. Paste in the crontab line you got from `crontab-generator`, or type in one of your own.
 
 4. Save and close the file.
-</details><br />
+</details>
 
 <details>
   <summary>Systemctl Service</summary>
-  <br />
 
 1. Create the service file:
 
@@ -381,5 +369,5 @@ See the cron section below.
    ```shell
    sudo systemctl status plex-meta-manager.service
    ```
-</details><br />
+</details>
 </details>
