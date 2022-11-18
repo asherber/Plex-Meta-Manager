@@ -1,0 +1,42 @@
+templates:
+  Tree:
+    default:
+      folder_name: <<collection_name>>
+    plex_all: true
+    filters:
+      filepath: \<<folder_name>>\
+  SingleFolder:
+    plex_all: true
+    filters:
+      filepath.regex: (?i)<<folder_name>>\\[^\\]+$
+      
+collections:
+  Bellesa:
+    template: { name: Tree }
+  Casting Couch:
+    template: { name: Tree, folder_name: CC }
+  Deeper:
+    template: { name: Tree }
+  Vixen:
+    template: { name: Tree }
+  Sweet Sinner:
+    template: { name: Tree, folder_name: SweetSinner }
+  Wank:
+    template: { name: Tree }
+  Model Media:
+    template: { name: Tree }
+  TNGF:
+    template: { name: Tree, folder_name: Girlfriend } 
+    collection_order: alpha
+  Blacked:
+    template: { name: Tree }
+  I Feel Myself:
+    template: { name: Tree }
+    collection_order: alpha
+  Pure Mature:
+    template: { name: Tree, folder_name: PureMature }
+      
+  PornoRip:
+    template: { name: SingleFolder, folder_name: Adult Swim }
+  PornHub:
+    template: { name: SingleFolder, folder_name: Pornhub }

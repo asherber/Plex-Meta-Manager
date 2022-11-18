@@ -17,6 +17,7 @@ config/*
 config/overlays/*/
 config/overlays/temp.png
 !config/*.template
+!config/*.yml
 build/
 develop-eggs/
 dist/
