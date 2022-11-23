@@ -1,0 +1,241 @@
+##############################################################################
+#                   CommonSense Content Rating Collections                   #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#  https://metamanager.wiki/en/latest/defaults/both/content_rating_cs.html   #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: 14
+
+translations:
+  pmm: translations
+
+collections:
+  Ratings Collections:
+    template:
+      - name: separator
+        separator: content_rating
+      - name: translation
+        key_name: Ratings
+        translation_key: separator
+
+dynamic_collections:
+  CommonSense Content Rating:
+    type: content_rating
+    title_format: Age <<key_name>>+ <<library_typeU>>s
+    other_name: Not Rated <<library_typeU>>s
+    template:
+      - smart_filter
+      - translation
+      - shared
+    other_template:
+      - other_collection
+      - smart_filter
+      - translation
+      - shared
+    template_variables:
+      search_term:
+        default: content_rating
+      image:
+        default: content_rating/cs/<<key_name>>
+        other: content_rating/cs/NR
+      translation_key:
+        default: content_rating_cs
+        other: content_rating_other
+      order:
+        1: "01_"
+        2: "02_"
+        3: "03_"
+        4: "04_"
+        5: "05_"
+        6: "06_"
+        7: "07_"
+        8: "08_"
+        9: "09_"
+        10: "10_"
+        11: "11_"
+        12: "12_"
+        13: "13_"
+        14: "14_"
+        15: "15_"
+        16: "16_"
+        17: "17_"
+        18: "18_"
+    include:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 12
+      - 13
+      - 14
+      - 15
+      - 16
+      - 17
+      - 18
+    addons:
+      1:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "01"
+      2:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "02"
+      3:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "03"
+      4:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "04"
+      5:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "05"
+      6:
+        - gb/U
+        - gb/0+
+        - G
+        - TV-Y
+        - E
+        - gb/E
+        - G - All Ages
+        - "06"
+      7:
+        - gb/PG
+        - TV-PG
+        - TV-Y7
+        - TV-Y7-FV
+        - PG
+        - PG - Children
+        - "07"
+      8:
+        - gb/PG
+        - TV-PG
+        - TV-Y7
+        - TV-Y7-FV
+        - PG
+        - PG - Children
+        - "08"
+      9:
+        - gb/PG
+        - TV-PG
+        - TV-Y7
+        - TV-Y7-FV
+        - PG
+        - PG - Children
+        - gb/9+
+        - "09"
+      10:
+        - gb/PG
+        - TV-PG
+        - TV-Y7
+        - TV-Y7-FV
+        - PG
+        - PG - Children
+        - gb/9+
+      11:
+        - gb/PG
+        - TV-PG
+        - TV-Y7
+        - TV-Y7-FV
+        - PG
+        - PG - Children
+        - gb/9+
+      12:
+        - gb/12
+        - gb/12A
+        - 12+
+        - PG
+        - PG - Children
+      13:
+        - gb/12
+        - gb/12A
+        - 12+
+        - PG-13
+        - PG-13 - Teens 13 or older
+      14:
+        - gb/12
+        - 12
+        - gb/12A
+        - 12+
+        - PG-13
+        - TV-14
+        - 13
+        - PG-13 - Teens 13 or older
+      15:
+        - gb/15
+        - gb/14+
+        - TV-14
+        - 13
+        - 14
+        - PG-13 - Teens 13 or older
+      16:
+        - gb/15
+        - gb/14+
+        - TV-14
+        - 13
+        - 14
+        - 15
+        - PG-13 - Teens 13 or older
+      17:
+        - gb/15
+        - gb/14+
+        - TV-14
+        - 13
+        - 14
+        - 15
+        - 16
+        - R - 17+ (violence & profanity)
+      18:
+        - gb/18
+        - MA-17
+        - TVMA
+        - TV-MA
+        - R
+        - 16
+        - 17
+        - gb/R18
+        - gb/X
+        - X
+        - NC-17
+        - R - 17+ (violence & profanity)
+        - R+ - Mild Nudity
+        - Rx - Hentai

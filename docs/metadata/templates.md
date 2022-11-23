@@ -1,13 +1,15 @@
 # Templates
 
-Collections often share a lot of common [or generalizable] configuration details. Templates allow you to define these details so they can be used across multiple collections.
+Collection and Overlay Definitions often share a lot of common or generalizable configuration details. Templates allow you to define these details so they can be used across multiple definitions.
 
 For example, an actor collection might look like this:
 
 ```yaml
 collections:
   Bruce Lee:
-    actor: tmdb
+    plex_search:
+      all:
+        actor: tmdb
     tmdb_person: 19429
     sort_title: !_Bruce Lee
     sync_mode: sync
@@ -19,13 +21,17 @@ Then you add another:
 ```yaml
 collections:
   Bruce Lee:
-    actor: tmdb
+    plex_search:
+      all:
+        actor: tmdb
     tmdb_person: 19429
     sort_title: !_Bruce Lee
     sync_mode: sync
     collection_order: release
   Chris Pratt:
-    actor: tmdb
+    plex_search:
+      all:
+        actor: tmdb
     tmdb_person: 73457
     sort_title: !_Chris Pratt
     sync_mode: sync
@@ -45,7 +51,9 @@ For example, a template for those two collections might look like this:
 ```yaml
 templates:
   Actor:
-    actor: tmdb
+    plex_search:
+      all:
+        actor: tmdb
     tmdb_person: <<person>>
     sort_title: !_<<collection_name>>
     sync_mode: sync
@@ -85,7 +93,9 @@ Here's the full example Actor template and two different ways to use it, as it w
 ```yaml
 templates:
   Actor:
-    actor: tmdb
+    plex_search:
+      all:
+        actor: tmdb
     tmdb_person: <<person>>
     sort_title: !_<<collection_name>>
     sync_mode: sync
@@ -97,6 +107,34 @@ collections:
     template:
       name: Actor
       person: 73457
+```
+
+## Multi-Template Variables
+
+When using multiple Templates in a single definition you can send the same variable to all templates by using the `variables` attribute.
+
+```yaml
+templates:
+  Actor:
+    plex_search:
+      all:
+        actor: tmdb
+    tmdb_person: <<person>>
+    sort_title: !_<<collection_name>>
+  Common:
+    summary: "Movies that <<collection_name>> (TMDb ID: <<person>>) are in"
+    sync_mode: sync
+    collection_order: release
+collections:
+  Bruce Lee:
+    variables: {person: 19429}
+    template: [{name: Actor}, {name: Common}]
+  Chris Pratt:
+    variables:
+      person: 19429
+    template:
+     - name: Actor
+     - name: Common
 ```
 
 ## Special Template Attributes
@@ -128,9 +166,13 @@ Each conditional is identified by its mapping name and has one required attribut
 
 Each set of conditions must have the `value` attribute which is the value of the variable if the condition is met. 
 
-All other attribute pairs in the set of conditions will check a variable of the attribute key and see if the variable is the attribute value or in the list of attribute values.
+All other attribute pairs in the set of conditions will check some condition of the value of the attribute key:
 
-Here's an example from the [PMM default ratings file](https://github.com/meisnate12/Plex-Meta-Manager-Configs/blob/master/PMM/overlays/ratings.yml).
+* If the attribute key ends with `.not` the value must not equal the attribute value or not be in the list of attribute values.
+* If the attribute key ends with `.exists` and the attribute value is `true` then the attribute key must be a given template variable and if the value is anything else then the attribute key must not be a given template variable.
+* Otherwise, the value must equal the attribute value or be in the list of attribute values.
+
+Here's an example from the [PMM Default ratings file](https://github.com/meisnate12/Plex-Meta-Manager/blob/master/defaults/overlays/ratings.yml).
 
 ```yaml
 templates:
@@ -199,5 +241,5 @@ To load external templates located in another file you can use the `external_tem
 ```yaml
 external_templates:
   - file: config/templates.yml       
-  - git: PMM/templates
+  - pmm: templates
 ```

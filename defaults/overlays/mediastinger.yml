@@ -1,0 +1,27 @@
+##############################################################################
+#                            MediaStinger Overlay                            #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#   https://metamanager.wiki/en/latest/defaults/overlays/mediastinger.html   #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    allowed_libraries: movie
+    horizontal_offset: 200
+    horizontal_align: right
+    vertical_offset: 15
+    vertical_align: top
+    back_color: "#00000099"
+    back_width: 105
+    back_height: 105
+    pmm: <<overlay_name>>
+
+overlays:
+  Mediastinger:
+    template:
+      name: standard
+    plex_all: true
+    filters:
+      tmdb_keyword: aftercreditsstinger, duringcreditsstinger

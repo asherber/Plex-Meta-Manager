@@ -1,0 +1,49 @@
+##############################################################################
+#                             Actor Collections                              #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#        https://metamanager.wiki/en/latest/defaults/both/actor.html         #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: 17
+
+translations:
+  pmm: translations
+
+collections:
+  Actors Collections:
+    template:
+      - name: separator
+        separator: actor
+      - name: translation
+        key_name: Actors
+        translation_key: separator
+
+dynamic_collections:
+  Top Actors:
+    type: actor
+    data:
+      depth: 5
+      limit: 25
+    title_format: <<key_name>>
+    template:
+      - smart_filter
+      - translation
+      - shared
+    template_variables:
+      tmdb_person:
+        default: <<value>>
+      search_term:
+        default: actor
+      search_value:
+        default: tmdb
+      translation_key:
+        default: actor
+      image:
+        default: people/<<style>>/<<key_encoded>>
+      style:
+        default: bw
+      

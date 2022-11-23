@@ -13,7 +13,7 @@ The specific steps you will be taking:
 2. Use `docker` to retrieve the PMM Docker image
 3. Create a directory for your config files and learn how to tell Docker to use it
 4. Gather two things that the script requires:
-   1. TMDB API Key
+   1. TMDb API Key
    2. Plex URL and Token
 5. Then, iteratively:
    1. use `docker` to run the image
@@ -56,6 +56,7 @@ The Docker install is discussed here: [Installing Docker](https://docs.docker.co
 Once you have Docker installed, test it at the command line with:
 
 [type this into your terminal]
+
 ```
 docker run --rm hello-world
 ```
@@ -75,7 +76,7 @@ If that doesn't work, stop here until you fix that.  Diagnoing and repairing Doc
 
 #### Important note on Docker images
 
-This tutorial uses the official image, and you should, too.  Don't change `meisnate12/plex-meta-manager` to the `linuxserver.io` image or any other; the lsio image specifically has [idiosyncracies](alternative-docker.md) that will prevent this walkthrough from working.  The official image *will* behave exactly as documented below.  Others very possibly won't.
+This tutorial uses the official image, and you should, too.  Don't change `meisnate12/plex-meta-manager` to the `linuxserver.io` image or any other; the lsio image specifically has [idiosyncracies](images.md) that will prevent this walkthrough from working.  The official image *will* behave exactly as documented below.  Others very possibly won't.
 
 The great thing about Docker is that all the setup you'd have to do to run PMM is already done inside the docker image.
 
@@ -116,6 +117,7 @@ PMM, inside that Docker container, can only see other things *inside the contain
 Go to your home directory and create a new directory:
 
 [type this into your terminal]
+
 ```
 cd ~
 mkdir plex-meta-manager
@@ -124,6 +126,7 @@ mkdir plex-meta-manager
 cd into that directory and create another directory:
 
 [type this into your terminal]
+
 ```
 cd ~/plex-meta-manager
 mkdir config
@@ -132,6 +135,7 @@ mkdir config
 get the full path:
 
 [type this into your terminal]
+
 ```
 pwd
 ```
@@ -140,6 +144,7 @@ This will display a full path:
 
 ````{tab} Linux
 <br/>
+
 ```
 /home/YOURUSERNAME/plex-meta-manager
 ```
@@ -147,6 +152,7 @@ This will display a full path:
 ````
 ````{tab} OS X:
 <br/>
+
 ```
 /Users/YOURUSERNAME/plex-meta-manager
 ```
@@ -154,6 +160,7 @@ This will display a full path:
 ````
 ````{tab} Windows:
 <br/>
+
 ```
 C:\Users\YOURUSERNAME\plex-meta-manager
 ```
@@ -164,6 +171,7 @@ Add "config" onto the end of that to get the host path to your config directory,
 
 ````{tab} Linux
 <br/>
+
 ```
 /home/YOURUSERNAME/plex-meta-manager/config
 ```
@@ -171,6 +179,7 @@ Add "config" onto the end of that to get the host path to your config directory,
 ````
 ````{tab} OS X:
 <br/>
+
 ```
 /Users/YOURUSERNAME/plex-meta-manager/config
 ```
@@ -178,6 +187,7 @@ Add "config" onto the end of that to get the host path to your config directory,
 ````
 ````{tab} Windows:
 <br/>
+
 ```
 C:\Users\YOURUSERNAME\plex-meta-manager\config
 ```
@@ -188,6 +198,7 @@ You'll need to add this to the docker command every time you run it, like this:
 
 ````{tab} Linux
 <br/>
+
 ```
 docker run --rm -it -v "/home/YOURUSERNAME/plex-meta-manager/config:/config:rw" meisnate12/plex-meta-manager
 ```
@@ -195,6 +206,7 @@ docker run --rm -it -v "/home/YOURUSERNAME/plex-meta-manager/config:/config:rw" 
 ````
 ````{tab} OS X:
 <br/>
+
 ```
 docker run --rm -it -v "/Users/YOURUSERNAME/plex-meta-manager/config:/config:rw" meisnate12/plex-meta-manager
 ```
@@ -202,6 +214,7 @@ docker run --rm -it -v "/Users/YOURUSERNAME/plex-meta-manager/config:/config:rw"
 ````
 ````{tab} Windows:
 <br/>
+
 ```
 docker run --rm -it -v "C:\Users\YOURUSERNAME\plex-meta-manager\config:/config:rw" meisnate12/plex-meta-manager
 ```
@@ -272,6 +285,7 @@ First, make a copy of the template:
 ````{tab} Linux
 <br/>
 Get a copy of the template to edit [type this into your terminal]:
+
 ```
 curl -fLvo config/config.yml https://raw.githubusercontent.com/meisnate12/Plex-Meta-Manager/master/config/config.yml.template
 ```
@@ -366,4 +380,4 @@ docker run -d \
 
 That will create a container that will run in the background until you explicitly stop it, surviving reboots, and waking up every morning at 3AM to process collections.
 
-There are of course [other flags you can add](../environmental.md), but this is the minimal command to create this container.
+There are of course [other flags you can add](../environmental), but this is the minimal command to create this container.

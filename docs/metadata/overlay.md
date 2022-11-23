@@ -36,6 +36,12 @@ overlays:
     # ... builders, details, and filters for this overlay
 ```
 
+There are multiple types of attributes that can be utilized within an overlay:
+
+* [Builders](builders)
+* [Settings/Updates](update)
+* [Filters](filters)
+
 ## Overlay
 
 Each overlay definition needs to specify what overlay to use. This can happen in 3 ways.
@@ -85,6 +91,8 @@ There are many attributes available when using overlays to edit how they work.
 | `font_style`               | Font style for Variable Fonts. Only needed when using a Variable Font.<br>**Value:** Variable Font Style                                                                                                                                                                            | &#10060; |
 | `font_size`                | Font Size for the Text Overlay.<br>**Value:** Integer greater than 0                                                                                                                                                                                                                | &#10060; |
 | `font_color`               | Font Color for the Text Overlay.<br>**Value:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`.                                                                                                                                                                  | &#10060; |
+| `stroke_width`             | Font Stroke Width for the Text Overlay.<br>**Value:** Integer greater than 0                                                                                                                                                                                                        | &#10060; |
+| `stroke_color`             | Font Stroke Color for the Text Overlay.<br>**Value:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`.                                                                                                                                                           | &#10060; |
 | `back_color`               | Backdrop Color for the Text Overlay.<br>**Value:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`.                                                                                                                                                              | &#10060; |
 | `back_width`               | Backdrop Width for the Text Overlay. If `back_width` is not specified the Backdrop Sizes to the text<br>**`back_height` is required when using `back_width`**<br>**Value:** Integer greater than 0                                                                                  | &#10060; |
 | `back_height`              | Backdrop Height for the Text Overlay. If `back_height` is not specified the Backdrop Sizes to the text<br>**`back_width` is required when using `back_height`**<br>**Value:** Integer greater than 0                                                                                | &#10060; |
@@ -93,7 +101,6 @@ There are many attributes available when using overlays to edit how they work.
 | `back_radius`              | Backdrop Radius for the Text Overlay.<br>**Value:** Integer greater than 0                                                                                                                                                                                                          | &#10060; |
 | `back_line_color`          | Backdrop Line Color for the Text Overlay.<br>**Value:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`.                                                                                                                                                         | &#10060; |
 | `back_line_width`          | Backdrop Line Width for the Text Overlay.<br>**Value:** Integer greater than 0                                                                                                                                                                                                      | &#10060; |
-| `special_text`             | Text Format for Special Text Overlays.<br>**`special_text` Only works with text overlays**                                                                                                                                                                                          | &#10060; |
 | `addon_offset`             | Text Addon Image Offset from the text.<br>**`addon_offset` Only works with text overlays**<br>**Value:** Integer 0 or greater                                                                                                                                                       | &#10060; |
 | `addon_position`           | Text Addon Image Alignment in relation to the text.<br>**`addon_position` Only works with text overlays**<br>**Values:** `left`, `right`, `top`, `bottom`                                                                                                                           | &#10060; |
 
@@ -115,7 +122,7 @@ overlays:
     imdb_chart: top_movies
     overlay:
       name: IMDB-Top-250
-      git: PMM/overlays/images/IMDB-Top-250
+      pmm: images/IMDB-Top-250
       horizontal_offset: 0
       horizontal_align: right
       vertical_offset: 0
@@ -140,6 +147,22 @@ overlays:
 ```
 
    ![](blur.png)
+
+### Backdrop Overlay
+
+There is a special overlay named `backdrop` that when given as the overlay name will instead of finding the image will just apply the background instead.
+
+You can set the size of the backdrop with `back_width` and `back_height`. By Default, they will extend the length of the Image.
+
+```yaml
+overlays:
+  blur:
+    overlay:
+      name: backdrop
+      back_color: "#00000099"
+    builder_level: episode
+    plex_all: true
+```
 
 ### Text Overlay
 
@@ -175,21 +198,24 @@ You can use the item's metadata to determine the text by adding Special Text Var
 
 There are multiple Special Text Variables that can be used when formatting the text. The variables are defined like so `<<name>>` and some can have modifiers like so `<<name$>>` where `$` is the modifier. The available options are:
 
-| Special Text Variables & Mods                                                                                                                                                                                                                         |  Movies  |  Shows   | Seasons  | Episodes |
-|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------:|:--------:|:--------:|:--------:|
-| `<<audience_rating>>`: audience rating (`8.7`, `9.0`)<br>`<<audience_rating%>>`: audience rating out of 100 (`87`, `90`)<br>`<<audience_rating#>>`: audience rating removing `.0` as needed (`8.7`, `9`)                                              | &#9989;  | &#9989;  | &#10060; | &#9989;  |
-| `<<critic_rating>>`: critic rating (`8.7`, `9.0`)<br>`<<critic_rating%>>`: critic rating out of 100 (`87`, `90`)<br>`<<critic_rating#>>`: critic rating removing `.0` as needed (`8.7`, `9`)                                                          | &#9989;  | &#9989;  | &#10060; | &#9989;  |
-| `<<user_rating>>`: user rating (`8.7`, `9.0`)<br>`<<user_rating%>>`: user rating out of 100 (`87`, `90`)<br>`<<user_rating#>>`: user rating removing `.0` as needed (`8.7`, `9`)                                                                      | &#9989;  | &#9989;  | &#9989;  | &#9989;  |
-| `<<title>>`: Title of the Item                                                                                                                                                                                                                        | &#9989;  | &#9989;  | &#9989;  | &#9989;  |
-| `<<show_title>>`: Title of the Item's Show                                                                                                                                                                                                            | &#10060; | &#10060; | &#9989;  | &#9989;  |
-| `<<season_title>>`: Title of the Item's Season                                                                                                                                                                                                        | &#10060; | &#10060; | &#10060; | &#9989;  |
-| `<<original_title>>`: Original Title of the Item                                                                                                                                                                                                      | &#9989;  | &#9989;  | &#10060; | &#10060; |
-| `<<content_rating>>`: Content Rating of the Item                                                                                                                                                                                                      | &#9989;  | &#9989;  | &#10060; | &#9989;  |
-| `<<episode_count>>`: Number of Episodes (`1`)<br>`<<episode_countW>>`: Number of Episodes As Words (`One`)<br>`<<episode_count0>>`: Number of Episodes With 10s Padding (`01`)<br>`<<episode_count00>>`: Number of Episodes With 100s Padding (`001`) | &#10060; | &#9989;  | &#9989;  | &#10060; |
-| `<<season_number>>`: Season Number (`1`)<br>`<<season_numberW>>`: Season Number As Words (`One`)<br>`<<season_number0>>`: Season Number With 10s Padding (`01`)<br>`<<season_number00>>`: Season Number With 100s Padding (`001`)                     | &#10060; | &#10060; | &#9989;  | &#9989;  |
-| `<<episode_number>>`: Episode Number (`1`)<br>`<<episode_numberW>>`: Episode Number As Words (`One`)<br>`<<episode_number0>>`: Episode Number With 10s Padding (`01`)<br>`<<episode_number00>>`: Episode Number With 100s Padding (`001`)             | &#10060; | &#10060; | &#10060; | &#9989;  |
-| `<<runtime>>`: Complete Runtime of the Item in minutes (`150`)<br>`<<runtimeH>>`: Hours in runtime of the Item (`2`)<br>`<<runtimeM>>`: Minutes remaining in the hour in the runtime of the Item (`30`)                                               | &#9989;  | &#10060; | &#10060; | &#9989;  |
-| `<<originally_available>>`: Original Available Date of the Item<br>`<<originally_available[FORMAT]>>`: Original Available Date of the Item in the given format. [Format Options](https://strftime.org/)                                               | &#9989;  | &#9989;  | &#10060; | &#9989;  |
+| Special Text Variables & Mods                                                                                                                                                                                                                                                                 |  Movies  |  Shows   | Seasons  | Episodes |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------:|:--------:|:--------:|:--------:|
+| `<<audience_rating>>`: audience rating (`8.7`, `9.0`)<br>`<<audience_rating%>>`: audience rating out of 100 (`87`, `90`)<br>`<<audience_rating#>>`: audience rating removing `.0` as needed (`8.7`, `9`)<br>`<<audience_rating/>>`: audience rating on a 5 point scale (`8.6` shows as `4.3`) | &#9989;  | &#9989;  | &#10060; | &#9989;  |
+| `<<critic_rating>>`: critic rating (`8.7`, `9.0`)<br>`<<critic_rating%>>`: critic rating out of 100 (`87`, `90`)<br>`<<critic_rating#>>`: critic rating removing `.0` as needed (`8.7`, `9`)<br>`<<critic_rating/>>`: critic rating on a 5 point scale (`8.6` shows as `4.3`)                 | &#9989;  | &#9989;  | &#10060; | &#9989;  |
+| `<<user_rating>>`: user rating (`8.7`, `9.0`)<br>`<<user_rating%>>`: user rating out of 100 (`87`, `90`)<br>`<<user_rating#>>`: user rating removing `.0` as needed (`8.7`, `9`)<br>`<<user_rating/>>`: user rating on a 5 point scale (`8.6` shows as `4.3`)                                 | &#9989;  | &#9989;  | &#9989;  | &#9989;  |
+| `<<title>>`: Title of the Item<br>`<<titleU>>`: Uppercase Title of the Item<br>`<<titleL>>`Lowercase Title of the Item<br>`<<titleP>>`Proper Title of the Item                                                                                                                                | &#9989;  | &#9989;  | &#9989;  | &#9989;  |
+| `<<show_title>>`: Title of the Item's Show<br>`<<show_itleU>>`: Uppercase Title of the Item's Show<br>`<<show_titleL>>`Lowercase Title of the Item's Show<br>`<<show_titleP>>`Proper Title of the Item's Show                                                                                 | &#10060; | &#10060; | &#9989;  | &#9989;  |
+| `<<season_title>>`: Title of the Item's Season<br>`<<season_titleU>>`: Uppercase Title of the Item's Season<br>`<<season_titleL>>`Lowercase title of the Item's Season<br>`<<season_titleP>>`Proper title of the Item's Season                                                                | &#10060; | &#10060; | &#10060; | &#9989;  |
+| `<<original_title>>`: Original Title of the Item<br>`<<original_titleU>>`: Original Title of the Item<br>`<<original_titleL>>`Lowercase Original Title of the Item<br>`<<original_titleP>>`Proper Original Title of the Item                                                                  | &#9989;  | &#9989;  | &#10060; | &#10060; |
+| `<<edition>>`: Edition of the Item<br>`<<editionU>>`: Edition of the Item<br>`<<editionL>>`Lowercase Edition of the Item<br>`<<editionP>>`Proper Edition of the Item                                                                                                                          | &#9989;  | &#10060; | &#10060; | &#10060; |
+| `<<content_rating>>`: Content Rating of the Item<br>`<<content_ratingU>>`: Uppercase Content Rating of the Item<br>`<<content_ratingL>>`Lowercase Content Rating of the Item<br>`<<content_ratingP>>`Proper Content Rating of the Item                                                        | &#9989;  | &#9989;  | &#10060; | &#9989;  |
+| `<<episode_count>>`: Number of Episodes (`1`)<br>`<<episode_countW>>`: Number of Episodes As Words (`One`)<br>`<<episode_count0>>`: Number of Episodes With 10s Padding (`01`)<br>`<<episode_count00>>`: Number of Episodes With 100s Padding (`001`)                                         | &#10060; | &#9989;  | &#9989;  | &#10060; |
+| `<<season_number>>`: Season Number (`1`)<br>`<<season_numberW>>`: Season Number As Words (`One`)<br>`<<season_number0>>`: Season Number With 10s Padding (`01`)<br>`<<season_number00>>`: Season Number With 100s Padding (`001`)                                                             | &#10060; | &#10060; | &#9989;  | &#9989;  |
+| `<<episode_number>>`: Episode Number (`1`)<br>`<<episode_numberW>>`: Episode Number As Words (`One`)<br>`<<episode_number0>>`: Episode Number With 10s Padding (`01`)<br>`<<episode_number00>>`: Episode Number With 100s Padding (`001`)                                                     | &#10060; | &#10060; | &#10060; | &#9989;  |
+| `<<versions>>`: Number of Versions of the Item (`1`)<br>`<<versionsW>>`: Number of Versions of the Item As Words (`One`)<br>`<<versions0>>`: Number of Versions of the Item With 10s Padding (`01`)<br>`<<versions00>>`: Number of Versions of the Item With 100s Padding (`001`)             | &#9989;  | &#10060; | &#10060; | &#9989;  |
+| `<<runtime>>`: Complete Runtime of the Item in minutes (`150`)<br>`<<runtimeH>>`: Hours in runtime of the Item (`2`)<br>`<<runtimeM>>`: Minutes remaining in the hour in the runtime of the Item (`30`)                                                                                       | &#9989;  | &#10060; | &#10060; | &#9989;  |
+| `<<bitrate>>`: Bitrate of the first media file for an item.<br>`<<bitrateH>>`: Bitrate of the media file with the highest bitrate<br>`<<bitrateL>>`: Bitrate of the media file with the lowest bitrate                                                                                        | &#9989;  | &#10060; | &#10060; | &#9989;  |
+| `<<originally_available>>`: Original Available Date of the Item<br>`<<originally_available[FORMAT]>>`: Original Available Date of the Item in the given format. [Format Options](https://strftime.org/)                                                                                       | &#9989;  | &#9989;  | &#10060; | &#9989;  |
 
 Note: You can use the `mass_audience_rating_update` or `mass_critic_rating_update` [Library Operation](../config/operations) to update your plex ratings to various services like `tmdb`, `imdb`, `mdb`, `metacritic`, `letterboxd` and many more.
 
@@ -244,8 +270,8 @@ These are some commonly-used examples of Special Text overlays:
 | `name: text(Season <<season_number>> Episode <<episode_number>>)` | Season 1 Episode 1 |
 | `name: text(Season <<season_number>>)`                            | Season 1           |
 | `name: text(Episode <<episode_number>>)`                          | Episode 1          |
-| `name: text(Runtime: <<runtime>>m)`                               | Runtime: 90m       |
-| `name: text(Runtime: <<runtimeH>>h <<runtimeM>>m)`                | Runtime: 1h 30m    |
+| `name: "text(Runtime: <<runtime>>m)"`                             | Runtime: 90m       |
+| `name: "text(Runtime: <<runtimeH>>h <<runtimeM>>m)"`              | Runtime: 1h 30m    |
 
 #### Text Addon Images
 
@@ -271,7 +297,7 @@ overlays:
       back_radius: 30
       back_width: 300
       back_height: 105
-      git: PMM/overlays/images/raw/IMDB_Rating
+      pmm: images/raw/IMDB_Rating
       addon_position: left
       addon_offset: 25
 ```
@@ -287,7 +313,7 @@ overlays:
   Dual-Audio:
     overlay:
       name: Dual-Audio
-      git: PMM/overlays/images/Dual-Audio
+      pmm: images/Dual-Audio
       group: audio_language
       weight: 10
       horizontal_offset: 0
@@ -300,7 +326,7 @@ overlays:
   Multi-Audio:
     overlay:
       name: Multi-Audio
-      git: PMM/overlays/images/Multi-Audio
+      pmm: images/Multi-Audio
       group: audio_language
       weight: 20
       horizontal_offset: 0
@@ -385,41 +411,6 @@ overlays:
         hdr: true
 ```
 
-## Builders
-
-Builders use third-party services to source items for overlays. Multiple builders can be used in the same overlay from a variety of sources listed below.
-
-* [Plex Builders](builders/plex)
-* [TMDb Builders](builders/tmdb)
-* [TVDb Builders](builders/tvdb)
-* [IMDb Builders](builders/imdb)
-* [Trakt Builders](builders/trakt)
-* [Tautulli Builders](builders/tautulli)
-* [Radarr Builders](builders/radarr)
-* [Sonarr Builders](builders/sonarr)
-* [MdbList Builders](builders/mdblist)
-* [Letterboxd Builders](builders/letterboxd)
-* [ICheckMovies Builders](builders/icheckmovies)
-* [FlixPatrol Builders](builders/flixpatrol)
-* [Reciperr Builders](builders/reciperr)
-* [StevenLu Builders](builders/stevenlu)
-* [AniDB Builders](builders/anidb)
-* [AniList Builders](builders/anilist)
-* [MyAnimeList Builders](builders/myanimelist)
-
-## Details
-
-Only a few details can be used with overlays: `limit`, `show_missing`, `save_missing`, `missing_only_released`, `minimum_items`, `cache_builders`, `tmdb_region`
-
-* [Setting Details](details/setting)
-* [Metadata Details](details/metadata)
-
-## Filters
-
-These filter media items that would have an overlay applied by any of the Builders.
-
-* [Filters](filters)
-
 ## Examples
 
 ### Example Overlay File
@@ -435,7 +426,7 @@ overlays:
   HDR:
     overlay:
       name: HDR
-      git: PMM/overlays/HDR
+      pmm: HDR
     plex_search:
       all:
         hdr: true

@@ -1,0 +1,85 @@
+##############################################################################
+#                          TMDb Charts Collections                           #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#        https://metamanager.wiki/en/latest/defaults/chart/tmdb.html         #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: "01"
+    image: chart/<<collection_name_encoded>>
+
+translations:
+  pmm: translations
+
+templates:
+  tmdb:
+    default:
+      limit: 100
+      limit_<<key>>: <<limit>>
+      chart: <<key>>
+    tmdb_<<chart>>: <<limit_<<key>>>>
+
+collections:
+  TMDb Popular:
+    variables:
+      key: popular
+    template:
+      - name: tmdb
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: tmdb_popular
+
+  TMDb Top Rated:
+    variables:
+      key: top
+    template:
+      - name: tmdb
+        chart: top_rated
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: tmdb_top
+
+  TMDb Trending:
+    variables:
+      key: trending
+    template:
+      - name: tmdb
+        chart: trending_weekly
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: tmdb_trending
+
+  TMDb Airing Today:
+    variables:
+      key: airing
+    template:
+      - name: tmdb
+        chart: airing_today
+      - name: shared
+        allowed_libraries: show
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: tmdb_airing
+
+  TMDb On The Air:
+    variables:
+      key: air
+    template:
+      - name: tmdb
+        chart: on_the_air
+      - name: shared
+        allowed_libraries: show
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: tmdb_air

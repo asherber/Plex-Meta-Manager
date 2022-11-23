@@ -1,42 +1,51 @@
 import os, re, time
 from datetime import datetime
-from PIL import Image, ImageColor, ImageDraw, ImageFont
 from modules import util
 from modules.util import Failed
+from PIL import Image, ImageColor, ImageDraw, ImageFont
+from plexapi.audio import Album
+from plexapi.video import Episode
 
 logger = util.logger
 
 portrait_dim = (1000, 1500)
 landscape_dim = (1920, 1080)
+square_dim = (1000, 1000)
 old_special_text = [f"{a}{s}" for a in ["audience_rating", "critic_rating", "user_rating"] for s in ["", "0", "%", "#"]]
 float_vars = ["audience_rating", "critic_rating", "user_rating"]
-int_vars = ["runtime", "season_number", "episode_number", "episode_count"]
+int_vars = ["runtime", "season_number", "episode_number", "episode_count", "versions"]
 date_vars = ["originally_available"]
 types_for_var = {
     "movie_show_season_episode_artist_album": ["user_rating", "title"],
     "movie_show_episode_album": ["critic_rating", "originally_available"],
     "movie_show_episode": ["audience_rating", "content_rating"],
     "movie_show": ["original_title"],
-    "movie_episode": ["runtime"],
+    "movie_episode": ["runtime", "versions", "bitrate"],
     "season_episode": ["show_title", "season_number"],
     "show_season": ["episode_count"],
+    "movie": ["edition"],
     "episode": ["season_title", "episode_number"]
 }
 var_mods = {
-    "title": [""],
-    "content_rating": [""],
-    "original_title": [""],
-    "show_title": [""],
-    "season_title": [""],
-    "user_rating": ["", "%", "#"],
-    "critic_rating": ["", "%", "#"],
-    "audience_rating": ["", "%", "#"],
+    "title": ["", "U", "L", "P"],
+    "content_rating": ["", "U", "L", "P"],
+    "original_title": ["", "U", "L", "P"],
+    "edition": ["", "U", "L", "P"],
+    "show_title": ["", "U", "L", "P"],
+    "season_title": ["", "U", "L", "P"],
+    "bitrate": ["", "H", "L"],
+    "user_rating": ["", "%", "#", "/"],
+    "critic_rating": ["", "%", "#", "/"],
+    "audience_rating": ["", "%", "#", "/"],
     "originally_available": ["", "["],
     "runtime": ["", "H", "M"],
     "season_number": ["", "W", "0", "00"],
     "episode_number": ["", "W", "0", "00"],
     "episode_count": ["", "W", "0", "00"],
+    "versions": ["", "W", "0", "00"],
 }
+single_mods = list(set([m for a, ms in var_mods.items() for m in ms if len(m) == 1]))
+double_mods = list(set([m for a, ms in var_mods.items() for m in ms if len(m) == 2]))
 vars_by_type = {
     "movie": [f"{item}{m}" for check, sub in types_for_var.items() for item in sub for m in var_mods[item] if "movie" in check],
     "show": [f"{item}{m}" for check, sub in types_for_var.items() for item in sub for m in var_mods[item] if "show" in check],
@@ -46,65 +55,19 @@ vars_by_type = {
     "album": [f"{item}{m}" for check, sub in types_for_var.items() for item in sub for m in var_mods[item] if "album" in check],
 }
 
-def parse_cords(data, parent, required=False):
-    horizontal_align = util.parse("Overlay", "horizontal_align", data["horizontal_align"], parent=parent,
-                                  options=["left", "center", "right"]) if "horizontal_align" in data else "left"
-    vertical_align = util.parse("Overlay", "vertical_align", data["vertical_align"], parent=parent,
-                                options=["top", "center", "bottom"]) if "vertical_align" in data else "top"
-
-    horizontal_offset = None
-    if "horizontal_offset" in data and data["horizontal_offset"] is not None:
-        x_off = data["horizontal_offset"]
-        per = False
-        if str(x_off).endswith("%"):
-            x_off = x_off[:-1]
-            per = True
-        x_off = util.check_num(x_off)
-        error = f"Overlay Error: {parent} horizontal_offset: {data['horizontal_offset']} must be a number"
-        if x_off is None:
-            raise Failed(error)
-        if horizontal_align != "center" and not per and x_off < 0:
-            raise Failed(f"{error} 0 or greater")
-        elif horizontal_align != "center" and per and (x_off > 100 or x_off < 0):
-            raise Failed(f"{error} between 0% and 100%")
-        elif horizontal_align == "center" and per and (x_off > 50 or x_off < -50):
-            raise Failed(f"{error} between -50% and 50%")
-        horizontal_offset = f"{x_off}%" if per else x_off
-    if horizontal_offset is None and horizontal_align == "center":
-        horizontal_offset = 0
-    if required and horizontal_offset is None:
-        raise Failed(f"Overlay Error: {parent} horizontal_offset is required")
-
-    vertical_offset = None
-    if "vertical_offset" in data and data["vertical_offset"] is not None:
-        y_off = data["vertical_offset"]
-        per = False
-        if str(y_off).endswith("%"):
-            y_off = y_off[:-1]
-            per = True
-        y_off = util.check_num(y_off)
-        error = f"Overlay Error: {parent} vertical_offset: {data['vertical_offset']} must be a number"
-        if y_off is None:
-            raise Failed(error)
-        if vertical_align != "center" and not per and y_off < 0:
-            raise Failed(f"{error} 0 or greater")
-        elif vertical_align != "center" and per and (y_off > 100 or y_off < 0):
-            raise Failed(f"{error} between 0% and 100%")
-        elif vertical_align == "center" and per and (y_off > 50 or y_off < -50):
-            raise Failed(f"{error} between -50% and 50%")
-        vertical_offset = f"{y_off}%" if per else y_off
-    if vertical_offset is None and vertical_align == "center":
-        vertical_offset = 0
-    if required and vertical_offset is None:
-        raise Failed(f"Overlay Error: {parent} vertical_offset is required")
-
-    return horizontal_align, horizontal_offset, vertical_align, vertical_offset
-
+def get_canvas_size(item):
+    if isinstance(item, Episode):
+        return landscape_dim
+    elif isinstance(item, Album):
+        return square_dim
+    else:
+        return portrait_dim
 
 class Overlay:
-    def __init__(self, config, library, original_mapping_name, overlay_data, suppress, level):
+    def __init__(self, config, library, overlay_file, original_mapping_name, overlay_data, suppress, level):
         self.config = config
         self.library = library
+        self.overlay_file = overlay_file
         self.original_mapping_name = original_mapping_name
         self.data = overlay_data
         self.suppress = suppress
@@ -116,16 +79,23 @@ class Overlay:
         self.landscape_box = None
         self.portrait = None
         self.portrait_box = None
+        self.square = None
+        self.square_box = None
         self.group = None
         self.queue = None
+        self.queue_name = None
         self.weight = None
         self.path = None
         self.font = None
         self.font_name = None
         self.font_size = 36
         self.font_color = None
+        self.stroke_color = None
+        self.stroke_width = 0
         self.addon_offset = 0
         self.addon_position = None
+        self.back_width = None
+        self.back_height = None
         self.special_text = None
 
         logger.debug("")
@@ -152,16 +122,19 @@ class Overlay:
         if "group" in self.data and self.data["group"]:
             self.group = str(self.data["group"])
         if "queue" in self.data and self.data["queue"]:
-            self.queue = str(self.data["queue"])
+            self.queue_name = str(self.data["queue"])
+            if self.queue_name not in self.overlay_file.queue_names:
+                raise Failed(f"Overlay Error: queue: {self.queue_name} not found")
+            self.queue = self.overlay_file.queue_names[self.queue_name]
         if "weight" in self.data:
             self.weight = util.parse("Overlay", "weight", self.data["weight"], datatype="int", parent="overlay", minimum=0)
         if "group" in self.data and (self.weight is None or not self.group):
             raise Failed(f"Overlay Error: overlay attribute's group requires the weight attribute")
-        elif "queue" in self.data and (self.weight is None or not self.queue):
+        elif "queue" in self.data and (self.weight is None or not self.queue_name):
             raise Failed(f"Overlay Error: overlay attribute's queue requires the weight attribute")
-        elif self.group and self.queue:
+        elif self.group and self.queue_name:
             raise Failed(f"Overlay Error: overlay attribute's group and queue cannot be used together")
-        self.horizontal_align, self.horizontal_offset, self.vertical_align, self.vertical_offset = parse_cords(self.data, "overlay")
+        self.horizontal_offset, self.horizontal_align, self.vertical_offset, self.vertical_align = util.parse_cords(self.data, "overlay")
 
         if (self.horizontal_offset is None and self.vertical_offset is not None) or (self.vertical_offset is None and self.horizontal_offset is not None):
             raise Failed(f"Overlay Error: overlay attribute's horizontal_offset and vertical_offset must be used together")
@@ -173,22 +146,22 @@ class Overlay:
                 except ValueError:
                     raise Failed(f"Overlay Error: overlay {attr}: {self.data[attr]} invalid")
         self.back_color = color("back_color")
-        self.back_radius = util.parse("Overlay", "back_radius", self.data["back_radius"], datatype="int", parent="overlay") if "back_radius" in self.data else None
-        self.back_line_width = util.parse("Overlay", "back_line_width", self.data["back_line_width"], datatype="int", parent="overlay") if "back_line_width" in self.data else None
+        self.back_radius = util.parse("Overlay", "back_radius", self.data["back_radius"], datatype="int", parent="overlay") if "back_radius" in self.data and self.data["back_radius"] else None
+        self.back_line_width = util.parse("Overlay", "back_line_width", self.data["back_line_width"], datatype="int", parent="overlay") if "back_line_width" in self.data and self.data["back_line_width"] else None
         self.back_line_color = color("back_line_color")
         self.back_padding = util.parse("Overlay", "back_padding", self.data["back_padding"], datatype="int", parent="overlay", default=0) if "back_padding" in self.data else 0
         self.back_align = util.parse("Overlay", "back_align", self.data["back_align"], parent="overlay", default="center", options=["left", "right", "center", "top", "bottom"]) if "back_align" in self.data else "center"
         self.back_box = None
         back_width = util.parse("Overlay", "back_width", self.data["back_width"], datatype="int", parent="overlay", minimum=0) if "back_width" in self.data else -1
         back_height = util.parse("Overlay", "back_height", self.data["back_height"], datatype="int", parent="overlay", minimum=0) if "back_height" in self.data else -1
-        if (back_width >= 0 and back_height < 0) or (back_height >= 0 and back_width < 0):
-            raise Failed(f"Overlay Error: overlay attributes back_width and back_height must be used together")
-        if self.back_align != "center" and (back_width < 0 or back_height < 0):
-            raise Failed(f"Overlay Error: overlay attribute back_align only works when back_width and back_height are used")
-        elif back_width >= 0 and back_height >= 0:
+        if self.name == "backdrop":
+            self.back_box = (back_width, back_height)
+        elif self.back_align != "center" and back_width < 0:
+            raise Failed(f"Overlay Error: overlay attribute back_align only works when back_width is used")
+        elif back_width >= 0 or back_height >= 0:
             self.back_box = (back_width, back_height)
         self.has_back = True if self.back_color or self.back_line_color else False
-        if self.has_back and not self.has_coordinates() and not self.queue:
+        if self.name != "backdrop" and self.has_back and not self.has_coordinates() and not self.queue_name:
             raise Failed(f"Overlay Error: horizontal_offset and vertical_offset are required when using a backdrop")
 
         def get_and_save_image(image_url):
@@ -210,8 +183,18 @@ class Overlay:
                 time.sleep(1)
             return image_path
 
-        if not self.name.startswith("blur"):
-            if "file" in self.data and self.data["file"]:
+        if not self.name.startswith(("blur", "backdrop")):
+            if ("pmm" in self.data and self.data["pmm"]) or ("git" in self.data and self.data["git"] and self.data["git"].startswith("PMM/")):
+                temp_path = self.data["pmm"] if "pmm" in self.data and self.data["pmm"] else self.data["git"][4:]
+                if temp_path.startswith("overlays/images/"):
+                    temp_path = temp_path[16:]
+                if not temp_path.endswith(".png"):
+                    temp_path = f"{temp_path}.png"
+                images_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "defaults", "overlays", "images")
+                if not os.path.exists(os.path.abspath(os.path.join(images_path, temp_path))):
+                    raise Failed(f"Overlay Error: Overlay Image not found at: {os.path.abspath(os.path.join(images_path, temp_path))}")
+                self.path = os.path.abspath(os.path.join(images_path, temp_path))
+            elif "file" in self.data and self.data["file"]:
                 self.path = self.data["file"]
             elif "git" in self.data and self.data["git"]:
                 self.path = get_and_save_image(f"{self.config.GitHub.configs_url}{self.data['git']}.png")
@@ -232,7 +215,7 @@ class Overlay:
                 logger.error(f"Overlay Error: failed to parse overlay blur name: {self.name} defaulting to blur(50)")
                 self.name = "blur(50)"
         elif self.name.startswith("text"):
-            if not self.has_coordinates() and not self.queue:
+            if not self.has_coordinates() and not self.queue_name:
                 raise Failed(f"Overlay Error: overlay attribute's horizontal_offset and vertical_offset are required when using text")
             if self.path:
                 if not os.path.exists(self.path):
@@ -255,15 +238,22 @@ class Overlay:
                 raise Failed(f"Overlay Error: failed to parse overlay text name: {self.name}")
             self.name = f"text({match.group(1)})"
             text = f"{match.group(1)}"
-            self.font_name = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fonts", "Roboto-Medium.ttf")
+            code_base = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            font_base = os.path.join(code_base, "fonts")
+            self.font_name = os.path.join(font_base, "Roboto-Medium.ttf")
             if "font_size" in self.data:
                 self.font_size = util.parse("Overlay", "font_size", self.data["font_size"], datatype="int", parent="overlay", default=self.font_size)
             if "font" in self.data and self.data["font"]:
                 font = str(self.data["font"])
+                if not os.path.exists(font) and os.path.exists(os.path.join(code_base, font)):
+                    font = os.path.join(code_base, font)
                 if not os.path.exists(font):
-                    fonts = util.get_system_fonts()
+                    pmm_fonts = os.listdir(font_base)
+                    fonts = util.get_system_fonts() + pmm_fonts
                     if font not in fonts:
                         raise Failed(f"Overlay Error: font: {os.path.abspath(font)} not found. Options: {', '.join(fonts)}")
+                    if font in pmm_fonts:
+                        font = os.path.join(font_base, font)
                 self.font_name = font
             self.font = ImageFont.truetype(self.font_name, self.font_size)
             if "font_style" in self.data and self.data["font_style"]:
@@ -275,12 +265,18 @@ class Overlay:
                         raise Failed(f"Overlay Error: Font Style {self.data['font_style']} not found. Options: {','.join(variation_names)}")
                 except OSError:
                     logger.warning(f"Overlay Warning: font: {self.font} does not have variations")
-            self.font_color = None
             if "font_color" in self.data and self.data["font_color"]:
                 try:
                     self.font_color = ImageColor.getcolor(self.data["font_color"], "RGBA")
                 except ValueError:
                     raise Failed(f"Overlay Error: overlay font_color: {self.data['font_color']} invalid")
+            if "stroke_width" in self.data:
+                self.stroke_width = util.parse("Overlay", "stroke_width", self.data["stroke_width"], datatype="int", parent="overlay", default=self.stroke_width)
+            if "stroke_color" in self.data and self.data["stroke_color"]:
+                try:
+                    self.stroke_color = ImageColor.getcolor(self.data["stroke_color"], "RGBA")
+                except ValueError:
+                    raise Failed(f"Overlay Error: overlay stroke_color: {self.data['stroke_color']} invalid")
             if text in old_special_text:
                 text_mod = text[-1] if text[-1] in ["0", "%", "#"] else None
                 text = text if text_mod is None else text[:-1]
@@ -295,10 +291,14 @@ class Overlay:
                         datetime.now().strftime(match.group(1))
                     except ValueError:
                         raise Failed("Overlay Error: originally_available date format not valid")
-            else:
-                box = self.image.size if self.image else None
-                self.portrait, self.portrait_box = self.get_backdrop(portrait_dim, box=box, text=self.name[5:-1])
-                self.landscape, self.landscape_box = self.get_backdrop(landscape_dim, box=box, text=self.name[5:-1])
+            box = self.image.size if self.image else None
+            self.portrait, self.portrait_box = self.get_backdrop(portrait_dim, box=box, text=self.name[5:-1])
+            self.landscape, self.landscape_box = self.get_backdrop(landscape_dim, box=box, text=self.name[5:-1])
+            self.square, self.square_box = self.get_backdrop(square_dim, box=box, text=self.name[5:-1])
+        elif self.name.startswith("backdrop"):
+            self.portrait, self.portrait_box = self.get_backdrop(portrait_dim, box=self.back_box)
+            self.landscape, self.landscape_box = self.get_backdrop(landscape_dim, box=self.back_box)
+            self.square, self.square_box = self.get_backdrop(square_dim, box=self.back_box)
         else:
             if not self.path:
                 clean_name, _ = util.validate_filename(self.name)
@@ -315,6 +315,7 @@ class Overlay:
                 if self.has_coordinates():
                     self.portrait, self.portrait_box = self.get_backdrop(portrait_dim, box=self.image.size)
                     self.landscape, self.landscape_box = self.get_backdrop(landscape_dim, box=self.image.size)
+                    self.square, self.square_box = self.get_backdrop(square_dim, box=self.image.size)
                 if self.config.Cache:
                     self.config.Cache.update_image_map(self.mapping_name, f"{self.library.image_table_name}_overlays", self.mapping_name, overlay_size)
             except OSError:
@@ -335,6 +336,10 @@ class Overlay:
                 box = (text_width, text_height)
         box_width, box_height = box
         back_width, back_height = self.back_box if self.back_box else (None, None)
+        if back_width == -1:
+            back_width = canvas_box[0] if self.name == "backdrop" else box_width
+        if back_height == -1:
+            back_height = canvas_box[1] if self.name == "backdrop" else box_height
         start_x, start_y = self.get_coordinates(canvas_box, box, new_cords=new_cords)
         main_x = start_x
         main_y = start_y
@@ -354,17 +359,10 @@ class Overlay:
                     drawing.rectangle(cords, fill=self.back_color, outline=self.back_line_color, width=self.back_line_width)
 
             if self.back_box:
-                if self.back_align == "left":
-                    main_y = start_y + (back_height - box_height) // 2
-                elif self.back_align == "right":
-                    main_x = start_x + back_width - (text_width if text is not None else image_width)
-                elif self.back_align == "top":
-                    main_x = start_x + (back_width - box_width) // 2
-                elif self.back_align == "bottom":
-                    main_y = start_y + back_height - (text_height if text is not None else image_height)
-                else:
-                    main_x = start_x + (back_width - box_width) // 2
-                    main_y = start_y + (back_height - box_height) // 2
+                if self.back_align in ["left", "right", "center", "bottom"]:
+                    main_y = start_y + (back_height - box_height) // (1 if self.back_align == "bottom" else 2)
+                if self.back_align in ["top", "bottom", "center", "right"]:
+                    main_x = start_x + (back_width - box_width) // (1 if self.back_align == "right" else 2)
 
             addon_x = None
             addon_y = None
@@ -372,47 +370,26 @@ class Overlay:
                 addon_x = main_x
                 addon_y = main_y
                 if self.addon_position == "left":
-                    if self.back_align == "left":
-                        main_x = start_x + self.addon_offset
-                    elif self.back_align == "right":
-                        addon_x = start_x + back_width - self.addon_offset
-                    else:
-                        main_x = addon_x + image_width + self.addon_offset
+                    main_x = main_x + image_width + self.addon_offset
                 elif self.addon_position == "right":
-                    if self.back_align == "left":
-                        addon_x = start_x + self.addon_offset
-                    elif self.back_align == "right":
-                        addon_x = start_x + back_width - image_width
-                        main_x = start_x + back_width - self.addon_offset
-                    else:
-                        addon_x = main_x + text_width + self.addon_offset
+                    addon_x = main_x + text_width + self.addon_offset
                 elif text_width < image_width:
                     main_x = main_x + ((image_width - text_width) / 2)
                 elif text_width > image_width:
                     addon_x = main_x + ((text_width - image_width) / 2)
 
                 if self.addon_position == "top":
-                    if self.back_align == "top":
-                        main_y = start_y + self.addon_offset
-                    elif self.back_align == "bottom":
-                        addon_y = start_y + back_height - self.addon_offset
-                    else:
-                        main_y = addon_y + image_height + self.addon_offset
+                    main_y = main_y + image_height + self.addon_offset
                 elif self.addon_position == "bottom":
-                    if self.back_align == "top":
-                        addon_y = start_y + self.addon_offset
-                    elif self.back_align == "bottom":
-                        addon_y = start_y + back_height - image_height
-                        main_y = start_y + back_height - self.addon_offset
-                    else:
-                        addon_y = main_y + text_height + self.addon_offset
+                    addon_y = main_y + text_height + self.addon_offset
                 elif text_height < image_height:
                     main_y = main_y + ((image_height - text_height) / 2)
                 elif text_height > image_height:
                     addon_y = main_y + ((text_height - image_height) / 2)
 
             if text is not None:
-                drawing.text((int(main_x), int(main_y)), text, font=self.font, fill=self.font_color, anchor="lt")
+                drawing.text((int(main_x), int(main_y)), text, font=self.font, fill=self.font_color,
+                             stroke_fill=self.stroke_color, stroke_width=self.stroke_width, anchor="lt")
             if addon_x is not None:
                 main_x = addon_x
                 main_y = addon_y
@@ -430,7 +407,8 @@ class Overlay:
             output += f"{self.back_box[0]}{self.back_box[1]}{self.back_align}"
         if self.addon_position is not None:
             output += f"{self.addon_position}{self.addon_offset}"
-        for value in [self.font_color, self.back_color, self.back_radius, self.back_padding, self.back_line_color, self.back_line_width]:
+        for value in [self.font_color, self.back_color, self.back_radius, self.back_padding,
+                      self.back_line_color, self.back_line_width, self.stroke_color, self.stroke_width]:
             if value is not None:
                 output += f"{value}"
         return output
@@ -445,7 +423,9 @@ class Overlay:
         if new_cords is None and not self.has_coordinates():
             return 0, 0
         if self.back_box:
-            box = self.back_box
+            bw, bh = box
+            bbw, bbh = self.back_box
+            box = (bbw if bbw >= 0 else bw, bbh if bbh >= 0 else bh)
 
         def get_cord(value, image_value, over_value, align):
             value = int(image_value * 0.01 * int(value[:-1])) if str(value).endswith("%") else value
@@ -456,11 +436,17 @@ class Overlay:
             else:
                 return value
 
-        if new_cords is None:
-            ho = self.horizontal_offset
-            ha = self.horizontal_align
-            vo = self.vertical_offset
-            va = self.vertical_align
-        else:
-            ha, ho, va, vo = new_cords
+        ho = int(new_cords[0]) if new_cords and self.horizontal_offset is None else self.horizontal_offset
+        ha = new_cords[1] if new_cords and self.horizontal_align is None else self.horizontal_align
+        vo = int(new_cords[2]) if new_cords and self.vertical_offset is None else self.vertical_offset
+        va = new_cords[3] if new_cords and self.vertical_align is None else self.vertical_align
+
         return get_cord(ho, canvas_box[0], box[0], ha), get_cord(vo, canvas_box[1], box[1], va)
+
+    def get_canvas(self, item):
+        if isinstance(item, Episode):
+            return self.landscape, self.landscape_box
+        elif isinstance(item, Album):
+            return self.square, self.square_box
+        else:
+            return self.portrait, self.portrait_box

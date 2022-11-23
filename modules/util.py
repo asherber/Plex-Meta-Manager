@@ -18,6 +18,9 @@ logger = logging.getLogger("Plex Meta Manager")
 class TimeoutExpired(Exception):
     pass
 
+class LimitReached(Exception):
+    pass
+
 class Failed(Exception):
     pass
 
@@ -98,14 +101,35 @@ start_time = None
 
 def current_version(version, nightly=False):
     if nightly:
-        return get_version("nightly")
+        return get_nightly()
     elif version[2] > 0:
-        new_version = get_version("develop")
+        new_version = get_develop()
         if version[1] != new_version[1] or new_version[2] >= version[2]:
             return new_version
-        return get_version("nightly")
+        return get_nightly()
     else:
-        return get_version("master")
+        return get_master()
+
+nightly_version = None
+def get_nightly():
+    global nightly_version
+    if nightly_version is None:
+        nightly_version = get_version("nightly")
+    return nightly_version
+
+develop_version = None
+def get_develop():
+    global develop_version
+    if develop_version is None:
+        develop_version = get_version("develop")
+    return develop_version
+
+master_version = None
+def get_master():
+    global master_version
+    if master_version is None:
+        master_version = get_version("master")
+    return master_version
 
 def get_version(level):
     try:
@@ -203,9 +227,9 @@ def pick_image(title, images, prioritize_assets, download_url_assets, item_dir, 
 def add_dict_list(keys, value, dict_map):
     for key in keys:
         if key in dict_map:
-            dict_map[key].append(value)
+            dict_map[key].append(int(value))
         else:
-            dict_map[key] = [value]
+            dict_map[key] = [int(value)]
 
 def get_list(data, lower=False, upper=False, split=True, int_list=False, trim=True):
     if split is True:               split = ","
@@ -324,11 +348,11 @@ def item_title(item):
         else:
             return f"{item.parentTitle} Season {item.index}: {item.title}"
     elif isinstance(item, Episode):
-        text = f"{item.grandparentTitle} S{item.parentIndex:02}E{item.index:02}"
-        if f"Season {item.parentIndex}" == item.parentTitle:
-            return f"{text}: {item.title}"
-        else:
-            return f"{text}: {item.parentTitle}: {item.title}"
+        season = item.parentIndex if item.parentIndex else 0
+        episode = item.index if item.index else 0
+        show_title = item.grandparentTitle if item.grandparentTitle else ""
+        season_title = f"{item.parentTitle}: " if item.parentTitle and f"Season {season}" == item.parentTitle else ""
+        return f"{show_title} S{season:02}E{episode:02}: {season_title}{item.title if item.title else ''}"
     elif isinstance(item, Movie) and item.year:
         return f"{item.title} ({item.year})"
     elif isinstance(item, Album):
@@ -401,12 +425,16 @@ def load_files(files_to_load, method, schedule=None, lib_vars=None):
             def check_dict(attr, name):
                 if attr in file:
                     if file[attr]:
-                        current.append((name, file[attr], temp_vars, asset_directory))
+                        if attr == "git" and file[attr].startswith("PMM/"):
+                            current.append(("PMM Default", file[attr][4:], temp_vars, asset_directory))
+                        else:
+                            current.append((name, file[attr], temp_vars, asset_directory))
                     else:
                         logger.error(f"Config Error: {method} {attr} is blank")
 
             check_dict("url", "URL")
             check_dict("git", "Git")
+            check_dict("pmm", "PMM Default")
             check_dict("repo", "Repo")
             check_dict("file", "File")
             if "folder" in file:
@@ -415,11 +443,12 @@ def load_files(files_to_load, method, schedule=None, lib_vars=None):
                 elif not os.path.isdir(file["folder"]):
                     logger.error(f"Config Error: Folder not found: {file['folder']}")
                 else:
-                    yml_files = glob_filter(os.path.join(file["folder"], f"*.yml"))
+                    yml_files = glob_filter(os.path.join(file["folder"], "*.yml"))
+                    yml_files.extend(glob_filter(os.path.join(file["folder"], "*.yaml")))
                     if yml_files:
                         current.extend([("File", yml, temp_vars, asset_directory) for yml in yml_files])
                     else:
-                        logger.error(f"Config Error: No YAML (.yml) files found in {file['folder']}")
+                        logger.error(f"Config Error: No YAML (.yml|.yaml) files found in {file['folder']}")
 
             if schedule and "schedule" in file and file["schedule"]:
                 current_time, run_hour, ignore_schedules = schedule
@@ -433,9 +462,10 @@ def load_files(files_to_load, method, schedule=None, lib_vars=None):
                     if not ignore_schedules:
                         err = e
                 if err:
-                    logger.warning(f"{err}\n\nMetadata File{'s' if len(current) > 1 else ''} not scheduled to run")
+                    logger.warning(f"Metadata Schedule:{err}\n\nMetadata File{'s' if len(current) > 1 else ''} not scheduled to run")
                     for file_type, file_path, temp_vars, asset_directory in current:
                         logger.warning(f"{file_type}: {file_path}")
+                    logger.info("")
                     continue
             files.extend(current)
         else:
@@ -726,9 +756,9 @@ def parse(error, attribute, data, datatype=None, methods=None, parent=None, defa
                 if start and end and start < end:
                     return f"{start}{range_split}{end}"
         else:
-            value = check_int(value, datatype=datatype, minimum=minimum, maximum=maximum)
-            if value is not None:
-                return value
+            new_value = check_int(value, datatype=datatype, minimum=minimum, maximum=maximum)
+            if new_value is not None:
+                return new_value
         message = f"{display} {value} must {'each ' if range_split else ''}be {'an integer' if datatype == 'int' else 'a number'}"
         message = f"{message} {minimum} or greater" if maximum is None else f"{message} between {minimum} and {maximum}"
         if range_split:
@@ -744,6 +774,61 @@ def parse(error, attribute, data, datatype=None, methods=None, parent=None, defa
     else:
         logger.warning(f"{error} Warning: {message} using {default} as default")
         return translation[default] if translation is not None else default
+
+def parse_cords(data, parent, required=False):
+    horizontal_align = parse("Overlay", "horizontal_align", data["horizontal_align"], parent=parent,
+                             options=["left", "center", "right"]) if "horizontal_align" in data else None
+    if required and horizontal_align is None:
+        raise Failed(f"Overlay Error: {parent} horizontal_align is required")
+
+    vertical_align = parse("Overlay", "vertical_align", data["vertical_align"], parent=parent,
+                           options=["top", "center", "bottom"]) if "vertical_align" in data else None
+    if required and vertical_align is None:
+        raise Failed(f"Overlay Error: {parent} vertical_align is required")
+
+    horizontal_offset = None
+    if "horizontal_offset" in data and data["horizontal_offset"] is not None:
+        x_off = data["horizontal_offset"]
+        per = False
+        if str(x_off).endswith("%"):
+            x_off = x_off[:-1]
+            per = True
+        x_off = check_num(x_off)
+        error = f"Overlay Error: {parent} horizontal_offset: {data['horizontal_offset']} must be a number"
+        if x_off is None:
+            raise Failed(error)
+        if horizontal_align != "center" and not per and x_off < 0:
+            raise Failed(f"{error} 0 or greater")
+        elif horizontal_align != "center" and per and (x_off > 100 or x_off < 0):
+            raise Failed(f"{error} between 0% and 100%")
+        elif horizontal_align == "center" and per and (x_off > 50 or x_off < -50):
+            raise Failed(f"{error} between -50% and 50%")
+        horizontal_offset = f"{x_off}%" if per else x_off
+    if required and horizontal_offset is None:
+        raise Failed(f"Overlay Error: {parent} horizontal_offset is required")
+
+    vertical_offset = None
+    if "vertical_offset" in data and data["vertical_offset"] is not None:
+        y_off = data["vertical_offset"]
+        per = False
+        if str(y_off).endswith("%"):
+            y_off = y_off[:-1]
+            per = True
+        y_off = check_num(y_off)
+        error = f"Overlay Error: {parent} vertical_offset: {data['vertical_offset']} must be a number"
+        if y_off is None:
+            raise Failed(error)
+        if vertical_align != "center" and not per and y_off < 0:
+            raise Failed(f"{error} 0 or greater")
+        elif vertical_align != "center" and per and (y_off > 100 or y_off < 0):
+            raise Failed(f"{error} between 0% and 100%")
+        elif vertical_align == "center" and per and (y_off > 50 or y_off < -50):
+            raise Failed(f"{error} between -50% and 50%")
+        vertical_offset = f"{y_off}%" if per else y_off
+    if required and vertical_offset is None:
+        raise Failed(f"Overlay Error: {parent} vertical_offset is required")
+
+    return horizontal_offset, horizontal_align, vertical_offset, vertical_align
 
 def replace_label(_label, _data):
     replaced = False

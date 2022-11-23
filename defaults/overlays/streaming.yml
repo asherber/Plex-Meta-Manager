@@ -1,0 +1,91 @@
+##############################################################################
+#                             Streaming Overlay                              #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#                     Credit to Magic815 for base images                     #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#    https://metamanager.wiki/en/latest/defaults/overlays/streaming.html     #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    group: streaming
+    horizontal_offset: 15
+    horizontal_align: left
+    vertical_offset: 150
+    vertical_align: bottom
+    back_color: "#00000099"
+    back_width: 305
+    back_height: 105
+    pmm: streaming/<<overlay_name>>
+
+templates:
+  streaming:
+    ignore_blank_results: true
+    mdblist_list: https://mdblist.com/lists/plexmetamanager/<<key>>-<<library_type>>s
+
+overlays:
+
+  Netflix:
+    variables: {key: netflix, weight: 160}
+    template: [name: standard, name: streaming]
+
+  Prime:
+    variables: {key: amazon, weight: 150}
+    template: [name: standard, name: streaming]
+
+  Disney:
+    variables: {key: disney, weight: 140}
+    template: [name: standard, name: streaming]
+
+  HBO-Max:
+    variables: {key: hbomax, weight: 130}
+    template: [name: standard, name: streaming]
+
+  Crunchyroll:
+    variables: {key: crunchyroll, weight: 120, allowed_libraries: show}
+    template: [name: standard, name: streaming]
+
+  YouTube:
+    variables: {key: youtube, weight: 110}
+    template: [name: standard, name: streaming]
+
+  Hulu:
+    variables: {key: hulu, weight: 100}
+    template: [name: standard, name: streaming]
+
+  Paramount:
+    variables: {key: paramount, weight: 90}
+    template: [name: standard, name: streaming]
+
+  AppleTV:
+    variables: {key: appletv, weight: 80}
+    template: [name: standard, name: streaming]
+
+  Peacock:
+    variables: {key: peacock, weight: 70}
+    template: [name: standard, name: streaming]
+
+  Showtime:
+    variables: {key: showtime, weight: 60}
+    template: [name: standard, name: streaming]
+
+  NOW:
+    variables: {key: now, weight: 50}
+    template: [name: standard, name: streaming]
+
+  All 4:
+    variables: {key: all4, weight: 40}
+    template: [name: standard, name: streaming]
+
+  britbox:
+    variables: {key: britbox, weight: 30}
+    template: [name: standard, name: streaming]
+
+  BET+:
+    variables: {key: bet, weight: 20}
+    template: [name: standard, name: streaming]
+
+  hayu:
+    variables: {key: hayu, weight: 10}
+    template: [name: standard, name: streaming]

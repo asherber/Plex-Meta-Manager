@@ -1,6 +1,7 @@
 from datetime import datetime
 from modules import util
 from modules.util import Failed
+from json import JSONDecodeError
 
 logger = util.logger
 
@@ -56,8 +57,7 @@ class OMDb:
             omdb_dict, expired = self.config.Cache.query_omdb(imdb_id, self.expiration)
             if omdb_dict and expired is False:
                 return OMDbObj(imdb_id, omdb_dict)
-        if self.config.trace_mode:
-            logger.debug(f"IMDb ID: {imdb_id}")
+        logger.trace(f"IMDb ID: {imdb_id}")
         response = self.config.get(base_url, params={"i": imdb_id, "apikey": self.apikey})
         if response.status_code < 400:
             omdb = OMDbObj(imdb_id, response.json())
@@ -65,7 +65,10 @@ class OMDb:
                 self.config.Cache.update_omdb(expired, omdb, self.expiration)
             return omdb
         else:
-            error = response.json()['Error']
-            if error == "Request limit reached!":
-                self.limit = True
+            try:
+                error = response.json()['Error']
+                if error == "Request limit reached!":
+                    self.limit = True
+            except JSONDecodeError:
+                error = f"Invalid JSON: {response.content}"
             raise Failed(f"OMDb Error: {error}")

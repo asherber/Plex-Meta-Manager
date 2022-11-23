@@ -1,0 +1,59 @@
+##############################################################################
+#                           Streaming Collections                            #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#      https://metamanager.wiki/en/latest/defaults/both/streaming.html       #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: "03"
+
+translations:
+  pmm: translations
+
+collections:
+  Streaming Collections:
+    template:
+      - name: separator
+        separator: streaming
+      - name: translation
+        key_name: Streaming
+        translation_key: separator
+
+dynamic_collections:
+  Streaming:
+    type: custom
+    data:
+      all4: All 4
+      appletv: Apple TV+
+      bet: BET+
+      britbox: BritBox
+      crunchyroll: Crunchyroll
+      disney: Disney+
+      hayu: hayu
+      hbomax: HBO Max
+      hulu: Hulu
+      netflix: Netflix
+      now: NOW
+      paramount: Paramount+
+      peacock: Peacock
+      amazon: Prime Video
+      showtime: Showtime
+    title_format: <<key_name>> <<library_typeU>>s
+    template:
+      - mdb_smart
+      - translation
+      - shared
+      - arr
+    template_variables:
+      mdblist_list:
+        default: https://mdblist.com/lists/plexmetamanager/<<key>>-<<library_type>>s
+      image:
+        default: streaming/<<key_name_encoded>>
+      allowed_libraries:
+        hayu: show
+        crunchyroll: show
+      translation_key:
+        default: streaming

@@ -1,8 +1,8 @@
-# Library & Playlist Files Attributes
+# Library Attributes
 
 ## Library Attributes
 
-Within the [Configuration File](configuration), the `libraries:` attribute specifies the Plex libraries that the user wants Plex Meta Manager to act on.
+Within the [Configuration File](configuration), the `libraries` attribute specifies the Plex libraries that the user wants Plex Meta Manager to act on.
 
 Attributes are used to instruct Plex Meta Manager what actions to take, such as "load the following libraries" or "execute the following Collection Definition files". These attributes can be specified individually per library, or can be inherited from the global value if it has been set. If an attribute is specified at both the library and global level, then the library level attribute will take priority.
 
@@ -23,18 +23,18 @@ libraries:
   Movies:
     metadata_path:
       - file: config/Movies.yml
-      - git: meisnate12/MovieCharts
-      - git: meisnate12/Studios
-      - git: meisnate12/IMDBGenres
-      - git: meisnate12/People
+      - pmm: imdb
+      - pmm: studio
+      - pmm: genre
+      - pmm: actor
     operations:
       mass_critic_rating_update: tmdb
       split_duplicates: true
   TV Shows:
     metadata_path:
       - file: config/TV Shows.yml
-      - git: meisnate12/ShowCharts
-      - git: meisnate12/Networks
+      - pmm: tmdb
+      - pmm: network
     overlay_path:
       - remove_overlays: false
       - file: config/Overlays.yml
@@ -45,12 +45,12 @@ libraries:
       token: ####################
     metadata_path:
       - file: config/TV Shows.yml
-      - git: meisnate12/ShowCharts
-      - git: meisnate12/Networks
+      - pmm: tmdb
+      - pmm: network
   Anime:
     metadata_path:
       - file: config/Anime.yml
-      - git: meisnate12/AnimeCharts
+      - pmm: myanimelist
     radarr:
       url: http://192.168.1.45:7878
       token: ################################
@@ -78,20 +78,20 @@ radarr:
 
 The available attributes for each library are as follows:
 
-| Attribute                                   | Values                                                                                                |                Default                |            Required             |
-|:--------------------------------------------|:------------------------------------------------------------------------------------------------------|:-------------------------------------:|:-------------------------------:|
-| [`library_name`](#library-name)             | Library name (required only when trying to use multiple libraries with the same name)                 |          Base Attribute Name          |            &#10060;             |
-| [`metadata_path`](#metadata-path)           | Location of Metadata YAML files                                                                       |    `/config/<<MAPPING_NAME>>.yml`     |            &#10060;             |
-| [`overlay_path`](#overlay-path)             | Location of Overlay YAML files                                                                        |                 None                  |            &#10060;             |
-| [`report_path`](#report-path)               | Location to create the YAML file listing added, removed, filtered, and missing items for this library | `/config/<<MAPPING_NAME>>_report.yml` |            &#10060;             |
-| [`template_variables`](#template-variables) | Library template variables to be applied to every Metadata and Overlay file run.                      |                  N/A                  |            &#10060;             |
-| [`schedule`](../metadata/details/schedule)  | Use any [schedule option](../metadata/details/schedule) to control when this library is run.          |                 daily                 |            &#10060;             |
-| [`operations`](operations)                  | Library Operations to run                                                                             |                  N/A                  |            &#10060;             |
-| [`settings`](settings)                      | Any `setting` attribute that overrides a global value                                                 |                global                 |            &#10060;             |
-| [`plex`](plex)                              | Any `plex` attribute that overrides a global value                                                    |                global                 | &#9989; Either here or globally |
-| [`radarr`](radarr)                          | Any `radarr` attribute that overrides a global value                                                  |                global                 |            &#10060;             |
-| [`sonarr`](sonarr)                          | Any `sonarr` attribute that overrides a global value                                                  |                global                 |            &#10060;             |
-| [`tautulli`](tautulli)                      | Any `tautulli` attribute that overrides a global value                                                |                global                 |            &#10060;             |
+| Attribute                                           | Values                                                                                                |                Default                |            Required             |
+|:----------------------------------------------------|:------------------------------------------------------------------------------------------------------|:-------------------------------------:|:-------------------------------:|
+| [`library_name`](#library-name)                     | Library name (required only when trying to use multiple libraries with the same name)                 |          Base Attribute Name          |            &#10060;             |
+| [`metadata_path`](#metadata-path)                   | Location of Metadata YAML files                                                                       |    `/config/<<MAPPING_NAME>>.yml`     |            &#10060;             |
+| [`overlay_path`](#overlay-path)                     | Location of Overlay YAML files                                                                        |                 None                  |            &#10060;             |
+| [`report_path`](#report-path)                       | Location to create the YAML file listing added, removed, filtered, and missing items for this library | `/config/<<MAPPING_NAME>>_report.yml` |            &#10060;             |
+| [`template_variables`](#library-template-variables) | Library template variables to be applied to every Metadata and Overlay file run.                      |                  N/A                  |            &#10060;             |
+| [`schedule`](../metadata/details/schedule)          | Use any [schedule option](../metadata/details/schedule) to control when this library is run.          |                 daily                 |            &#10060;             |
+| [`operations`](operations)                          | Library Operations to run                                                                             |                  N/A                  |            &#10060;             |
+| [`settings`](settings)                              | Any `setting` attribute that overrides a global value                                                 |                global                 |            &#10060;             |
+| [`plex`](plex)                                      | Any `plex` attribute that overrides a global value                                                    |                global                 | &#9989; Either here or globally |
+| [`radarr`](radarr)                                  | Any `radarr` attribute that overrides a global value                                                  |                global                 |            &#10060;             |
+| [`sonarr`](sonarr)                                  | Any `sonarr` attribute that overrides a global value                                                  |                global                 |            &#10060;             |
+| [`tautulli`](tautulli)                              | Any `tautulli` attribute that overrides a global value                                                |                global                 |            &#10060;             |
 
 ### Library Name
 
@@ -121,15 +121,15 @@ plex:
 
 ### Metadata Path
 
-The `metadata_path` attribute is used to define [Metadata Files](../metadata/metadata) by specifying the path type and path of the files that will be executed against the parent library. See [Path Types](paths) for how to define them. 
+The `metadata_path` attribute is used to define [Metadata Files](../metadata/metadata) by specifying the path type and path of the files that will be executed against the parent library. See [Path Types](paths) for how to define them.
 
 ```yaml
 libraries:
   TV Shows:
     metadata_path:
       - file: config/TV Shows.yml
-      - git: meisnate12/ShowCharts
-      - git: meisnate12/Networks
+      - pmm: tmdb
+      - pmm: network
 ```
 
 By default, when `metadata_path` is missing the script will look within the root PMM directory for a metadata file called `<MAPPING_NAME>.yml`. In this example, Plex Meta Manager will look for a file named `TV Shows.yml`.
@@ -141,7 +141,7 @@ libraries:
 
 ### Overlay Path
 
-The `overlay_path` attribute is used to define [Overlay Files](../metadata/metadata) by specifying the path type and path of the files that will be executed against the parent library. See [Path Types](paths) for how to define them. 
+The `overlay_path` attribute is used to define [Overlay Files](../metadata/overlay) by specifying the path type and path of the files that will be executed against the parent library. See [Path Types](paths) for how to define them.
 
 ```yaml
 libraries:
@@ -166,7 +166,7 @@ libraries:
       - file: config/Overlays.yml
 ```
 
-#### Reapply Overlays 
+#### Reapply Overlays
 
 You can reapply overlays from a library by adding `reapply_overlays: true` to `overlay_path`. This will reapply overlays to every item in your library.
 
@@ -180,7 +180,7 @@ libraries:
       - file: config/Overlays.yml
 ```
 
-#### Reset Overlays 
+#### Reset Overlays
 
 You can reset overlays from a library by adding `reset_overlays` to `overlay_path` and setting it to either `tmdb` or `plex` depending on where you want to source the images from. This will use the reset image when overlaying items in your library.
 
@@ -191,6 +191,22 @@ libraries:
       - file: config/TV Shows.yml
     overlay_path:
       - reset_overlays: plex
+      - file: config/Overlays.yml
+```
+
+#### Schedule Overlays
+
+You can schedule all overlays from a library by adding `schedule` to `overlay_path` and setting it to [Any Schedule Option](../metadata/details/schedule).
+
+**You cannot schedule individual Overlay Files.** 
+
+```yaml
+libraries:
+  TV Shows:
+    metadata_path:
+      - file: config/TV Shows.yml
+    overlay_path:
+      - schedule: weekly(sunday)
       - file: config/Overlays.yml
 ```
 
@@ -216,7 +232,7 @@ libraries:
     report_path: /config/reports/Movies.yml
 ```
 
-### Template Variables
+### Library Template Variables
 
 Library template variables to be applied to every Metadata and Overlay file run.
 
@@ -224,17 +240,5 @@ Library template variables to be applied to every Metadata and Overlay file run.
 libraries:
   Movies:
     template_variables:
-      collection_mode: true
-```
-
-## Playlist Files Attribute
-
-As playlists are not tied to one specific library and can combine media from multiple libraries, they require their own special [Playlist Files](../metadata/metadata) to work.
-
-You can define Playlist Files by using `playlist_files` mapper by specifying the path type and path of the files that will be executed. See [Path Types](paths) for how to define them.
-
-```yaml
-playlist_files:
-  - file: config/playlists.yml       
-  - git: meisnate12/Playlists
+      collection_mode: hide_items
 ```

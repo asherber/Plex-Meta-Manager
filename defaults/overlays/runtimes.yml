@@ -1,0 +1,29 @@
+##############################################################################
+#                              Runtimes Overlay                              #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#     https://metamanager.wiki/en/latest/defaults/overlays/runtimes.html     #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    conditionals:
+      overlay_level:
+        conditions:
+          - library_type: show
+            value: episode
+    horizontal_offset: 15
+    horizontal_align: right
+    vertical_offset: 30
+    vertical_align: bottom
+    back_color: "#00000099"
+    back_width: 600
+    back_height: 105
+    final_name: "text(Runtime: <<runtimeH>>h <<runtimeM>>m)"
+
+overlays:
+  runtime_info:
+    plex_all: true
+    template:
+      name: standard

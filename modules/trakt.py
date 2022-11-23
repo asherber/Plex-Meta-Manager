@@ -123,9 +123,12 @@ class Trakt:
             logger.info(f"Navigate to: {url}")
             logger.info("If you get an OAuth error your client_id or client_secret is invalid")
             webbrowser.open(url, new=2)
-            try:                                pin = util.logger_input("Trakt pin (case insensitive)", timeout=300).strip()
-            except TimeoutExpired:              raise Failed("Input Timeout: Trakt pin required.")
-        if not pin:                         raise Failed("Trakt Error: Trakt pin required.")
+            try:
+                pin = util.logger_input("Trakt pin (case insensitive)", timeout=300).strip()
+            except TimeoutExpired:
+                raise Failed("Input Timeout: Trakt pin required.")
+        if not pin:
+            raise Failed("Trakt Error: Trakt pin required.")
         json = {
             "code": pin,
             "client_id": self.client_id,
@@ -135,8 +138,11 @@ class Trakt:
         }
         response = self.config.post(f"{base_url}/oauth/token", json=json, headers={"Content-Type": "application/json"})
         if response.status_code != 200:
-            raise Failed("Trakt Error: Invalid trakt pin. If you're sure you typed it in correctly your client_id or client_secret may be invalid")
-        elif not self._save(response.json()):
+            raise Failed(f"Trakt Error: ({response.status_code}) {response.reason}")
+            #raise Failed("Trakt Error: Invalid trakt pin. If you're sure you typed it in correctly your client_id or client_secret may be invalid")
+        response_json = response.json()
+        logger.trace(response_json)
+        if not self._save(response_json):
             raise Failed("Trakt Error: New Authorization Failed")
 
     def _check(self, authorization=None):
@@ -151,6 +157,8 @@ class Trakt:
         response = self.config.get(f"{base_url}/users/settings", headers=headers)
         if response.status_code == 423:
             raise Failed("Trakt Error: Account is Locked please Contact Trakt Support")
+        if response.status_code != 200:
+            logger.debug(f"Trakt Error: ({response.status_code}) {response.reason}")
         return response.status_code == 200
 
     def _refresh(self):
@@ -201,12 +209,11 @@ class Trakt:
             params = {}
         pages = 1
         current = 1
-        if self.config.trace_mode:
-            logger.debug(f"URL: {base_url}{url}")
-            if params:
-                logger.debug(f"Params: {params}")
-            if json:
-                logger.debug(f"JSON: {json}")
+        logger.trace(f"URL: {base_url}{url}")
+        if params:
+            logger.trace(f"Params: {params}")
+        if json:
+            logger.trace(f"JSON: {json}")
         while current <= pages:
             if pages > 1:
                 params["page"] = current
@@ -219,9 +226,8 @@ class Trakt:
             if response.status_code >= 400:
                 raise Failed(f"({response.status_code}) {response.reason}")
             json_data = response.json()
-            if self.config.trace_mode:
-                logger.debug(f"Headers: {response.headers}")
-                logger.debug(f"Response: {json_data}")
+            logger.trace(f"Headers: {response.headers}")
+            logger.trace(f"Response: {json_data}")
             if isinstance(json_data, dict):
                 return json_data
             else:

@@ -8,7 +8,7 @@ from plexapi import utils
 from plexapi.audio import Artist, Track, Album
 from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 from plexapi.collection import Collection
-from plexapi.library import Role
+from plexapi.library import Role, FilterChoice
 from plexapi.playlist import Playlist
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Show, Season, Episode
@@ -18,11 +18,12 @@ from xml.etree.ElementTree import ParseError
 
 logger = util.logger
 
-builders = ["plex_all", "plex_pilots", "plex_collectionless", "plex_search"]
+builders = ["plex_all", "plex_watchlist", "plex_pilots", "plex_collectionless", "plex_search"]
 library_types = ["movie", "show", "artist"]
 search_translation = {
     "episode_title": "episode.title",
     "network": "show.network",
+    "edition": "editionTitle",
     "critic_rating": "rating",
     "audience_rating": "audienceRating",
     "episode_critic_rating": "episode.rating",
@@ -51,6 +52,8 @@ search_translation = {
     "unplayed_episodes": "show.unwatchedLeaves",
     "season_collection": "season.collection",
     "episode_collection": "episode.collection",
+    "season_label": "season.label",
+    "episode_label": "episode.label",
     "artist_title": "artist.title",
     "artist_user_rating": "artist.userRating",
     "artist_genre": "artist.genre",
@@ -61,6 +64,7 @@ search_translation = {
     "artist_added": "artist.addedAt",
     "artist_last_played": "artist.lastViewedAt",
     "artist_unmatched": "artist.unmatched",
+    "artist_label": "artist.label",
     "album_title": "album.title",
     "album_year": "album.year",
     "album_decade": "album.decade",
@@ -90,7 +94,8 @@ search_translation = {
     "track_last_rated": "track.lastRatedAt",
     "track_added": "track.addedAt",
     "track_trash": "track.trash",
-    "track_source": "track.source"
+    "track_source": "track.source",
+    "track_label": "track.label"
 }
 show_translation = {
     "title": "show.title",
@@ -151,9 +156,11 @@ attribute_translation = {
     "episode_number": "episodeNumber",
     "season_number": "seasonNumber",
     "original_title": "originalTitle",
+    "edition": "editionTitle",
     "runtime": "duration",
     "season_title": "parentTitle",
-    "episode_count": "leafCount"
+    "episode_count": "leafCount",
+    "versions": "media"
 }
 method_alias = {
     "actors": "actor", "role": "actor", "roles": "actor",
@@ -246,11 +253,14 @@ movie_only_searches = [
     "country", "country.not", "director", "director.not", "producer", "producer.not", "writer", "writer.not",
     "decade", "duplicate", "unplayed", "progress",
     "duration.gt", "duration.gte", "duration.lt", "duration.lte"
+    "edition", "edition.not", "edition.is", "edition.isnot", "edition.begins", "edition.ends"
 ]
 show_only_searches = [
     "network", "network.not",
     "season_collection", "season_collection.not",
     "episode_collection", "episode_collection.not",
+    "season_label", "season_label.not",
+    "episode_label", "episode_label.not",
     "episode_title", "episode_title.not", "episode_title.is", "episode_title.isnot", "episode_title.begins", "episode_title.ends",
     "episode_added", "episode_added.not", "episode_added.before", "episode_added.after",
     "episode_air_date", "episode_air_date.not",
@@ -263,7 +273,7 @@ show_only_searches = [
     "episode_year", "episode_year.not", "episode_year.gt", "episode_year.gte", "episode_year.lt", "episode_year.lte",
     "unplayed_episodes", "episode_unplayed", "episode_duplicate", "episode_progress", "episode_unmatched", "show_unmatched",
 ]
-string_attributes = ["title", "studio", "episode_title", "artist_title", "album_title", "album_record_label", "track_title"]
+string_attributes = ["title", "studio", "edition", "episode_title", "artist_title", "album_title", "album_record_label", "track_title"]
 string_modifiers = ["", ".not", ".is", ".isnot", ".begins", ".ends"]
 boolean_attributes = [
     "hdr", "unmatched", "duplicate", "unplayed", "progress", "trash", "unplayed_episodes", "episode_unplayed",
@@ -286,10 +296,10 @@ float_attributes = [
 float_modifiers = number_modifiers + [".rated"]
 search_display = {"added": "Date Added", "release": "Release Date", "hdr": "HDR", "progress": "In Progress", "episode_progress": "Episode In Progress"}
 tag_attributes = [
-    "actor", "audio_language", "collection", "content_rating", "country", "director", "genre", "label", "network",
-    "producer", "resolution", "studio", "subtitle_language", "writer", "season_collection", "episode_collection",
-    "artist_genre", "artist_collection", "artist_country", "artist_mood", "artist_style", "album_genre", "album_mood",
-    "album_style", "album_format", "album_type", "album_collection", "album_source", "album_label", "track_mood", "track_source"
+    "actor", "audio_language", "collection", "content_rating", "country", "director", "genre", "label", "season_label", "episode_label", "network",
+    "producer", "resolution", "studio", "subtitle_language", "writer", "season_collection", "episode_collection", "edition",
+    "artist_genre", "artist_collection", "artist_country", "artist_mood", "artist_label", "artist_style", "album_genre", "album_mood",
+    "album_style", "album_format", "album_type", "album_collection", "album_source", "album_label", "track_mood", "track_source", "track_label"
 ]
 tag_modifiers = ["", ".not", ".regex"]
 no_not_mods = ["resolution", "decade", "album_decade"]
@@ -409,6 +419,12 @@ sort_types = {
     "artist": ("title.asc", 8, artist_sorts),
     "album": ("title.asc", 9, album_sorts),
     "track": ("title.asc", 10, track_sorts)
+}
+watchlist_sorts = {
+    "added.asc": "watchlistedAt:asc", "added.desc": "watchlistedAt:desc",
+    "title.asc": "titleSort:asc", "title.desc": "titleSort:desc",
+    "release.asc": "originallyAvailableAt:asc", "release.desc": "originallyAvailableAt:desc",
+    "critic_rating.asc": "rating:asc", "critic_rating.desc": "rating:desc",
 }
 
 class Plex(Library):
@@ -539,6 +555,10 @@ class Plex(Library):
     def query_data(self, method, data):
         return method(data)
 
+    @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
+    def tag_edit(self, item, attribute, data, locked=True, remove=False):
+        return item.editTags(attribute, data, locked=locked, remove=remove)
+
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
     def query_collection(self, item, collection, locked=True, add=True):
         if add:
@@ -575,6 +595,7 @@ class Plex(Library):
                                    includeGeolocation=False, includeLoudnessRamps=False, includeMarkers=False,
                                    includeOnDeck=False, includePopularLeaves=False, includeRelated=False,
                                    includeRelatedCount=0, includeReviews=False, includeStations=False)
+                cached_item._initpath = cached_item._details_key
                 self.cached_items[cached_item.ratingKey] = (cached_item, True)
             return cached_item
         except (BadRequest, NotFound) as e:
@@ -611,6 +632,13 @@ class Plex(Library):
         else:
             item.uploadPoster(filepath=image)
 
+    @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
+    def upload_background(self, item, image, url=False):
+        if url:
+            item.uploadArt(url=image)
+        else:
+            item.uploadArt(filepath=image)
+
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
     def get_actor_id(self, name):
         results = self.Plex.hubSearch(name)
@@ -639,7 +667,24 @@ class Plex(Library):
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
     def get_tags(self, tag):
-        return self.Plex.listFilterChoices(field=tag)
+        if isinstance(tag, str):
+            match = re.match(r'(?:([a-zA-Z]*)\.)?([a-zA-Z]+)', tag)
+            if not match:
+                raise BadRequest(f'Invalid filter field: {tag}')
+            _libtype, tag = match.groups()
+            libtype = _libtype or self.Plex.TYPE
+            try:
+                tag = next(f for f in self.Plex.listFilters(libtype) if f.filter == tag)
+            except StopIteration:
+                availableFilters = [f.filter for f in self.Plex.listFilters(libtype)]
+                raise NotFound(f'Unknown filter field "{tag}" for libtype "{libtype}". '
+                               f'Available filters: {availableFilters}') from None
+        items = self.Plex.findItems(self.Plex._server.query(tag.key), FilterChoice)
+        if tag.key.endswith("/collection?type=4"):
+            keys = [k.key for k in items]
+            keys.extend([k.key for k in self.Plex.findItems(self.Plex._server.query(f"{tag.key[:-1]}3"), FilterChoice)])
+            items = [i for i in self.Plex.findItems(self.Plex._server.query(tag.key[:-7]), FilterChoice) if i.key not in keys]
+        return items
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
     def _query(self, key, post=False, put=False):
@@ -777,11 +822,11 @@ class Plex(Library):
         except NotFound:
             raise Failed(f"Plex Error: Playlist {title} not found")
 
-    def get_collection(self, data):
-        if isinstance(data, int):
-            return self.fetchItem(data)
-        elif isinstance(data, Collection):
+    def get_collection(self, data, force_search=False):
+        if isinstance(data, Collection):
             return data
+        elif isinstance(data, int) and not force_search:
+            return self.fetchItem(data)
         else:
             cols = self.search(title=str(data), libtype="collection")
             for d in cols:
@@ -796,17 +841,77 @@ class Plex(Library):
     def validate_collections(self, collections):
         valid_collections = []
         for collection in collections:
-            try:                                        valid_collections.append(self.get_collection(collection))
-            except Failed as e:                         logger.error(e)
+            try:
+                valid_collections.append(self.get_collection(collection))
+            except Failed as e:
+                logger.error(e)
         if len(valid_collections) == 0:
             raise Failed(f"Collection Error: No valid Plex Collections in {collections}")
         return valid_collections
 
-    def get_rating_keys(self, method, data):
+    def get_watchlist(self, sort=None, is_playlist=False):
+        if is_playlist:
+            libtype = None
+        elif self.is_movie:
+            libtype = "movie"
+        else:
+            libtype = "show"
+        watchlist = self.account.watchlist(sort=watchlist_sorts[sort], libtype=libtype)
+        ids = []
+        for item in watchlist:
+            tmdb_id = []
+            tvdb_id = []
+            imdb_id = []
+            if self.config.Cache:
+                cache_id, _, media_type, _ = self.config.Cache.query_guid_map(item.guid)
+                if cache_id:
+                    ids.extend([(t_id, "tmdb" if "movie" in media_type else "tvdb") for t_id in cache_id])
+                    continue
+            try:
+                fin = False
+                for guid_tag in item.guids:
+                    url_parsed = requests.utils.urlparse(guid_tag.id)
+                    if url_parsed.scheme == "tvdb":
+                        if isinstance(item, Show):
+                            ids.append((int(url_parsed.netloc), "tvdb"))
+                            fin = True
+                    elif url_parsed.scheme == "imdb":
+                        imdb_id.append(url_parsed.netloc)
+                    elif url_parsed.scheme == "tmdb":
+                        if isinstance(item, Movie):
+                            ids.append((int(url_parsed.netloc), "tmdb"))
+                            fin = True
+                        tmdb_id.append(int(url_parsed.netloc))
+                    if fin:
+                        break
+                if fin:
+                    continue
+            except requests.exceptions.ConnectionError:
+                continue
+            if imdb_id and not tmdb_id:
+                for imdb in imdb_id:
+                    tmdb, tmdb_type = self.config.Convert.imdb_to_tmdb(imdb)
+                    if tmdb:
+                        tmdb_id.append(tmdb)
+            if tmdb_id and isinstance(item, Show) and not tvdb_id:
+                for tmdb in tmdb_id:
+                    tvdb = self.config.Convert.tmdb_to_tvdb(tmdb)
+                    if tvdb:
+                        tvdb_id.append(tvdb)
+            if isinstance(item, Show) and tvdb_id:
+                ids.extend([(t_id, "tvdb") for t_id in tvdb_id])
+            if isinstance(item, Movie) and tmdb_id:
+                ids.extend([(t_id, "tmdb") for t_id in tmdb_id])
+        return ids
+
+    def get_rating_keys(self, method, data, is_playlist=False):
         items = []
         if method == "plex_all":
             logger.info(f"Processing Plex All {data.capitalize()}s")
             items = self.get_all(builder_level=data)
+        elif method == "plex_watchlist":
+            logger.info(f"Processing Plex Watchlist")
+            return self.get_watchlist(sort=data, is_playlist=is_playlist)
         elif method == "plex_pilots":
             logger.info(f"Processing Plex Pilot {data.capitalize()}s")
             items = []
@@ -817,8 +922,7 @@ class Plex(Library):
                     logger.warning(f"Plex Warning: {item.title} has no Season 1 Episode 1 ")
         elif method == "plex_search":
             logger.info(f"Processing {data[1]}")
-            if self.config.trace_mode:
-                logger.debug(data[2])
+            logger.trace(data[2])
             items = self.get_filter_items(data[2])
         elif method == "plex_collectionless":
             good_collections = []
@@ -860,10 +964,7 @@ class Plex(Library):
             raise Failed(f"Plex Error: Method {method} not supported")
         if not items:
             raise Failed("Plex Error: No Items found in Plex")
-        ids = [(item.ratingKey, "ratingKey") for item in items]
-        logger.debug("")
-        logger.debug(f"{len(ids)} Keys Found: {ids}")
-        return ids
+        return [(item.ratingKey, "ratingKey") for item in items]
 
     def get_collection_items(self, collection, smart_label_collection):
         if smart_label_collection:
@@ -890,10 +991,12 @@ class Plex(Library):
     def get_tvdb_from_map(self, item):
         return self.show_rating_key_map[item.ratingKey] if item.ratingKey in self.show_rating_key_map else None
 
-    def search_item(self, data, year=None):
+    def search_item(self, data, year=None, edition=None):
         kwargs = {}
         if year is not None:
             kwargs["year"] = year
+        if edition is not None:
+            kwargs["editionTitle"] = edition
         for d in self.search(title=str(data), **kwargs):
             if d.title == data:
                 return d
@@ -909,12 +1012,12 @@ class Plex(Library):
             logger.stacktrace()
             return False
 
-    def edit_tags(self, attr, obj, add_tags=None, remove_tags=None, sync_tags=None, do_print=True):
+    def edit_tags(self, attr, obj, add_tags=None, remove_tags=None, sync_tags=None, do_print=True, locked=True, is_locked=None):
         display = ""
         final = ""
         key = attribute_translation[attr] if attr in attribute_translation else attr
+        actual = "similar" if attr == "similar_artist" else attr
         attr_display = attr.replace("_", " ").title()
-        attr_call = attr_display.replace(" ", "")
         if add_tags or remove_tags or sync_tags is not None:
             _add_tags = add_tags if add_tags else []
             _remove_tags = remove_tags if remove_tags else []
@@ -927,17 +1030,22 @@ class Plex(Library):
             _add = [t for t in _add_tags + _sync_tags if t not in _item_tags]
             _remove = [t for t in _item_tags if (sync_tags is not None and t not in _sync_tags) or t in _remove_tags]
             if _add:
-                self.query_data(getattr(obj, f"add{attr_call}"), _add)
+                self.tag_edit(obj, actual, _add, locked=locked)
                 display += f"+{', +'.join(_add)}"
             if _remove:
-                self.query_data(getattr(obj, f"remove{attr_call}"), _remove)
+                self.tag_edit(obj, actual, _remove, locked=locked, remove=True)
+                if display:
+                    display += ", "
                 display += f"-{', -'.join(_remove)}"
+            if is_locked is not None and not display and is_locked != locked:
+                self.edit_query(obj, {f"{actual}.locked": 1 if locked else 0})
+                display = "Locked" if locked else "Unlocked"
             final = f"{obj.title[:25]:<25} | {attr_display} | {display}" if display else display
             if do_print and final:
                 logger.info(final)
         return final[28:] if final else final
 
-    def item_images(self, item, group, alias, asset_location=None, title=None, image_name=None, folder_name=None):
+    def item_images(self, item, group, alias, initial=False, asset_location=None, title=None, image_name=None, folder_name=None):
         if title is None:
             title = item.title
         posters, backgrounds = util.get_image_dicts(group, alias)
@@ -947,7 +1055,7 @@ class Plex(Library):
                 posters["asset_directory"] = asset_poster
             if asset_background:
                 backgrounds["asset_directory"] = asset_background
-            if asset_location is None:
+            if asset_location is None or initial:
                 asset_location = item_dir
         except Failed as e:
             logger.warning(e)
@@ -1059,9 +1167,10 @@ class Plex(Library):
                     path_test = path_test.replace("\\", "/")
                 folder_name = os.path.basename(os.path.dirname(path_test) if isinstance(starting, Movie) else path_test)
             elif isinstance(item, (Collection, Playlist)):
-                folder_name, _ = util.validate_filename(item.title)
+                folder_name = item.title
             else:
-                folder_name, _ = util.validate_filename(item)
+                folder_name = item
+            folder_name, _ = util.validate_filename(folder_name)
 
         if not self.asset_folders:
             file_name = folder_name if file_name == "poster" else f"{folder_name}_{file_name}"
@@ -1088,14 +1197,13 @@ class Plex(Library):
                     break
             if not item_asset_directory:
                 if self.asset_folders:
-                    extra = ""
                     if self.create_asset_folders and asset_directory:
                         item_asset_directory = os.path.join(asset_directory[0], folder_name)
                         os.makedirs(item_asset_directory, exist_ok=True)
-                        extra = f"\nAsset Directory Created: {item_asset_directory}"
-                    raise Failed(f"Asset Warning: Unable to find asset folder: '{folder_name}{extra}'")
-                else:
-                    return None, None, item_asset_directory, folder_name
+                        logger.warning(f"Asset Warning: Asset Directory Not Found and Created: {item_asset_directory}")
+                    else:
+                        raise Failed(f"Asset Warning: Unable to find asset folder: '{folder_name}'")
+                return None, None, item_asset_directory, folder_name
 
         poster_filter = os.path.join(item_asset_directory, f"{file_name}.*")
         background_filter = os.path.join(item_asset_directory, "background.*" if file_name == "poster" else f"{file_name}_background.*")
@@ -1373,19 +1481,15 @@ class Plex(Library):
                 if failures > failure_threshold:
                     return False
         elif filter_attr in builder.number_filters or modifier in [".gt", ".gte", ".lt", ".lte", ".count_gt", ".count_gte", ".count_lt", ".count_lte"]:
-            divider = 60000 if filter_attr == "duration" else 1
             test_number = []
-            if filter_attr in ["resolution", "audio_codec", "audio_profile", "video_codec", "video_profile"]:
-                for media in item.media:
-                    attr = getattr(media, filter_actual)
-                    if attr and attr not in test_number:
-                        test_number.append(attr)
-            elif filter_attr in ["channels", "height", "width", "aspect"]:
+            if filter_attr in ["channels", "height", "width", "aspect"]:
                 test_number = 0
                 for media in item.media:
                     attr = getattr(media, filter_actual)
                     if attr and attr > test_number:
                         test_number = attr
+            elif filter_attr == "versions":
+                test_number = len(item.media)
             elif filter_attr == "audio_language":
                 for media in item.media:
                     for part in media.parts:
@@ -1394,12 +1498,14 @@ class Plex(Library):
                 for media in item.media:
                     for part in media.parts:
                         test_number.extend([s.language for s in part.subtitleStreams()])
+            elif filter_attr == "duration":
+                test_number = getattr(item, filter_actual) / 60000
             else:
                 test_number = getattr(item, filter_actual)
             if modifier in [".count_gt", ".count_gte", ".count_lt", ".count_lte"]:
                 test_number = len(test_number) if test_number else 0
                 modifier = f".{modifier[7:]}"
-            if test_number is None or util.is_number_filter(test_number / divider, modifier, filter_data):
+            if test_number is None or util.is_number_filter(test_number, modifier, filter_data):
                 return False
         else:
             attrs = []

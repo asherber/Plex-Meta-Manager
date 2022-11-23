@@ -12,35 +12,27 @@ class Letterboxd:
         self.config = config
 
     def _parse_page(self, list_url, language):
-        list_url = list_url.replace("https://letterboxd.com/films", "https://letterboxd.com/films/ajax")
+        if "ajax" not in list_url:
+            list_url = list_url.replace("https://letterboxd.com/films", "https://letterboxd.com/films/ajax")
+        logger.trace(f"URL: {list_url}")
         response = self.config.get_html(list_url, headers=util.header(language))
-        letterboxd_ids = response.xpath(
-            "//li[contains(@class, 'poster-container') or contains(@class, 'film-detail')]/div/@data-film-id")
+        letterboxd_ids = response.xpath("//li[contains(@class, 'poster-container') or contains(@class, 'film-detail')]/div/@data-film-id")
         items = []
         for letterboxd_id in letterboxd_ids:
             slugs = response.xpath(f"//div[@data-film-id='{letterboxd_id}']/@data-film-slug")
-            comments = response.xpath(
-                f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']/div/p/text()")
-            ratings = response.xpath(
-                f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']//span[contains(@class, 'rating')]/@class")
-            years = response.xpath(
-                f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']/h2/small/a/text()")
+            comments = response.xpath(f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']/div/p/text()")
+            ratings = response.xpath(f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']//span[contains(@class, 'rating')]/@class")
+            years = response.xpath(f"//div[@data-film-id='{letterboxd_id}']/parent::li/div[@class='film-detail-content']/h2/small/a/text()")
             rating = None
             if ratings:
                 match = re.search("rated-(\\d+)", ratings[0])
                 if match:
                     rating = int(match.group(1))
-            items.append((letterboxd_id, slugs[0],
-                          int(years[0]) if years else None,
-                          comments[0] if comments else None,
-                          rating
-                          ))
+            items.append((letterboxd_id, slugs[0], int(years[0]) if years else None, comments[0] if comments else None, rating))
         next_url = response.xpath("//a[@class='next']/@href")
         return items, next_url
 
     def _parse_list(self, list_url, limit, language):
-        if self.config.trace_mode:
-            logger.debug(f"URL: {list_url}")
         items, next_url = self._parse_page(list_url, language)
         while len(next_url) > 0:
             time.sleep(2)
@@ -51,8 +43,7 @@ class Letterboxd:
         return items
 
     def _tmdb(self, letterboxd_url, language):
-        if self.config.trace_mode:
-            logger.debug(f"URL: {letterboxd_url}")
+        logger.trace(f"URL: {letterboxd_url}")
         response = self.config.get_html(letterboxd_url, headers=util.header(language))
         ids = response.xpath("//a[@data-track-action='TMDb']/@href")
         if len(ids) > 0 and ids[0]:
@@ -62,8 +53,7 @@ class Letterboxd:
         raise Failed(f"Letterboxd Error: TMDb Movie ID not found at {letterboxd_url}")
 
     def get_list_description(self, list_url, language):
-        if self.config.trace_mode:
-            logger.debug(f"URL: {list_url}")
+        logger.trace(f"URL: {list_url}")
         response = self.config.get_html(list_url, headers=util.header(language))
         descriptions = response.xpath("//meta[@property='og:description']/@content")
         return descriptions[0] if len(descriptions) > 0 and len(descriptions[0]) > 0 else None

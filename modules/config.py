@@ -1,4 +1,4 @@
-import base64, os, requests
+import base64, os, re, requests
 from datetime import datetime
 from lxml import html
 from modules import util, radarr, sonarr, operations
@@ -33,12 +33,39 @@ from retrying import retry
 logger = util.logger
 
 sync_modes = {"append": "Only Add Items to the Collection or Playlist", "sync": "Add & Remove Items from the Collection or Playlist"}
-mass_genre_options = {"tmdb": "Use TMDb Metadata", "imdb": "Use IMDb Rating", "omdb": "Use IMDb Metadata through OMDb", "tvdb": "Use TVDb Metadata", "anidb": "Use AniDB Tag Metadata"}
-mass_content_options = {"omdb": "Use IMDb Metadata through OMDb", "mdb": "Use MdbList Metadata", "mdb_commonsense": "Use Commonsense Rating through MDbList"}
-mass_available_options = {"tmdb": "Use TMDb Metadata", "omdb": "Use IMDb Metadata through OMDb", "mdb": "Use MdbList Metadata", "tvdb": "Use TVDb Metadata", "anidb": "Use AniDB Metadata"}
 imdb_label_options = {"with_none": "Add IMDb Parental Labels including None", "without_none": "Add IMDb Parental Labels including None"}
-mass_episode_rating_options = {"tmdb": "Use TMDb Rating", "imdb": "Use IMDb Rating"}
+mass_genre_options = {
+    "lock": "Unlock Genre", "unlock": "Unlock Genre", "remove": "Remove and Lock Genre", "reset": "Remove and Unlock Genre",
+    "tmdb": "Use TMDb Genres", "imdb": "Use IMDb Genres", "omdb": "Use IMDb Genres through OMDb", "tvdb": "Use TVDb Genres",
+    "anidb": "Use AniDB Tags", "mal": "Use MyAnimeList Genres"
+}
+mass_content_options = {
+    "lock": "Unlock Rating", "unlock": "Unlock Rating", "remove": "Remove and Lock Rating", "reset": "Remove and Unlock Rating",
+    "omdb": "Use IMDb Rating through OMDb", "mdb": "Use MdbList Rating", "mdb_commonsense": "Use Commonsense Rating through MDbList",
+    "mdb_commonsense0": "Use Commonsense Rating with Zero Padding through MDbList", "mal": "Use MyAnimeList Rating"
+}
+mass_original_title_options = {
+    "lock": "Unlock Original Title", "unlock": "Unlock Original Title", "remove": "Remove and Lock Original Title", "reset": "Remove and Unlock Original Title",
+    "anidb": "Use AniDB Main Title", "anidb_official": "Use AniDB Official Title based on the language attribute in the config file",
+    "mal": "Use MyAnimeList Main Title", "mal_english": "Use MyAnimeList English Title", "mal_japanese": "Use MyAnimeList Japanese Title",
+}
+mass_available_options = {
+    "lock": "Unlock Originally Available", "unlock": "Unlock Originally Available", "remove": "Remove and Lock Originally Available", "reset": "Remove and Unlock Originally Available",
+    "tmdb": "Use TMDb Release", "omdb": "Use IMDb Release through OMDb", "mdb": "Use MdbList Release", "tvdb": "Use TVDb Release",
+    "anidb": "Use AniDB Release", "mal": "Use MyAnimeList Release"
+}
+mass_image_options = {
+    "plex": "Use Plex Images", "tmdb": "Use TMDb Images"
+}
+mass_episode_rating_options = {
+    "lock": "Unlock Rating", "unlock": "Unlock Rating", "remove": "Remove and Lock Rating", "reset": "Remove and Unlock Rating",
+    "tmdb": "Use TMDb Rating", "imdb": "Use IMDb Rating"
+}
 mass_rating_options = {
+    "lock": "Lock Rating",
+    "unlock": "Unlock Rating",
+    "remove": "Remove and Lock Rating",
+    "reset": "Remove and Unlock Rating",
     "tmdb": "Use TMDb Rating",
     "imdb": "Use IMDb Rating",
     "trakt_user": "Use Trakt User Rating",
@@ -54,9 +81,23 @@ mass_rating_options = {
     "mdb_letterboxd": "Use Letterboxd Rating through MDbList",
     "mdb_myanimelist": "Use MyAnimeList Rating through MDbList",
     "anidb_rating": "Use AniDB Rating",
-    "anidb_average": "Use AniDB Average"
+    "anidb_average": "Use AniDB Average",
+    "anidb_score": "Use AniDB Review Dcore",
+    "mal": "Use MyAnimeList Rating"
 }
 reset_overlay_options = {"tmdb": "Reset to TMDb poster", "plex": "Reset to Plex Poster"}
+library_operations = {
+    "assets_for_all": "bool", "split_duplicates": "bool", "update_blank_track_titles": "bool", "remove_title_parentheses": "bool",
+    "radarr_add_all_existing": "bool", "radarr_remove_by_tag": "bool", "sonarr_add_all_existing": "bool", "sonarr_remove_by_tag": "bool",
+    "mass_genre_update": mass_genre_options, "mass_content_rating_update": mass_content_options,
+    "mass_audience_rating_update": mass_rating_options, "mass_episode_audience_rating_update": mass_episode_rating_options,
+    "mass_critic_rating_update": mass_rating_options, "mass_episode_critic_rating_update": mass_episode_rating_options,
+    "mass_user_rating_update": mass_rating_options, "mass_episode_user_rating_update": mass_episode_rating_options,
+    "mass_original_title_update": mass_original_title_options, "mass_originally_available_update": mass_available_options,
+    "mass_imdb_parental_labels": imdb_label_options, "mass_poster_update": mass_image_options, "mass_background_update": mass_image_options,
+    "mass_collection_mode": "mass_collection_mode", "metadata_backup": "metadata_backup", "delete_collections": "delete_collections",
+    "genre_mapper": "mapper", "content_rating_mapper": "mapper",
+}
 
 class ConfigFile:
     def __init__(self, default_dir, attrs):
@@ -73,24 +114,25 @@ class ConfigFile:
         self.read_only = attrs["read_only"] if "read_only" in attrs else False
         self.version = attrs["version"] if "version" in attrs else None
         self.no_missing = attrs["no_missing"] if "no_missing" in attrs else None
-        self.test_mode = attrs["test"] if "test" in attrs else False
-        self.trace_mode = attrs["trace"] if "trace" in attrs else False
-        self.delete_collections = attrs["delete"] if "delete" in attrs else False
+        self.no_report = attrs["no_report"] if "no_report" in attrs else None
         self.ignore_schedules = attrs["ignore_schedules"] if "ignore_schedules" in attrs else False
-        self.library_first = attrs["library_first"] if "library_first" in attrs else False
         self.start_time = attrs["time_obj"]
         self.run_hour = datetime.strptime(attrs["time"], "%H:%M").hour
         self.requested_collections = util.get_list(attrs["collections"]) if "collections" in attrs else None
         self.requested_libraries = util.get_list(attrs["libraries"]) if "libraries" in attrs else None
         self.requested_metadata_files = [mf[:-4] if str(mf).endswith(".yml") else mf for mf in util.get_list(attrs["metadata_files"])] if "metadata_files" in attrs and attrs["metadata_files"] else None
-        self.resume_from = attrs["resume"] if "resume" in attrs else None
         self.collection_only = attrs["collection_only"] if "collection_only" in attrs else False
         self.operations_only = attrs["operations_only"] if "operations_only" in attrs else False
         self.overlays_only = attrs["overlays_only"] if "overlays_only" in attrs else False
         current_time = datetime.now()
 
-        loaded_yaml = YAML(self.config_path)
-        self.data = loaded_yaml.data
+        with open(self.config_path, encoding="utf-8") as fp:
+            logger.separator("Redacted Config", space=False, border=False, debug=True)
+            for line in fp.readlines():
+                logger.debug(re.sub(r"(token|client.*|url|api_*key|secret|webhooks|error|run_start|run_end|version|changes|username|password): .+", r"\1: (redacted)", line.strip("\r\n")))
+            logger.debug("")
+
+        self.data = YAML(self.config_path).data
 
         def replace_attr(all_data, attr, par):
             if "settings" not in all_data:
@@ -312,6 +354,7 @@ class ConfigFile:
             "missing_only_released": check_for_attribute(self.data, "missing_only_released", parent="settings", var_type="bool", default=False),
             "only_filter_missing": check_for_attribute(self.data, "only_filter_missing", parent="settings", var_type="bool", default=False),
             "show_unmanaged": check_for_attribute(self.data, "show_unmanaged", parent="settings", var_type="bool", default=True),
+            "show_unconfigured": check_for_attribute(self.data, "show_unconfigured", parent="settings", var_type="bool", default=True),
             "show_filtered": check_for_attribute(self.data, "show_filtered", parent="settings", var_type="bool", default=False),
             "show_options": check_for_attribute(self.data, "show_options", parent="settings", var_type="bool", default=False),
             "show_missing": check_for_attribute(self.data, "show_missing", parent="settings", var_type="bool", default=True),
@@ -355,14 +398,13 @@ class ConfigFile:
         if "notifiarr" in self.data:
             logger.info("Connecting to Notifiarr...")
             try:
-                self.NotifiarrFactory = Notifiarr(self, {
-                    "apikey": check_for_attribute(self.data, "apikey", parent="notifiarr", throw=True),
-                    "develop": check_for_attribute(self.data, "develop", parent="notifiarr", var_type="bool", default=False, do_print=False, save=False),
-                    "test": check_for_attribute(self.data, "test", parent="notifiarr", var_type="bool", default=False, do_print=False, save=False)
-                })
+                self.NotifiarrFactory = Notifiarr(self, {"apikey": check_for_attribute(self.data, "apikey", parent="notifiarr", throw=True)})
             except Failed as e:
-                logger.stacktrace()
-                logger.error(e)
+                if str(e).endswith("is blank"):
+                    logger.warning(e)
+                else:
+                    logger.stacktrace()
+                    logger.error(e)
             logger.info(f"Notifiarr Connection {'Failed' if self.NotifiarrFactory is None else 'Successful'}")
         else:
             logger.warning("notifiarr attribute not found")
@@ -412,7 +454,10 @@ class ConfigFile:
                         "expiration": check_for_attribute(self.data, "cache_expiration", parent="omdb", var_type="int", default=60, int_min=1)
                     })
                 except Failed as e:
-                    logger.error(e)
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
                 logger.info(f"OMDb Connection {'Failed' if self.OMDb is None else 'Successful'}")
             else:
                 logger.warning("omdb attribute not found")
@@ -429,7 +474,10 @@ class ConfigFile:
                     )
                     logger.info("Mdblist Connection Successful")
                 except Failed as e:
-                    logger.error(e)
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
                     logger.info("Mdblist Connection Failed")
             else:
                 logger.warning("mdblist attribute not found")
@@ -448,7 +496,10 @@ class ConfigFile:
                         "authorization": self.data["trakt"]["authorization"] if "authorization" in self.data["trakt"] else None
                     })
                 except Failed as e:
-                    logger.error(e)
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
                 logger.info(f"Trakt Connection {'Failed' if self.Trakt is None else 'Successful'}")
             else:
                 logger.warning("trakt attribute not found")
@@ -463,27 +514,46 @@ class ConfigFile:
                         "client_id": check_for_attribute(self.data, "client_id", parent="mal", throw=True),
                         "client_secret": check_for_attribute(self.data, "client_secret", parent="mal", throw=True),
                         "localhost_url": check_for_attribute(self.data, "localhost_url", parent="mal", default_is_none=True),
+                        "cache_expiration": check_for_attribute(self.data, "cache_expiration", parent="mal", var_type="int", default=60, int_min=1),
                         "config_path": self.config_path,
                         "authorization": self.data["mal"]["authorization"] if "authorization" in self.data["mal"] else None
                     })
                 except Failed as e:
-                    logger.error(e)
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
                 logger.info(f"My Anime List Connection {'Failed' if self.MyAnimeList is None else 'Successful'}")
             else:
                 logger.warning("mal attribute not found")
 
-            self.AniDB = AniDB(self, check_for_attribute(self.data, "language", parent="anidb", default="en"))
+            self.AniDB = AniDB(self, {"language": check_for_attribute(self.data, "language", parent="anidb", default="en")})
             if "anidb" in self.data:
                 logger.separator()
                 logger.info("Connecting to AniDB...")
+                try:
+                    self.AniDB.authorize(
+                        check_for_attribute(self.data, "client", parent="anidb", throw=True),
+                        check_for_attribute(self.data, "version", parent="anidb", var_type="int", throw=True),
+                        check_for_attribute(self.data, "cache_expiration", parent="anidb", var_type="int", default=60, int_min=1)
+                    )
+                except Failed as e:
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
+                logger.info(f"AniDB API Connection {'Successful' if self.AniDB.is_authorized else 'Failed'}")
                 try:
                     self.AniDB.login(
                         check_for_attribute(self.data, "username", parent="anidb", throw=True),
                         check_for_attribute(self.data, "password", parent="anidb", throw=True)
                     )
                 except Failed as e:
-                    logger.error(e)
-                logger.info(f"AniDB Connection {'Failed Continuing as Guest ' if self.MyAnimeList is None else 'Successful'}")
+                    if str(e).endswith("is blank"):
+                        logger.warning(e)
+                    else:
+                        logger.error(e)
+                logger.info(f"AniDB Login {'Successful' if self.AniDB.username else 'Failed Continuing as Guest'}")
 
             logger.separator()
 
@@ -506,6 +576,7 @@ class ConfigFile:
                         self.playlist_names.extend([p for p in playlist_obj.playlists])
                         self.playlist_files.append(playlist_obj)
                     except Failed as e:
+                        logger.info(f"Playlist File Failed To Load")
                         logger.error(e)
             else:
                 logger.warning("playlist_files attribute not found")
@@ -576,25 +647,9 @@ class ConfigFile:
             for library_name, lib in libs.items():
                 if self.requested_libraries and library_name not in self.requested_libraries:
                     continue
-                params = {
-                    "mapping_name": str(library_name),
-                    "name": str(lib["library_name"]) if lib and "library_name" in lib and lib["library_name"] else str(library_name),
-                    "genre_mapper": None,
-                    "content_rating_mapper": None,
-                    "radarr_remove_by_tag": None,
-                    "sonarr_remove_by_tag": None,
-                    "mass_collection_mode": None,
-                    "metadata_backup": None,
-                    "update_blank_track_titles": None,
-                    "mass_content_rating_update": None,
-                    "mass_originally_available_update": None,
-                    "mass_imdb_parental_labels": None,
-                    "remove_title_parentheses": None,
-                    "mass_user_rating_update": None,
-                    "mass_episode_audience_rating_update": None,
-                    "mass_episode_critic_rating_update": None,
-                    "mass_episode_user_rating_update": None,
-                }
+                params = {o: None for o in library_operations}
+                params["mapping_name"] = str(library_name)
+                params["name"] = str(lib["library_name"]) if lib and "library_name" in lib and lib["library_name"] else str(library_name)
                 display_name = f"{params['name']} ({params['mapping_name']})" if lib and "library_name" in lib and lib["library_name"] else params["mapping_name"]
 
                 logger.separator(f"{display_name} Configuration")
@@ -607,6 +662,7 @@ class ConfigFile:
                 params["sync_mode"] = check_for_attribute(lib, "sync_mode", parent="settings", test_list=sync_modes, default=self.general["sync_mode"], do_print=False, save=False)
                 params["default_collection_order"] = check_for_attribute(lib, "default_collection_order", parent="settings", default=self.general["default_collection_order"], default_is_none=True, do_print=False, save=False)
                 params["show_unmanaged"] = check_for_attribute(lib, "show_unmanaged", parent="settings", var_type="bool", default=self.general["show_unmanaged"], do_print=False, save=False)
+                params["show_unconfigured"] = check_for_attribute(lib, "show_unconfigured", parent="settings", var_type="bool", default=self.general["show_unconfigured"], do_print=False, save=False)
                 params["show_filtered"] = check_for_attribute(lib, "show_filtered", parent="settings", var_type="bool", default=self.general["show_filtered"], do_print=False, save=False)
                 params["show_options"] = check_for_attribute(lib, "show_options", parent="settings", var_type="bool", default=self.general["show_options"], do_print=False, save=False)
                 params["show_missing"] = check_for_attribute(lib, "show_missing", parent="settings", var_type="bool", default=self.general["show_missing"], do_print=False, save=False)
@@ -625,121 +681,67 @@ class ConfigFile:
                 params["item_refresh_delay"] = check_for_attribute(lib, "item_refresh_delay", parent="settings", var_type="int", default=self.general["item_refresh_delay"], do_print=False, save=False)
                 params["delete_below_minimum"] = check_for_attribute(lib, "delete_below_minimum", parent="settings", var_type="bool", default=self.general["delete_below_minimum"], do_print=False, save=False)
                 params["delete_not_scheduled"] = check_for_attribute(lib, "delete_not_scheduled", parent="settings", var_type="bool", default=self.general["delete_not_scheduled"], do_print=False, save=False)
-                params["delete_unmanaged_collections"] = check_for_attribute(lib, "delete_unmanaged_collections", parent="settings", var_type="bool", default=False, do_print=False, save=False)
-                params["delete_collections_with_less"] = check_for_attribute(lib, "delete_collections_with_less", parent="settings", var_type="int", default_is_none=True, do_print=False, save=False)
                 params["ignore_ids"] = check_for_attribute(lib, "ignore_ids", parent="settings", var_type="int_list", default_is_none=True, do_print=False, save=False)
                 params["ignore_ids"].extend([i for i in self.general["ignore_ids"] if i not in params["ignore_ids"]])
                 params["ignore_imdb_ids"] = check_for_attribute(lib, "ignore_imdb_ids", parent="settings", var_type="list", default_is_none=True, do_print=False, save=False)
                 params["ignore_imdb_ids"].extend([i for i in self.general["ignore_imdb_ids"] if i not in params["ignore_imdb_ids"]])
                 params["error_webhooks"] = check_for_attribute(lib, "error", parent="webhooks", var_type="list", default=self.webhooks["error"], do_print=False, save=False, default_is_none=True)
                 params["changes_webhooks"] = check_for_attribute(lib, "changes", parent="webhooks", var_type="list", default=self.webhooks["changes"], do_print=False, save=False, default_is_none=True)
-                params["assets_for_all"] = check_for_attribute(lib, "assets_for_all", parent="settings", var_type="bool", default=self.general["assets_for_all"], do_print=False, save=False)
-                params["mass_genre_update"] = check_for_attribute(lib, "mass_genre_update", test_list=mass_genre_options, default_is_none=True, save=False, do_print=False)
-                params["mass_audience_rating_update"] = check_for_attribute(lib, "mass_audience_rating_update", test_list=mass_rating_options, default_is_none=True, save=False, do_print=False)
-                params["mass_critic_rating_update"] = check_for_attribute(lib, "mass_critic_rating_update", test_list=mass_rating_options, default_is_none=True, save=False, do_print=False)
-                params["mass_trakt_rating_update"] = check_for_attribute(lib, "mass_trakt_rating_update", var_type="bool", default=False, save=False, do_print=False)
-                params["split_duplicates"] = check_for_attribute(lib, "split_duplicates", var_type="bool", default=False, save=False, do_print=False)
-                params["radarr_add_all_existing"] = check_for_attribute(lib, "radarr_add_all_existing", var_type="bool", default=False, save=False, do_print=False)
-                params["sonarr_add_all_existing"] = check_for_attribute(lib, "sonarr_add_all_existing", var_type="bool", default=False, save=False, do_print=False)
                 params["report_path"] = None
                 if lib and "report_path" in lib and lib["report_path"]:
                     if os.path.exists(os.path.dirname(os.path.abspath(lib["report_path"]))):
                         params["report_path"] = lib["report_path"]
                     else:
                         logger.error(f"Config Error: Folder {os.path.dirname(os.path.abspath(lib['report_path']))} does not exist")
-
                 if lib and "operations" in lib and lib["operations"]:
                     if isinstance(lib["operations"], dict):
-                        if "assets_for_all" in lib["operations"]:
-                            params["assets_for_all"] = check_for_attribute(lib["operations"], "assets_for_all", var_type="bool", default=False, save=False)
-                        if "delete_unmanaged_collections" in lib["operations"]:
-                            params["delete_unmanaged_collections"] = check_for_attribute(lib["operations"], "delete_unmanaged_collections", var_type="bool", default=False, save=False)
-                        if "delete_collections_with_less" in lib["operations"]:
-                            params["delete_collections_with_less"] = check_for_attribute(lib["operations"], "delete_collections_with_less", var_type="int", default_is_none=True, save=False)
-                        if "mass_genre_update" in lib["operations"]:
-                            params["mass_genre_update"] = check_for_attribute(lib["operations"], "mass_genre_update", test_list=mass_genre_options, default_is_none=True, save=False)
-                        if "mass_audience_rating_update" in lib["operations"]:
-                            params["mass_audience_rating_update"] = check_for_attribute(lib["operations"], "mass_audience_rating_update", test_list=mass_rating_options, default_is_none=True, save=False)
-                        if "mass_critic_rating_update" in lib["operations"]:
-                            params["mass_critic_rating_update"] = check_for_attribute(lib["operations"], "mass_critic_rating_update", test_list=mass_rating_options, default_is_none=True, save=False)
-                        if "mass_user_rating_update" in lib["operations"]:
-                            params["mass_user_rating_update"] = check_for_attribute(lib["operations"], "mass_user_rating_update", test_list=mass_rating_options, default_is_none=True, save=False)
-                        if "mass_episode_audience_rating_update" in lib["operations"]:
-                            params["mass_episode_audience_rating_update"] = check_for_attribute(lib["operations"], "mass_episode_audience_rating_update", test_list=mass_episode_rating_options, default_is_none=True, save=False)
-                        if "mass_episode_critic_rating_update" in lib["operations"]:
-                            params["mass_episode_critic_rating_update"] = check_for_attribute(lib["operations"], "mass_episode_critic_rating_update", test_list=mass_episode_rating_options, default_is_none=True, save=False)
-                        if "mass_episode_user_rating_update" in lib["operations"]:
-                            params["mass_episode_user_rating_update"] = check_for_attribute(lib["operations"], "mass_episode_user_rating_update", test_list=mass_episode_rating_options, default_is_none=True, save=False)
-                        if "mass_content_rating_update" in lib["operations"]:
-                            params["mass_content_rating_update"] = check_for_attribute(lib["operations"], "mass_content_rating_update", test_list=mass_content_options, default_is_none=True, save=False)
-                        if "mass_originally_available_update" in lib["operations"]:
-                            params["mass_originally_available_update"] = check_for_attribute(lib["operations"], "mass_originally_available_update", test_list=mass_available_options, default_is_none=True, save=False)
-                        if "mass_imdb_parental_labels" in lib["operations"]:
-                            params["mass_imdb_parental_labels"] = check_for_attribute(lib["operations"], "mass_imdb_parental_labels", test_list=imdb_label_options, default_is_none=True, save=False)
-                        if "mass_trakt_rating_update" in lib["operations"]:
-                            params["mass_trakt_rating_update"] = check_for_attribute(lib["operations"], "mass_trakt_rating_update", var_type="bool", default=False, save=False, do_print=False)
-                        if "split_duplicates" in lib["operations"]:
-                            params["split_duplicates"] = check_for_attribute(lib["operations"], "split_duplicates", var_type="bool", default=False, save=False)
-                        if "radarr_add_all_existing" in lib["operations"]:
-                            params["radarr_add_all_existing"] = check_for_attribute(lib["operations"], "radarr_add_all_existing", var_type="bool", default=False, save=False)
-                        if "radarr_remove_by_tag" in lib["operations"]:
-                            params["radarr_remove_by_tag"] = check_for_attribute(lib["operations"], "radarr_remove_by_tag", var_type="comma_list", default=False, save=False)
-                        if "sonarr_add_all_existing" in lib["operations"]:
-                            params["sonarr_add_all_existing"] = check_for_attribute(lib["operations"], "sonarr_add_all_existing", var_type="bool", default=False, save=False)
-                        if "sonarr_remove_by_tag" in lib["operations"]:
-                            params["sonarr_remove_by_tag"] = check_for_attribute(lib["operations"], "sonarr_remove_by_tag", var_type="comma_list", default=False, save=False)
-                        if "update_blank_track_titles" in lib["operations"]:
-                            params["update_blank_track_titles"] = check_for_attribute(lib["operations"], "update_blank_track_titles", var_type="bool", default=False, save=False)
-                        if "remove_title_parentheses" in lib["operations"]:
-                            params["remove_title_parentheses"] = check_for_attribute(lib["operations"], "remove_title_parentheses", var_type="bool", default=False, save=False)
-                        if "mass_collection_mode" in lib["operations"]:
-                            try:
-                                params["mass_collection_mode"] = util.check_collection_mode(lib["operations"]["mass_collection_mode"])
-                            except Failed as e:
-                                logger.error(e)
-                        if "metadata_backup" in lib["operations"]:
-                            params["metadata_backup"] = {
-                                "path": os.path.join(default_dir, f"{str(library_name)}_Metadata_Backup.yml"),
-                                "exclude": [],
-                                "sync_tags": False,
-                                "add_blank_entries": True
-                            }
-                            if lib["operations"]["metadata_backup"] and isinstance(lib["operations"]["metadata_backup"], dict):
-                                params["metadata_backup"]["path"] = check_for_attribute(lib["operations"]["metadata_backup"], "path", var_type="path", default=params["metadata_backup"]["path"], save=False)
-                                params["metadata_backup"]["exclude"] = check_for_attribute(lib["operations"]["metadata_backup"], "exclude", var_type="comma_list", default_is_none=True, save=False)
-                                params["metadata_backup"]["sync_tags"] = check_for_attribute(lib["operations"]["metadata_backup"], "sync_tags", var_type="bool", default=False, save=False)
-                                params["metadata_backup"]["add_blank_entries"] = check_for_attribute(lib["operations"]["metadata_backup"], "add_blank_entries", var_type="bool", default=True, save=False)
-                        if "genre_mapper" in lib["operations"]:
-                            if lib["operations"]["genre_mapper"] and isinstance(lib["operations"]["genre_mapper"], dict):
-                                params["genre_mapper"] = lib["operations"]["genre_mapper"]
-                                for old_genre, new_genre in lib["operations"]["genre_mapper"].items():
-                                    if old_genre == new_genre:
-                                        logger.error("Config Error: genres cannot be mapped to themselves")
-                                    else:
-                                        params["genre_mapper"][old_genre] = new_genre if new_genre else None
+                        if "delete_collections" not in lib["operations"] and ("delete_unmanaged_collections" in lib["operations"] or "delete_collections_with_less" in lib["operations"]):
+                            lib["operations"]["delete_collections"] = {}
+                            if "delete_unmanaged_collections" in lib["operations"]:
+                                lib["operations"]["delete_collections"]["unmanaged"] = check_for_attribute(lib["operations"], "delete_unmanaged_collections", var_type="bool", default=False, save=False)
+                            if "delete_collections_with_less" in lib["operations"]:
+                                lib["operations"]["delete_collections"]["less"] = check_for_attribute(lib["operations"], "delete_collections_with_less", var_type="int", default_is_none=True, save=False)
+                        for op, data_type in library_operations.items():
+                            if op not in lib["operations"]:
+                                continue
+                            elif isinstance(data_type, list):
+                                params[op] = check_for_attribute(lib["operations"], op, test_list=data_type, default_is_none=True, save=False)
+                            elif data_type == "mass_collection_mode":
+                                params[op] = util.check_collection_mode(lib["operations"][op])
+                            elif data_type in ["metadata_backup", "mapper", "delete_collections"]:
+                                if not lib["operations"][op] or not isinstance(lib["operations"][op], dict):
+                                    raise Failed(f"Config Error: {op} must be a dictionary")
+                                if data_type == "metadata_backup":
+                                    default_path = os.path.join(default_dir, f"{str(library_name)}_Metadata_Backup.yml")
+                                    try:
+                                        default_path = check_for_attribute(lib["operations"][op], "path", var_type="path", save=False)
+                                    except Failed as e:
+                                        logger.debug(f"{e} using default {default_path}")
+                                    params[op] = {
+                                        "path": default_path,
+                                        "exclude": check_for_attribute(lib["operations"][op], "exclude", var_type="comma_list", default_is_none=True, save=False),
+                                        "sync_tags": check_for_attribute(lib["operations"][op], "sync_tags", var_type="bool", default=False, save=False),
+                                        "add_blank_entries": check_for_attribute(lib["operations"][op], "add_blank_entries", var_type="bool", default=True, save=False)
+                                    }
+                                if data_type == "mapper":
+                                    params[op] = lib["operations"][op]
+                                    for old_value, new_value in lib["operations"][op].items():
+                                        if old_value == new_value:
+                                            logger.warning(f"Config Warning: {op} value '{new_value}' ignored as it cannot be mapped to itself")
+                                        else:
+                                            params[op][old_value] = new_value if new_value else None
+                                if data_type == "delete_collections":
+                                    params[op] = {
+                                        "managed": check_for_attribute(lib["operations"][op], "managed", var_type="bool", default=False, save=False),
+                                        "unmanaged": check_for_attribute(lib["operations"][op], "unmanaged", var_type="bool", default=False, save=False),
+                                        "configured": check_for_attribute(lib["operations"][op], "configured", var_type="bool", default=False, save=False),
+                                        "unconfigured": check_for_attribute(lib["operations"][op], "unconfigured", var_type="bool", default=False, save=False),
+                                        "less": check_for_attribute(lib["operations"][op], "less", var_type="int", default_is_none=True, save=False, int_min=1),
+                                    }
                             else:
-                                logger.error("Config Error: genre_mapper is blank")
-                        if "content_rating_mapper" in lib["operations"]:
-                            if lib["operations"]["content_rating_mapper"] and isinstance(lib["operations"]["content_rating_mapper"], dict):
-                                params["content_rating_mapper"] = lib["operations"]["content_rating_mapper"]
-                                for old_content, new_content in lib["operations"]["content_rating_mapper"].items():
-                                    if old_content == new_content:
-                                        logger.error("Config Error: content rating cannot be mapped to themselves")
-                                    else:
-                                        params["content_rating_mapper"][old_content] = new_content if new_content else None
-                            else:
-                                logger.error("Config Error: content_rating_mapper is blank")
-                        for atr in ["tmdb_collections", "genre_collections"]:
-                            if atr in lib["operations"]:
-                                logger.error(f"Deprecated Error: {atr} has been replaced with dynamic collections")
+                                params[op] = check_for_attribute(lib["operations"], op, var_type=data_type, default=False, save=False)
                     else:
                         logger.error("Config Error: operations must be a dictionary")
-
-                if params["mass_trakt_rating_update"]:
-                    if params["mass_user_rating_update"]:
-                        logger.error("Config Error: User Rating is already being set by mass_user_rating_update")
-                    else:
-                        params["mass_user_rating_update"] = "trakt_user"
 
                 def error_check(attr, service):
                     logger.error(f"Config Error: Operation {attr} cannot be {params[attr]} without a successful {service} Connection")
@@ -750,6 +752,10 @@ class ConfigFile:
                         error_check(mass_key, "OMDb")
                     if params[mass_key] and params[mass_key].startswith("mdb") and not self.Mdblist.has_key:
                         error_check(mass_key, "MdbList")
+                    if params[mass_key] and params[mass_key].startswith("anidb") and not self.AniDB.is_authorized:
+                        error_check(mass_key, "AniDB")
+                    if params[mass_key] and params[mass_key].startswith("mal") and self.MyAnimeList is None:
+                        error_check(mass_key, "MyAnimeList")
                     if params[mass_key] and params[mass_key].startswith("trakt") and self.Trakt is None:
                         error_check(mass_key, "Trakt")
 
@@ -769,66 +775,72 @@ class ConfigFile:
                         params["metadata_path"] = [("File", os.path.join(default_dir, f"{library_name}.yml"), lib_vars, None)]
                     else:
                         params["metadata_path"] = []
-                    params["default_dir"] = default_dir
+                except Failed as e:
+                    logger.error(e)
+                params["default_dir"] = default_dir
 
-                    params["skip_library"] = False
-                    if lib and "schedule" in lib and not self.requested_libraries and not self.ignore_schedules:
-                        if not lib["schedule"]:
-                            raise Failed(f"Config Error: schedule attribute is blank")
-                        else:
-                            logger.debug(f"Value: {lib['schedule']}")
-                            try:
-                                util.schedule_check("schedule", lib["schedule"], current_time, self.run_hour)
-                            except NotScheduled:
-                                params["skip_library"] = True
-
-                    params["overlay_path"] = []
-                    params["remove_overlays"] = False
-                    params["reapply_overlays"] = False
-                    params["reset_overlays"] = None
-                    if lib and "overlay_path" in lib:
+                params["skip_library"] = False
+                if lib and "schedule" in lib and not self.requested_libraries and not self.ignore_schedules:
+                    if not lib["schedule"]:
+                        logger.error(f"Config Error: schedule attribute is blank")
+                    else:
+                        logger.debug(f"Value: {lib['schedule']}")
                         try:
-                            if not lib["overlay_path"]:
-                                raise Failed("Config Error: overlay_path attribute is blank")
-                            files = util.load_files(lib["overlay_path"], "overlay_path", lib_vars=lib_vars)
-                            if not files:
-                                logger.error("Config Error: No Paths Found for overlay_path")
-                            for file in util.get_list(lib["overlay_path"], split=False):
-                                if isinstance(file, dict):
-                                    if ("remove_overlays" in file and file["remove_overlays"] is True) \
+                            util.schedule_check("schedule", lib["schedule"], current_time, self.run_hour)
+                        except NotScheduled:
+                            params["skip_library"] = True
+
+                params["overlay_path"] = []
+                params["remove_overlays"] = False
+                params["reapply_overlays"] = False
+                params["reset_overlays"] = None
+                if lib and "overlay_path" in lib:
+                    try:
+                        if not lib["overlay_path"]:
+                            raise Failed("Config Error: overlay_path attribute is blank")
+                        files = util.load_files(lib["overlay_path"], "overlay_path", lib_vars=lib_vars)
+                        if not files:
+                            raise Failed("Config Error: No Paths Found for overlay_path")
+                        for file in util.get_list(lib["overlay_path"], split=False):
+                            if isinstance(file, dict):
+                                if ("remove_overlays" in file and file["remove_overlays"] is True) \
                                         or ("remove_overlay" in file and file["remove_overlay"] is True) \
                                         or ("revert_overlays" in file and file["revert_overlays"] is True):
-                                        params["remove_overlays"] = True
-                                    if ("reapply_overlays" in file and file["reapply_overlays"] is True) \
+                                    params["remove_overlays"] = True
+                                if ("reapply_overlays" in file and file["reapply_overlays"] is True) \
                                         or ("reapply_overlay" in file and file["reapply_overlay"] is True):
-                                        params["reapply_overlays"] = True
-                                    if "reset_overlays" in file or "reset_overlay" in file:
-                                        attr = f"reset_overlay{'s' if 'reset_overlays' in file else ''}"
-                                        if file[attr] and file[attr] in reset_overlay_options:
-                                            params["reset_overlays"] = file[attr]
-                                        else:
-                                            final_text = f"Config Error: reset_overlays attribute {file[attr]} invalid. Options: "
-                                            for option, description in reset_overlay_options.items():
-                                                final_text = f"{final_text}\n    {option} ({description})"
-                                            logger.error(final_text)
-                                    if "schedule" in file and file["schedule"]:
-                                        logger.debug(f"Value: {file['schedule']}")
-                                        err = None
-                                        try:
-                                            util.schedule_check("schedule", file["schedule"], current_time, self.run_hour)
-                                        except NotScheduledRange as e:
+                                    params["reapply_overlays"] = True
+                                if "reset_overlays" in file or "reset_overlay" in file:
+                                    attr = f"reset_overlay{'s' if 'reset_overlays' in file else ''}"
+                                    if file[attr] and file[attr] in reset_overlay_options:
+                                        params["reset_overlays"] = file[attr]
+                                    else:
+                                        final_text = f"Config Error: reset_overlays attribute {file[attr]} invalid. Options: "
+                                        for option, description in reset_overlay_options.items():
+                                            final_text = f"{final_text}\n    {option} ({description})"
+                                        logger.error(final_text)
+                                if "schedule" in file and file["schedule"]:
+                                    logger.debug(f"Value: {file['schedule']}")
+                                    err = None
+                                    try:
+                                        util.schedule_check("schedule", file["schedule"], current_time, self.run_hour)
+                                    except NotScheduledRange as e:
+                                        err = e
+                                    except NotScheduled as e:
+                                        if not self.ignore_schedules:
                                             err = e
-                                        except NotScheduled as e:
-                                            if not self.ignore_schedules:
-                                                err = e
-                                        if err:
-                                            raise NotScheduled(f"{err}\n\nOverlays not scheduled to run")
-                            params["overlay_path"] = files
-                        except NotScheduled as e:
-                            logger.info(e)
-                            params["overlay_path"] = []
-                            params["remove_overlays"] = False
+                                    if err:
+                                        raise NotScheduled(f"Overlay Schedule:{err}\n\nOverlays not scheduled to run")
+                        params["overlay_path"] = files
+                    except NotScheduled as e:
+                        logger.info("")
+                        logger.info(e)
+                        params["overlay_path"] = []
+                        params["remove_overlays"] = False
+                    except Failed as e:
+                        logger.error(e)
 
+                try:
                     logger.info("")
                     logger.separator("Plex Configuration", space=False, border=False)
                     params["plex"] = {

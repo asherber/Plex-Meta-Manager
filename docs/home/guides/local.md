@@ -13,7 +13,7 @@ The specific steps you will be taking:
 3. Use `git` to retrieve the code
 4. Install requirements [extra bits of code required for PMM]
 5. Gather two things that the script requires:
-   1. TMDB API Key
+   1. TMDb API Key
    2. Plex URL and Token
 6. Then, iteratively:
    1. use `python` to run the script
@@ -150,7 +150,7 @@ cd Plex-Meta-Manager
 
 **NOTE: The rest of this walkthrough assumes you are staying in this directory in this terminal/Powershell window.**
 
-**IMPORTANT: In the future, when you want to run PMM at teh command line, you have to be in this directory.**
+**IMPORTANT: In the future, when you want to run PMM at the command line, you have to be in this directory.**
 
 When you open a command window to run PMM, the first step will always be:
 
@@ -528,7 +528,7 @@ Save the file:
 
 Then run the script again:
 
-```{include} wt/wt-run-docker.md
+```{include} wt/wt-run-shell.md
 ```
 
 ```{include} wt/wt-03.md
@@ -559,7 +559,7 @@ Save the file:
 
 Then run the script again:
 
-```{include} wt/wt-run-docker.md
+```{include} wt/wt-run-shell.md
 ```
 
 ```{include} wt/wt-06.md

@@ -40,44 +40,10 @@ collections:
     # ... builders, details, and filters for this collection
 ```
 
-There are three types of attributes that can be utilized within a collection:
+There are multiple types of attributes that can be utilized within a collection:
 
-### Builders
-
-Builders use third-party services to source items to be added to the collection. Multiple builders can be used in the same collection from a variety of sources listed below.
-
-* [Plex Builders](builders/plex)
-* [Smart Builders](builders/smart) (Collections Only)
-* [TMDb Builders](builders/tmdb)
-* [TVDb Builders](builders/tvdb)
-* [IMDb Builders](builders/imdb)
-* [Trakt Builders](builders/trakt)
-* [Tautulli Builders](builders/tautulli)
-* [Radarr Builders](builders/radarr)
-* [Sonarr Builders](builders/sonarr)
-* [MdbList Builders](builders/mdblist)
-* [Letterboxd Builders](builders/letterboxd)
-* [ICheckMovies Builders](builders/icheckmovies)
-* [FlixPatrol Builders](builders/flixpatrol)
-* [Reciperr Builders](builders/reciperr)
-* [StevenLu Builders](builders/stevenlu)
-* [AniDB Builders](builders/anidb)
-* [AniList Builders](builders/anilist)
-* [MyAnimeList Builders](builders/myanimelist)
-
-### Details
-
-These can alter any aspect of the collection or the media items within them.
-
-* [Setting Details](details/setting)
-* [Schedule Detail](details/schedule)
-* [Metadata Details](details/metadata)
-* [Arr Details](details/arr)
-
-### Filters
-
-These filter media items added to the collection by any of the Builders.
-
+* [Builders](builders)
+* [Settings/Updates](update)
 * [Filters](filters)
 
 ### Example
@@ -140,9 +106,9 @@ metadata:
     # ... details to change for this item
 ```
 
-### Title & Year
+### Title, Year, & Edition
 
-YAML files cannot have two items with the same mapping name so if you have two movies with the same name you define each one with a name of your choosing. Then use the `title` attribute to specify the real title and the `year` attribute to specify which of the multiple movies is for this mapping.
+YAML files cannot have two items with the same mapping name so if you have two movies with the same name you define each one with a name of your choosing. Then use the `title` attribute to specify the real title and the `year` and/or `edition_filter` attribute to specify which of the multiple movies is for this mapping.
 
 ```yaml
 metadata:
@@ -154,7 +120,14 @@ metadata:
     title: Godzilla
     year: 1998
     content_rating: PG-13
+  Godzilla3:
+    title: Godzilla
+    year: 1954
+    edition: Extended
+    content_rating: R
 ```
+
+**Note: `edition_filter` only works with Movies**
 
 ### Alt Title
 

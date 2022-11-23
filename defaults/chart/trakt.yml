@@ -1,0 +1,80 @@
+##############################################################################
+#                          Trakt Charts Collections                          #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#        https://metamanager.wiki/en/latest/defaults/chart/trakt.html        #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: "01"
+    image: chart/<<collection_name_encoded>>
+
+translations:
+  pmm: translations
+
+templates:
+  trakt:
+    default:
+      limit: 100
+      limit_<<key>>: <<limit>>
+    trakt_chart:
+      chart: <<key>>
+      limit: <<limit_<<key>>>>
+
+collections:
+  Trakt Collected:
+    variables:
+      key: collected
+    template:
+      - name: trakt
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: trakt_collected
+
+  Trakt Popular:
+    variables:
+      key: popular
+    template:
+      - name: trakt
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: trakt_popular
+
+  Trakt Recommended:
+    variables:
+      key: recommended
+    template:
+      - name: trakt
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: trakt_recommended
+
+  Trakt Trending:
+    variables:
+      key: trending
+    template:
+      - name: trakt
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: trakt_trending
+
+  Trakt Watched:
+    variables:
+      key: watched
+    template:
+      - name: trakt
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: trakt_watched

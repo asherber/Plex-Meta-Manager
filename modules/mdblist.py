@@ -1,7 +1,7 @@
 from datetime import datetime
 from json import JSONDecodeError
 from modules import util
-from modules.util import Failed
+from modules.util import Failed, LimitReached
 from urllib.parse import urlparse
 
 logger = util.logger
@@ -73,6 +73,8 @@ class Mdblist:
         self.expiration = expiration
         try:
             self._request(imdb_id="tt0080684", ignore_cache=True)
+        except LimitReached:
+            self.limit = True
         except Failed:
             self.apikey = None
             raise
@@ -93,7 +95,7 @@ class Mdblist:
         elif tvdb_id:
             params["tv"] = tvdb_id
             params["m"] = "movie" if is_movie else "show"
-            key = f"{'tvm' if is_movie else 'tvs'}{tmdb_id}"
+            key = f"{'tvm' if is_movie else 'tvs'}{tvdb_id}"
         else:
             raise Failed("MdbList Error: Either IMDb ID, TVDb ID, or TMDb ID and TMDb Type Required")
         expired = None
@@ -101,13 +103,16 @@ class Mdblist:
             mdb_dict, expired = self.config.Cache.query_mdb(key, self.expiration)
             if mdb_dict and expired is False:
                 return MDbObj(mdb_dict)
-        if self.config.trace_mode:
-            logger.debug(f"ID: {key}")
-            logger.debug(f"Params: {params}")
-        response = self.config.get_json(api_url, params=params)
+        logger.trace(f"ID: {key}")
+        logger.trace(f"Params: {params}")
+        try:
+            response = self.config.get_json(api_url, params=params)
+        except JSONDecodeError:
+            raise Failed("Mdblist Error: JSON Decoding Failed")
         if "response" in response and response["response"] is False:
             if response["error"] == "API Limit Reached!":
                 self.limit = True
+                raise LimitReached(f"MdbList Error: {response['error']}")
             raise Failed(f"MdbList Error: {response['error']}")
         else:
             mdb = MDbObj(response)
@@ -179,12 +184,15 @@ class Mdblist:
                 logger.info(f"Limit: {data['limit']} items")
                 params["limit"] = data["limit"]
             parsed_url = urlparse(data["url"])
-            url_base = parsed_url._replace(query=None).geturl()
+            url_base = str(parsed_url._replace(query=None).geturl())
             url_base = url_base if url_base.endswith("/") else f"{url_base}/"
             url_base = url_base if url_base.endswith("json/") else f"{url_base}json/"
             try:
                 response = self.config.get_json(url_base, headers=headers, params=params)
-                if "error" in response:
+                if (isinstance(response, dict) and "error" in response) or (isinstance(response, list) and response and "error" in response[0]):
+                    err = response["error"] if isinstance(response, dict) else response[0]["error"]
+                    if err in ["empty", "empty or private list"]:
+                        raise Failed(f"Mdblist Error: No Items Returned. Lists can take 24 hours to update so try again later.")
                     raise Failed(f"Mdblist Error: Invalid Response {response}")
                 results = []
                 for item in response:

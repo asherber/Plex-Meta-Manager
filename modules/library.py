@@ -18,7 +18,8 @@ class Library(ABC):
         self.Notifiarr = None
         self.collections = []
         self.metadatas = []
-        self.queue_names = []
+        self.queues = {}
+        self.queue_current = 0
         self.metadata_files = []
         self.overlay_files = []
         self.overlay_names = []
@@ -64,6 +65,7 @@ class Library(ABC):
         self.delete_not_scheduled = params["delete_not_scheduled"]
         self.missing_only_released = params["missing_only_released"]
         self.show_unmanaged = params["show_unmanaged"]
+        self.show_unconfigured = params["show_unconfigured"]
         self.show_filtered = params["show_filtered"]
         self.show_options = params["show_options"]
         self.show_missing = params["show_missing"]
@@ -73,8 +75,7 @@ class Library(ABC):
         self.ignore_ids = params["ignore_ids"]
         self.ignore_imdb_ids = params["ignore_imdb_ids"]
         self.assets_for_all = params["assets_for_all"]
-        self.delete_unmanaged_collections = params["delete_unmanaged_collections"]
-        self.delete_collections_with_less = params["delete_collections_with_less"]
+        self.delete_collections = params["delete_collections"]
         self.mass_genre_update = params["mass_genre_update"]
         self.mass_audience_rating_update = params["mass_audience_rating_update"]
         self.mass_critic_rating_update = params["mass_critic_rating_update"]
@@ -83,8 +84,11 @@ class Library(ABC):
         self.mass_episode_critic_rating_update = params["mass_episode_critic_rating_update"]
         self.mass_episode_user_rating_update = params["mass_episode_user_rating_update"]
         self.mass_content_rating_update = params["mass_content_rating_update"]
+        self.mass_original_title_update = params["mass_original_title_update"]
         self.mass_originally_available_update = params["mass_originally_available_update"]
         self.mass_imdb_parental_labels = params["mass_imdb_parental_labels"]
+        self.mass_poster_update = params["mass_poster_update"]
+        self.mass_background_update = params["mass_background_update"]
         self.radarr_add_all_existing = params["radarr_add_all_existing"]
         self.radarr_remove_by_tag = params["radarr_remove_by_tag"]
         self.sonarr_add_all_existing = params["sonarr_add_all_existing"]
@@ -110,13 +114,13 @@ class Library(ABC):
         self.items_library_operation = True if self.assets_for_all or self.mass_genre_update or self.remove_title_parentheses \
                                        or self.mass_audience_rating_update or self.mass_critic_rating_update or self.mass_user_rating_update \
                                        or self.mass_episode_audience_rating_update or self.mass_episode_critic_rating_update or self.mass_episode_user_rating_update \
-                                       or self.mass_content_rating_update or self.mass_originally_available_update or self.mass_imdb_parental_labels \
-                                       or self.genre_mapper or self.content_rating_mapper \
-                                       or self.radarr_add_all_existing or self.sonarr_add_all_existing else False
-        self.library_operation = True if self.items_library_operation or self.delete_unmanaged_collections or self.delete_collections_with_less \
-                                 or self.radarr_remove_by_tag or self.sonarr_remove_by_tag or self.mass_collection_mode \
-                                 or self.show_unmanaged or self.metadata_backup or self.update_blank_track_titles else False
-        self.meta_operations = [getattr(self, o) for o in operations.meta_operations]
+                                       or self.mass_content_rating_update or self.mass_originally_available_update or self.mass_original_title_update\
+                                       or self.mass_imdb_parental_labels or self.genre_mapper or self.content_rating_mapper \
+                                       or self.radarr_add_all_existing or self.sonarr_add_all_existing or self.mass_poster_update or self.mass_background_update else False
+        self.library_operation = True if self.items_library_operation or self.delete_collections or self.mass_collection_mode \
+                                 or self.radarr_remove_by_tag or self.sonarr_remove_by_tag or self.show_unmanaged or self.show_unconfigured \
+                                 or self.metadata_backup or self.update_blank_track_titles else False
+        self.meta_operations = [i for i in [getattr(self, o) for o in operations.meta_operations] if i]
 
         if self.asset_directory:
             logger.info("")
@@ -139,17 +143,21 @@ class Library(ABC):
                     self.metadata_files.append(meta_obj)
                 except Failed as e:
                     logger.error(e)
+                    logger.info(f"Metadata File Failed To Load")
                 except NotScheduled as e:
                     logger.info("")
                     logger.separator(f"Skipping {e} Metadata File")
         if not operations_only and not collection_only:
             for file_type, overlay_file, temp_vars, asset_directory in self.overlay_path:
                 try:
-                    overlay_obj = OverlayFile(self.config, self, file_type, overlay_file, temp_vars, asset_directory)
+                    overlay_obj = OverlayFile(self.config, self, file_type, overlay_file, temp_vars, asset_directory, self.queue_current)
                     self.overlay_files.append(overlay_obj)
-                    self.queue_names.extend([q for q in overlay_obj.queues])
+                    for qk, qv in overlay_obj.queues.items():
+                        self.queues[self.queue_current] = qv
+                        self.queue_current += 1
                 except Failed as e:
                     logger.error(e)
+                    logger.info(f"Overlay File Failed To Load")
 
     def upload_images(self, item, poster=None, background=None, overlay=False):
         poster_uploaded = False
@@ -221,7 +229,7 @@ class Library(ABC):
         pass
 
     @abstractmethod
-    def edit_tags(self, attr, obj, add_tags=None, remove_tags=None, sync_tags=None, do_print=True):
+    def edit_tags(self, attr, obj, add_tags=None, remove_tags=None, sync_tags=None, do_print=True, locked=True, is_locked=None):
         pass
 
     @abstractmethod

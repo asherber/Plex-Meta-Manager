@@ -1,0 +1,49 @@
+##############################################################################
+#                              Versions Overlay                              #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#                     Credit to Magic815 for base images                     #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#     https://metamanager.wiki/en/latest/defaults/overlays/versions.html     #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    conditionals:
+      vertical_offset:
+        default: 1050
+        conditions:
+          - overlay_level: episode
+            value: 15
+      horizontal_offset:
+        default: 15
+        conditions:
+          - overlay_level: episode
+            value: 235
+      horizontal_align:
+        default: right
+        conditions:
+          - overlay_level: episode
+            value: center
+    vertical_align: top
+    back_color: "#00000099"
+    back_width: 105
+    back_height: 105
+    pmm: <<overlay_name>>
+
+templates:
+  versions:
+    conditionals:
+      version_style:
+        default: "duplicate"
+        conditions:
+         - overlay_level: ['show', 'season', 'episode']
+           value: "episode_duplicate"
+    plex_search:
+      all:
+        <<version_style>>: true
+    ignore_blank_results: true
+      
+overlays:
+  versions:
+    template: [name: standard, name: versions]

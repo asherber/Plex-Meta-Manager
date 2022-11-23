@@ -119,6 +119,36 @@ class Cache:
                     expiration_date TEXT)"""
                 )
                 cursor.execute(
+                    """CREATE TABLE IF NOT EXISTS anidb_data (
+                    key INTEGER PRIMARY KEY,
+                    anidb_id INTEGER UNIQUE,
+                    main_title TEXT,
+                    titles TEXT,
+                    rating REAL,
+                    average REAL,
+                    score REAL,
+                    released TEXT,
+                    tags TEXT,
+                    expiration_date TEXT)"""
+                )
+                cursor.execute(
+                    """CREATE TABLE IF NOT EXISTS mal_data (
+                    key INTEGER PRIMARY KEY,
+                    mal_id INTEGER UNIQUE,
+                    title TEXT,
+                    title_english TEXT,
+                    title_japanese TEXT,
+                    status TEXT,
+                    airing TEXT,
+                    aired TEXT,
+                    rating TEXT,
+                    score REAL,
+                    rank INTEGER,
+                    popularity TEXT,
+                    genres TEXT,
+                    expiration_date TEXT)"""
+                )
+                cursor.execute(
                     """CREATE TABLE IF NOT EXISTS tmdb_movie_data (
                     key INTEGER PRIMARY KEY,
                     tmdb_id INTEGER UNIQUE,
@@ -254,6 +284,14 @@ class Cache:
                     rating_key INTEGER,
                     type TEXT,
                     text TEXT)"""
+                )
+                cursor.execute(
+                    """CREATE TABLE IF NOT EXISTS testing (
+                    key INTEGER PRIMARY KEY,
+                    name TEXT,
+                    value1 TEXT,
+                    value2 TEXT,
+                    success TEXT)"""
                 )
                 cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='image_map'")
                 if cursor.fetchone()[0] > 0:
@@ -469,6 +507,79 @@ class Cache:
                     mdb.metacriticuser_rating, mdb.trakt_rating, mdb.tomatoes_rating, mdb.tomatoesaudience_rating,
                     mdb.tmdb_rating, mdb.letterboxd_rating, mdb.myanimelist_rating, mdb.content_rating, mdb.commonsense,
                     expiration_date.strftime("%Y-%m-%d"), key_id
+                ))
+
+    def query_anidb(self, anidb_id, expiration):
+        anidb_dict = {}
+        expired = None
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute("SELECT * FROM anidb_data WHERE anidb_id = ?", (anidb_id,))
+                row = cursor.fetchone()
+                if row:
+                    anidb_dict["main_title"] = row["main_title"]
+                    anidb_dict["titles"] = row["titles"] if row["titles"] else None
+                    anidb_dict["rating"] = row["rating"] if row["rating"] else None
+                    anidb_dict["average"] = row["average"] if row["average"] else None
+                    anidb_dict["score"] = row["score"] if row["score"] else None
+                    anidb_dict["released"] = row["released"] if row["released"] else None
+                    anidb_dict["tags"] = row["tags"] if row["tags"] else None
+                    datetime_object = datetime.strptime(row["expiration_date"], "%Y-%m-%d")
+                    time_between_insertion = datetime.now() - datetime_object
+                    expired = time_between_insertion.days > expiration
+        return anidb_dict, expired
+
+    def update_anidb(self, expired, anidb_id, anidb, expiration):
+        expiration_date = datetime.now() if expired is True else (datetime.now() - timedelta(days=random.randint(1, expiration)))
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute("INSERT OR IGNORE INTO anidb_data(anidb_id) VALUES(?)", (anidb_id,))
+                update_sql = "UPDATE anidb_data SET main_title = ?, titles = ?, rating = ?, average = ?, score = ?, " \
+                             "released = ?, tags = ?, expiration_date = ? WHERE anidb_id = ?"
+                cursor.execute(update_sql, (
+                    anidb.main_title, str(anidb.titles), anidb.rating, anidb.average, anidb.score,
+                    anidb.released.strftime("%Y-%m-%d") if anidb.released else None, "|".join(anidb.tags),
+                    expiration_date.strftime("%Y-%m-%d"), anidb_id
+                ))
+
+    def query_mal(self, mal_id, expiration):
+        mal_dict = {}
+        expired = None
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute("SELECT * FROM mal_data WHERE mal_id = ?", (mal_id,))
+                row = cursor.fetchone()
+                if row:
+                    mal_dict["title"] = row["title"]
+                    mal_dict["title_english"] = row["title_english"] if row["title_english"] else None
+                    mal_dict["title_japanese"] = row["title_japanese"] if row["title_japanese"] else None
+                    mal_dict["status"] = row["status"] if row["status"] else None
+                    mal_dict["airing"] = row["airing"] if row["airing"] else None
+                    mal_dict["aired"] = row["aired"] if row["aired"] else None
+                    mal_dict["rating"] = row["rating"] if row["rating"] else None
+                    mal_dict["score"] = row["score"] if row["score"] else None
+                    mal_dict["rank"] = row["rank"] if row["rank"] else None
+                    mal_dict["popularity"] = row["popularity"] if row["popularity"] else None
+                    mal_dict["genres"] = row["genres"] if row["genres"] else None
+                    datetime_object = datetime.strptime(row["expiration_date"], "%Y-%m-%d")
+                    time_between_insertion = datetime.now() - datetime_object
+                    expired = time_between_insertion.days > expiration
+        return mal_dict, expired
+
+    def update_mal(self, expired, mal_id, mal, expiration):
+        expiration_date = datetime.now() if expired is True else (datetime.now() - timedelta(days=random.randint(1, expiration)))
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute("INSERT OR IGNORE INTO mal_data(mal_id) VALUES(?)", (mal_id,))
+                update_sql = "UPDATE mal_data SET title = ?, title_english = ?, title_japanese = ?, status = ?, airing = ?, " \
+                             "aired = ?, rating = ?, score = ?, rank = ?, popularity = ?, genres = ? , expiration_date = ? WHERE mal_id = ?"
+                cursor.execute(update_sql, (
+                    mal.title, mal.title_english, mal.title_japanese, mal.status, mal.airing, mal.aired.strftime("%Y-%m-%d") if mal.aired else None,
+                    mal.rating, mal.score, mal.rank, mal.popularity, "|".join(mal.genres), expiration_date.strftime("%Y-%m-%d"), mal_id
                 ))
 
     def query_tmdb_movie(self, tmdb_id, expiration):
@@ -887,3 +998,26 @@ class Cache:
             with closing(connection.cursor()) as cursor:
                 cursor.execute("INSERT OR IGNORE INTO overlay_special_text(rating_key, type) VALUES(?, ?)", (rating_key, data_type))
                 cursor.execute("UPDATE overlay_special_text SET text = ? WHERE rating_key = ? AND type = ?", (text, rating_key, data_type))
+
+    def query_testing(self, name):
+        value1 = None
+        value2 = None
+        success = None
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute(f"SELECT * FROM testing WHERE name = ?", (name,))
+                row = cursor.fetchone()
+                if row:
+                    value1 = row["value1"]
+                    value2 = row["value2"]
+                    success = True if row["success"] == "True" else False
+        return value1, value2, success
+
+    def update_testing(self, name, value1, value2, success):
+        with sqlite3.connect(self.cache_path) as connection:
+            connection.row_factory = sqlite3.Row
+            with closing(connection.cursor()) as cursor:
+                cursor.execute(f"INSERT OR IGNORE INTO testing(name) VALUES(?)", (name,))
+                sql = f"UPDATE testing SET value1 = ?, value2 = ?, success = ? WHERE name = ?"
+                cursor.execute(sql, (value1, value2, success, name))

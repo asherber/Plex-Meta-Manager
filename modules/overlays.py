@@ -23,9 +23,14 @@ class Overlays:
         logger.info("")
         os.makedirs(self.library.overlay_backup, exist_ok=True)
 
+        key_to_overlays = {}
+        properties = None
+        if not self.library.remove_overlays:
+            key_to_overlays, properties = self.compile_overlays()
+        ignore_list = [rk for rk in key_to_overlays]
+
         old_overlays = [la for la in self.library.Plex.listFilterChoices("label") if str(la.title).lower().endswith(" overlay")]
         if old_overlays:
-            logger.info("")
             logger.separator(f"Removing Old Overlays for the {self.library.name} Library")
             logger.info("")
             for old_overlay in old_overlays:
@@ -40,13 +45,7 @@ class Overlays:
                         self.remove_overlay(item, item_title, old_overlay.title, [
                             os.path.join(self.library.overlay_folder, old_overlay.title[:-8], f"{item.ratingKey}.png")
                         ])
-
-        key_to_overlays = {}
-        queues = {}
-        properties = None
-        if not self.library.remove_overlays:
-            key_to_overlays, properties, queues = self.compile_overlays()
-        ignore_list = [rk for rk in key_to_overlays]
+            logger.info("")
 
         remove_overlays = self.get_overlay_items(ignore=ignore_list)
         if self.library.is_show:
@@ -55,9 +54,8 @@ class Overlays:
         elif self.library.is_music:
             remove_overlays.extend(self.get_overlay_items(libtype="album", ignore=ignore_list))
 
-        logger.info("")
         if remove_overlays:
-            logger.separator(f"Removing Overlays for the {self.library.name} Library")
+            logger.separator(f"Removing {'All ' if self.library.remove_overlays else ''}Overlays for the {self.library.name} Library")
             for i, item in enumerate(remove_overlays, 1):
                 item_title = self.library.get_item_sort_title(item, atr="title")
                 logger.ghost(f"Restoring: {i}/{len(remove_overlays)} {item_title}")
@@ -70,12 +68,11 @@ class Overlays:
             logger.separator(f"No Overlays to Remove for the {self.library.name} Library")
         logger.info("")
         if not self.library.remove_overlays:
-            logger.info("")
             logger.separator(f"{'Re-' if self.library.reapply_overlays else ''}Applying Overlays for the {self.library.name} Library")
             logger.info("")
             for i, (over_key, (item, over_names)) in enumerate(sorted(key_to_overlays.items(), key=lambda io: self.library.get_item_sort_title(io[1][0])), 1):
+                item_title = self.library.get_item_sort_title(item, atr="title")
                 try:
-                    item_title = self.library.get_item_sort_title(item, atr="title")
                     logger.ghost(f"Overlaying: {i}/{len(key_to_overlays)} {item_title}")
                     image_compare = None
                     overlay_compare = None
@@ -97,7 +94,7 @@ class Overlays:
                             blur_test = int(re.search("\\(([^)]+)\\)", current_overlay.name).group(1))
                             if blur_test > blur_num:
                                 blur_num = blur_test
-                        elif current_overlay.queue:
+                        elif current_overlay.queue_name:
                             if current_overlay.queue not in queue_overlays:
                                 queue_overlays[current_overlay.queue] = {}
                             if current_overlay.weight in queue_overlays[current_overlay.queue]:
@@ -158,19 +155,22 @@ class Overlays:
                         if image_compare and str(poster.compare) != str(image_compare):
                             changed_image = True
                     elif has_overlay:
-                        if self.library.reset_overlays is not None:
-                            if self.library.reset_overlays == "tmdb":
-                                new_backup = self.find_poster_url(item)
-                            else:
-                                posters = item.posters()
-                                if posters:
-                                    new_backup = posters[0]
-                        elif os.path.exists(os.path.join(self.library.overlay_backup, f"{item.ratingKey}.png")):
+                        if os.path.exists(os.path.join(self.library.overlay_backup, f"{item.ratingKey}.png")):
                             has_original = os.path.join(self.library.overlay_backup, f"{item.ratingKey}.png")
                         elif os.path.exists(os.path.join(self.library.overlay_backup, f"{item.ratingKey}.jpg")):
                             has_original = os.path.join(self.library.overlay_backup, f"{item.ratingKey}.jpg")
-                        else:
-                            new_backup = self.find_poster_url(item)
+                        if self.library.reset_overlays is not None or has_original is None:
+                            if self.library.reset_overlays == "tmdb":
+                                try:
+                                    new_backup = self.find_poster_url(item)
+                                except Failed as e:
+                                    logger.error(e)
+                            else:
+                                temp_poster = next((p for p in item.posters() if p.provider == "local"), None)
+                                if temp_poster:
+                                    new_backup = f"{self.library.url}{temp_poster.key}&X-Plex-Token={self.library.token}"
+                            if not new_backup:
+                                logger.error("Overlay Error: Reset Failed")
                     else:
                         new_backup = item.posterUrl
                     if new_backup:
@@ -193,8 +193,7 @@ class Overlays:
                         logger.error(f"{item_title[:60]:<60} | Overlay Error: No poster found")
                     elif self.library.reapply_overlays or changed_image or overlay_change:
                         try:
-                            canvas_width = 1920 if isinstance(item, Episode) else 1000
-                            canvas_height = 1080 if isinstance(item, Episode) else 1500
+                            canvas_width, canvas_height = overlay.get_canvas_size(item)
 
                             new_poster = Image.open(poster.location if poster else has_original) \
                                 .convert("RGB").resize((canvas_width, canvas_height), Image.ANTIALIAS)
@@ -207,10 +206,10 @@ class Overlays:
                                     if f"<<{format_var}" in full_text and format_var == "originally_available[":
                                         mod = re.search("<<originally_available\\[(.+)]>>", full_text).group(1)
                                         format_var = "originally_available"
-                                    elif f"<<{format_var}>>" in full_text and format_var.endswith("00"):
-                                        mod = "00"
+                                    elif f"<<{format_var}>>" in full_text and format_var.endswith(tuple(m for m in overlay.double_mods)):
+                                        mod = format_var[-2:]
                                         format_var = format_var[:-2]
-                                    elif f"<<{format_var}>>" in full_text and format_var.endswith(("%", "#", "H", "M", "0")):
+                                    elif f"<<{format_var}>>" in full_text and format_var.endswith(tuple(m for m in overlay.single_mods)):
                                         mod = format_var[-1]
                                         format_var = format_var[:-1]
                                     elif f"<<{format_var}>>" in full_text:
@@ -223,10 +222,24 @@ class Overlays:
                                         actual_attr = plex.attribute_translation[format_var]
                                     else:
                                         actual_attr = format_var
-                                    if not hasattr(item, actual_attr) or getattr(item, actual_attr) is None:
-                                        logger.warning(f"Overlay Warning: No {full_text} found")
-                                        continue
-                                    actual_value = getattr(item, actual_attr)
+                                    if format_var == "bitrate":
+                                        actual_value = None
+                                        for media in item.media:
+                                            current = int(media.bitrate)
+                                            if actual_value is None:
+                                                actual_value = current
+                                                if mod == "":
+                                                    break
+                                            elif mod == "H" and current > actual_value:
+                                                actual_value = current
+                                            elif mod == "L" and current < actual_value:
+                                                actual_value = current
+                                    else:
+                                        if not hasattr(item, actual_attr) or getattr(item, actual_attr) is None:
+                                            raise Failed(f"Overlay Warning: No {full_text} found")
+                                        actual_value = getattr(item, actual_attr)
+                                        if format_var == "versions":
+                                            actual_value = len(actual_value)
                                     if self.config.Cache:
                                         cache_store = actual_value.strftime("%Y-%m-%d") if format_var in overlay.date_vars else actual_value
                                         self.config.Cache.update_overlay_special_text(item.ratingKey, format_var, cache_store)
@@ -254,6 +267,14 @@ class Overlays:
                                         final_value = f"{int(actual_value):02}"
                                     elif mod == "00":
                                         final_value = f"{int(actual_value):03}"
+                                    elif mod == "/":
+                                        final_value = f"{int(actual_value) / 2:.2f}"
+                                    elif mod == "U":
+                                        final_value = str(actual_value).upper()
+                                    elif mod == "L":
+                                        final_value = str(actual_value).lower()
+                                    elif mod == "P":
+                                        final_value = str(actual_value).title()
                                     else:
                                         final_value = actual_value
                                     if sub_value:
@@ -273,27 +294,26 @@ class Overlays:
                                             logger.warning(e)
                                             continue
                                         new_poster.paste(overlay_image, (0, 0), overlay_image)
-                                        if current_overlay.image:
-                                            new_poster.paste(current_overlay.image, addon_box, current_overlay.image)
                                     else:
-                                        overlay_image = current_overlay.landscape if isinstance(item, Episode) else current_overlay.portrait
+                                        overlay_image, addon_box = current_overlay.get_canvas(item)
                                         new_poster.paste(overlay_image, (0, 0), overlay_image)
+                                    if current_overlay.image:
+                                        new_poster.paste(current_overlay.image, addon_box, current_overlay.image)
+                                elif current_overlay.name == "backdrop":
+                                    overlay_image, _ = current_overlay.get_canvas(item)
+                                    new_poster.paste(overlay_image, (0, 0), overlay_image)
                                 else:
                                     if current_overlay.has_coordinates():
+                                        overlay_image, overlay_box = current_overlay.get_canvas(item)
                                         if current_overlay.portrait is not None:
-                                            overlay_image = current_overlay.landscape if isinstance(item, Episode) else current_overlay.portrait
                                             new_poster.paste(overlay_image, (0, 0), overlay_image)
-                                        overlay_box = current_overlay.landscape_box if isinstance(item, Episode) else current_overlay.portrait_box
                                         new_poster.paste(current_overlay.image, overlay_box, current_overlay.image)
                                     else:
                                         new_poster = new_poster.resize(current_overlay.image.size, Image.ANTIALIAS)
                                         new_poster.paste(current_overlay.image, (0, 0), current_overlay.image)
 
                             for queue, weights in queue_overlays.items():
-                                if queue not in queues:
-                                    logger.error(f"Overlay Error: no queue {queue} found")
-                                    continue
-                                cords = queues[queue]
+                                cords = self.library.queues[queue]
                                 sorted_weights = sorted(weights.items(), reverse=True)
                                 for o, cord in enumerate(cords):
                                     if len(sorted_weights) <= o:
@@ -317,7 +337,7 @@ class Overlays:
                                         else:
                                             overlay_box = current_overlay.get_coordinates((canvas_width, canvas_height), box=current_overlay.image.size, new_cords=cord)
                                         new_poster.paste(current_overlay.image, overlay_box, current_overlay.image)
-                            temp = os.path.join(self.library.overlay_folder, f"temp.jpg")
+                            temp = os.path.join(self.library.overlay_folder, "temp.jpg")
                             new_poster.save(temp)
                             self.library.upload_poster(item, temp)
                             self.library.edit_tags("label", item, add_tags=["Overlay"], do_print=False)
@@ -333,7 +353,11 @@ class Overlays:
                     if self.config.Cache and poster_compare:
                         self.config.Cache.update_image_map(item.ratingKey, f"{self.library.image_table_name}_overlays", item.thumb, poster_compare, overlay='|'.join(compare_names))
                 except Failed as e:
-                    logger.error(e)
+                    logger.error(f"{e}\nOverlays Attempted on {item_title}: {', '.join(over_names)}")
+                except Exception as e:
+                    logger.stacktrace(e)
+                    logger.error("")
+                    logger.error(f"Overlays Attempted on {item_title}: {', '.join(over_names)}")
         logger.exorcise()
         overlay_run_time = str(datetime.now() - overlay_start).split('.')[0]
         logger.info("")
@@ -345,16 +369,8 @@ class Overlays:
         properties = {}
         overlay_groups = {}
         key_to_overlays = {}
-        queues = {}
 
         for overlay_file in self.library.overlay_files:
-            for k, v in overlay_file.queues.items():
-                if not isinstance(v, list):
-                    raise Failed(f"Overlay Error: Queue: {k} must be a list")
-                try:
-                    queues[k] = [overlay.parse_cords(q, f"{k} queue", required=True) for q in v]
-                except Failed as e:
-                    logger.error(e)
             for k, v in overlay_file.overlays.items():
                 try:
                     builder = CollectionBuilder(self.config, overlay_file, k, v, library=self.library, overlay=True)
@@ -366,12 +382,7 @@ class Overlays:
                         raise Failed(f"Overlay Error: Overlay {builder.overlay.mapping_name} already exists")
                     properties[builder.overlay.mapping_name] = builder.overlay
 
-                    if builder.filters or builder.tmdb_filters:
-                        logger.info("")
-                        for filter_key, filter_value in builder.filters:
-                            logger.info(f"Collection Filter {filter_key}: {filter_value}")
-                        for filter_key, filter_value in builder.tmdb_filters:
-                            logger.info(f"Collection Filter {filter_key}: {filter_value}")
+                    builder.display_filters()
 
                     for method, value in builder.builders:
                         logger.debug("")
@@ -387,15 +398,15 @@ class Overlays:
                                 raise Failed(e)
 
                     added_titles = []
-                    if builder.added_items:
-                        for item in builder.added_items:
+                    if builder.found_items:
+                        for item in builder.found_items:
                             key_to_item[item.ratingKey] = item
                             added_titles.append(item)
                             if item.ratingKey not in properties[builder.overlay.mapping_name].keys:
                                 properties[builder.overlay.mapping_name].keys.append(item.ratingKey)
                     if added_titles:
-                        logger.debug(f"{len(added_titles)} Titles Found: {[self.library.get_item_sort_title(a, atr='title') for a in added_titles]}")
                         logger.info(f"{len(added_titles)} Items found for {builder.overlay.mapping_name} Overlay")
+                        logger.trace(f"Titles Found: {[self.library.get_item_sort_title(a, atr='title') for a in added_titles]}")
                     else:
                         logger.warning(f"No Items found for {builder.overlay.mapping_name} Overlay")
                     logger.info("")
@@ -405,6 +416,26 @@ class Overlays:
                     logger.stacktrace()
                     logger.error(e)
                     logger.info("")
+
+        logger.separator(f"Overlay Operation for the {self.library.name} Library")
+        logger.debug("")
+        logger.debug(f"Remove Overlays: {self.library.remove_overlays}")
+        logger.debug(f"Reapply Overlays: {self.library.reapply_overlays}")
+        logger.debug(f"Reset Overlays: {self.library.reset_overlays}")
+        logger.debug("")
+        logger.separator(f"Number of Items Per Overlay", space=False, border=False)
+        logger.debug("")
+
+        longest = 7
+        for overlay_name in properties:
+            if len(overlay_name) > longest:
+                longest = len(overlay_name)
+
+        logger.debug(f"{'Overlay':^{longest}} | Number |")
+        logger.debug(f"{logger.separating_character * longest} | {logger.separating_character * 6} |")
+        for overlay_name, over_obj in properties.items():
+            logger.debug(f"{overlay_name:<{longest}} | {len(over_obj.keys):^6} |")
+        logger.debug("")
 
         for overlay_name, over_obj in properties.items():
             if over_obj.group:
@@ -421,6 +452,10 @@ class Overlays:
         for over_key, (item, over_names) in key_to_overlays.items():
             group_status = {}
             for over_name in over_names:
+                for suppress_name in properties[over_name].suppress:
+                    if suppress_name in over_names:
+                        key_to_overlays[over_key][1].remove(suppress_name)
+            for over_name in over_names:
                 for overlay_group, group_names in overlay_groups.items():
                     if over_name in group_names:
                         if overlay_group not in group_status:
@@ -435,29 +470,22 @@ class Overlays:
                     for v in gv:
                         if final != v:
                             key_to_overlays[over_key][1].remove(v)
-            for over_name in over_names:
-                for suppress_name in properties[over_name].suppress:
-                    if suppress_name in over_names:
-                        key_to_overlays[over_key][1].remove(suppress_name)
-        return key_to_overlays, properties, queues
+        return key_to_overlays, properties
 
     def find_poster_url(self, item):
-        try:
-            if isinstance(item, Movie):
-                if item.ratingKey in self.library.movie_rating_key_map:
-                    return self.config.TMDb.get_movie(self.library.movie_rating_key_map[item.ratingKey]).poster_url
-            elif isinstance(item, (Show, Season, Episode)):
-                check_key = item.ratingKey if isinstance(item, Show) else item.show().ratingKey
-                if check_key in self.library.show_rating_key_map:
-                    tmdb_id = self.config.Convert.tvdb_to_tmdb(self.library.show_rating_key_map[check_key])
-                    if isinstance(item, Show) and item.ratingKey in self.library.show_rating_key_map:
-                        return self.config.TMDb.get_show(tmdb_id).poster_url
-                    elif isinstance(item, Season):
-                        return self.config.TMDb.get_season(tmdb_id, item.seasonNumber).poster_url
-                    elif isinstance(item, Episode):
-                        return self.config.TMDb.get_episode(tmdb_id, item.seasonNumber, item.episodeNumber).still_url
-        except Failed as e:
-            logger.error(e)
+        if isinstance(item, Movie):
+            if item.ratingKey in self.library.movie_rating_key_map:
+                return self.config.TMDb.get_movie(self.library.movie_rating_key_map[item.ratingKey]).poster_url
+        elif isinstance(item, (Show, Season, Episode)):
+            check_key = item.ratingKey if isinstance(item, Show) else item.show().ratingKey
+            if check_key in self.library.show_rating_key_map:
+                tmdb_id = self.config.Convert.tvdb_to_tmdb(self.library.show_rating_key_map[check_key])
+                if isinstance(item, Show) and item.ratingKey in self.library.show_rating_key_map:
+                    return self.config.TMDb.get_show(tmdb_id).poster_url
+                elif isinstance(item, Season):
+                    return self.config.TMDb.get_season(tmdb_id, item.seasonNumber).poster_url
+                elif isinstance(item, Episode):
+                    return self.config.TMDb.get_episode(tmdb_id, item.seasonNumber, item.episodeNumber).still_url
 
     def get_overlay_items(self, label="Overlay", libtype=None, ignore=None):
         items = self.library.search(label=label, libtype=libtype)
@@ -470,14 +498,18 @@ class Overlays:
             poster = None
         is_url = False
         original = None
+        poster_location = None
         if poster:
             poster_location = poster.location
         elif any([os.path.exists(loc) for loc in locations]):
             original = next((loc for loc in locations if os.path.exists(loc)))
             poster_location = original
-        else:
+        if not poster_location:
             is_url = True
-            poster_location = self.find_poster_url(item)
+            try:
+                poster_location = self.find_poster_url(item)
+            except Failed as e:
+                logger.error(e)
         if poster_location:
             self.library.upload_poster(item, poster_location, url=is_url)
             self.library.edit_tags("label", item, remove_tags=[label], do_print=False)

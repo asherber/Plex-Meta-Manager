@@ -12,6 +12,8 @@ These docs are assuming you have a basic understanding of Docker concepts.  One 
 | [Time to Run](#time-to-run)                           | `-t` or `--time`                   | `PMM_TIME`               |
 | [Run](#run)                                           | `-r` or `--run`                    | `PMM_RUN`                |
 | [Run Tests](#run-tests)                               | `-rt`, `--tests`, or `--run-tests` | `PMM_TEST`               |
+| [Debug](#debug)                                       | `-db` or `--debug`                 | `PMM_DEBUG`              |
+| [Trace](#trace)                                       | `-tr` or `--trace`                 | `PMM_TRACE`              |
 | [Timeout](#timeout)                                   | `-ti` or `--timeout`               | `PMM_TIMEOUT`            |
 | [Collections Only](#collections-only)                 | `-co` or `--collections-only`      | `PMM_COLLECTIONS_ONLY`   |
 | [Playlists Only](#playlists-only)                     | `-po` or `--playlists-only`        | `PMM_PLAYLISTS_ONLY`     |
@@ -25,9 +27,11 @@ These docs are assuming you have a basic understanding of Docker concepts.  One 
 | [Ignore Ghost](#ignore-ghost)                         | `-ig` or `--ignore-ghost`          | `PMM_IGNORE_GHOST`       |
 | [Cache Libraries](#cache-libraries)                   | `-ca` or `--cache-libraries`       | `PMM_CACHE_LIBRARIES`    |
 | [Delete Collections](#delete-collections)             | `-dc` or `--delete-collections`    | `PMM_DELETE_COLLECTIONS` |
+| [Delete Labels](#delete-labels)                       | `-dl` or `--delete-labels`         | `PMM_DELETE_LABELS`      |
 | [Resume Run](#resume-run)                             | `-re` or `--resume`                | `PMM_RESUME`             |
 | [No Countdown](#no-countdown)                         | `-nc` or `--no-countdown`          | `PMM_NO_COUNTDOWN`       |
 | [No Missing](#no-missing)                             | `-nm` or `--no-missing`            | `PMM_NO_MISSING`         |
+| [No Report](#no-report)                               | `-nr` or `--no-report`             | `PMM_NO_REPORT`          |
 | [Read Only Config](#read-only-config)                 | `-ro` or `--read-only-config`      | `PMM_READ_ONLY_CONFIG`   |
 | [Divider Character](#divider-character--screen-width) | `-d` or `--divider`                | `PMM_DIVIDER`            |
 | [Screen Width](#divider-character--screen-width)      | `-w` or `--width`                  | `PMM_WIDTH`              |
@@ -173,7 +177,7 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 ### Run Tests
 
-Run Plex Meta Manager in test/debug mode
+Perform a debug test run immediately, bypassing the time to run flag. This will only run collections with `test: true` in the definition.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -212,9 +216,87 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 </details>
 
+### Debug
+
+Run with Debug Logs Reporting to the Command Window.
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #222;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-db</code> or <code>--debug</code></td>
+    <td><code>PMM_DEBUG</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--debug</code></td>
+    <td><code>PMM_TIMEOUT=true</code></td>
+  </tr>
+</table>
+
+<details>
+  <summary>Local Environment</summary>
+
+```shell
+python plex_meta_manager.py --debug
+```
+
+</details>
+<details>
+  <summary>Docker Environment</summary>
+
+```shell
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --debug
+```
+
+</details>
+
+### Trace
+
+Run with extra Trace Debug Logs.
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #222;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-tr</code> or <code>--trace</code></td>
+    <td><code>PMM_TIMEOUT</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--trace</code></td>
+    <td><code>PMM_TRACE=true</code></td>
+  </tr>
+</table>
+
+<details>
+  <summary>Local Environment</summary>
+
+```shell
+python plex_meta_manager.py --trace
+```
+
+</details>
+<details>
+  <summary>Docker Environment</summary>
+
+```shell
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --trace0
+```
+
+</details>
+
 ### Timeout
 
-Change the main Plex Meta Manager timeout.
+Change the main Plex Meta Manager timeout. This timeout is overwritten byt those in your config file for those services.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -238,7 +320,7 @@ Change the main Plex Meta Manager timeout.
   <summary>Local Environment</summary>
 
 ```shell
-python plex_meta_manager.py ---timeout 360
+python plex_meta_manager.py --timeout 360
 ```
 
 </details>
@@ -246,7 +328,7 @@ python plex_meta_manager.py ---timeout 360
   <summary>Docker Environment</summary>
 
 ```shell
-docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager ---timeout 360
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --timeout 360
 ```
 
 </details>
@@ -410,7 +492,7 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 ### Run Collections
 
-Run only the pre-defined collections
+Perform a collections run immediately to run only the pre-defined collections, bypassing the time to run flag.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -453,7 +535,7 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 ### Run Libraries
 
-Run only the pre-defined libraries
+Perform a libraries run immediately to run only the pre-defined libraries, bypassing the time to run flag.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -496,7 +578,7 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 ### Run Metadata Files
 
-Run only the pre-defined metadata files
+Perform a metadata files run immediately to run only the pre-defined metadata files, bypassing the time to run flag.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -734,8 +816,48 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 </details>
 
+### Delete Labels
+
+Delete all labels on every item in a Library prior to running collections/operations.
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #222;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-dl</code> or <code>--delete-labels</code></td>
+    <td><code>PMM_DELETE_LABELS</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--delete-labels</code></td>
+    <td><code>PMM_DELETE_LABELS=true</code></td>
+  </tr>
+</table>
+
+<details>
+  <summary>Local Environment</summary>
+
+```shell
+python plex_meta_manager.py --delete-labels
+```
+
+</details>
+<details>
+  <summary>Docker Environment</summary>
+
+```shell
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --delete-labels
+```
+
+</details>
+
 ### Resume Run
-Resume a run from a specific collection use the `--resume` option.
+
+Perform a resume run immediately resuming from the first instance of the specified collection, bypassing the time to run flag.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -854,9 +976,48 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 </details>
 
+### No Report
+
+Run without saving the report.
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #222;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-nr</code> or <code>--no-report</code></td>
+    <td><code>PMM_NO_REPORT</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--no-report</code></td>
+    <td><code>PMM_NO_REPORT=true</code></td>
+  </tr>
+</table>
+
+<details>
+  <summary>Local Environment</summary>
+
+```shell
+python plex_meta_manager.py --no-report
+```
+
+</details>
+<details>
+  <summary>Docker Environment</summary>
+
+```shell
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --no-report
+```
+
+</details>
+
 ### Read Only Config
 
-Run without writing to the configuration file
+Run without writing to the configuration file.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
@@ -895,7 +1056,7 @@ docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex
 
 ### Divider Character & Screen Width
 
-Change the terminal output divider character or width
+Change the terminal output divider character or width.
 
 #### Divider Character
 

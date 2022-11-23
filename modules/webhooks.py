@@ -15,19 +15,16 @@ class Webhooks:
         self.notifiarr = notifiarr
 
     def _request(self, webhooks, json):
-        if self.config.trace_mode:
-            logger.separator("Webhooks", space=False, border=False, debug=True)
-            logger.debug("")
-            logger.debug(f"JSON: {json}")
+        logger.separator("Webhooks", space=False, border=False, trace=True)
+        logger.trace("")
+        logger.trace(f"JSON: {json}")
         for webhook in list(set(webhooks)):
             response = None
-            if self.config.trace_mode:
-                logger.debug(f"Webhook: {webhook}")
+            logger.trace(f"Webhook: {webhook}")
             if webhook == "notifiarr":
                 if self.notifiarr:
-                    url, params = self.notifiarr.get_url("notification/pmm/")
                     for x in range(6):
-                        response = self.config.get(url, json=json, params=params)
+                        response = self.notifiarr.notification(json)
                         if response.status_code < 500:
                             break
             else:
@@ -39,8 +36,7 @@ class Webhooks:
             if response:
                 try:
                     response_json = response.json()
-                    if self.config.trace_mode:
-                        logger.debug(f"Response: {response_json}")
+                    logger.trace(f"Response: {response_json}")
                     if webhook == "notifiarr" and self.notifiarr and response.status_code == 400:
                         def remove_from_config(text, hook_cat):
                             if response_json["details"]["response"] == text:

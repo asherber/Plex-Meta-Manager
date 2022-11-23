@@ -27,7 +27,7 @@ To make a collection a Smart Label Collection, the `smart_label` attribute must 
           sort_by: release.desc
           all:
             label: <<smart_label>>
-            unplayed: True
+            unplayed: true
     ```
 
 This is extremely useful because smart collections don't follow normal show/hide rules and can eliminate the need to have [Plex Collectionless](plex.md#plex-collectionless) when used correctly. To fix the issue described in [Plex Collectionless](plex.md#plex-collectionless) you would make `Marvel Cinematic Universe` a Smart Label Collection and all other Marvel collection just normal collections, and they will show/hide all the movie properly.
@@ -52,11 +52,11 @@ There are a couple other attributes you can have at the top level only along wit
 
 ## Special Attributes
 
-| Attribute  | Description & Values                                                                                                                                                                                                                                                                                                                         |
-|:-----------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `limit`    | **Description:** The max number of item for the filter.<br>**Default:** `all`<br>**Values:** `all` or a number greater than 0                                                                                                                                                                                                                |
-| `sort_by`  | **Description:** This will control how the filter is sorted in your library.<br>**Default:** `random`<br>**Values:** Any sort options for your filter type in the [Sorts Options Table](#sort-options)                                                                                                                                       |
-| `validate` | **Description:** Determines if a collection will fail on a validation error<br>**Default:** `true`<br>**Values**: `true` or `false`                                                                                                                                                                                                          |
+| Attribute  | Description & Values                                                                                                                                                                                                                               |
+|:-----------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `limit`    | **Description:** The max number of item for the filter.<br>**Default:** `all`<br>**Values:** `all` or a number greater than 0                                                                                                                      |
+| `sort_by`  | **Description:** This will control how the filter is sorted in your library. You can do a multi-level sort using a list.<br>**Default:** `random`<br>**Values:** Any sort options for your filter type in the [Sorts Options Table](#sort-options) |
+| `validate` | **Description:** Determines if a collection will fail on a validation error<br>**Default:** `true`<br>**Values**: `true` or `false`                                                                                                                |
 
 ## Sort Options
 
@@ -123,6 +123,7 @@ String filter can take multiple values **only as a list**.
 | `title`              | Uses the title attribute to match                        |      &#9989;       |      &#9989;      |      &#10060;      |
 | `episode_title`      | Uses the title attribute of the show's episodes to match |      &#10060;      |      &#9989;      |      &#10060;      |
 | `studio`             | Uses the studio attribute to match                       |      &#9989;       |      &#9989;      |      &#10060;      |
+| `edition`            | Uses the edition attribute to match                      |      &#9989;       |     &#10060;      |      &#10060;      |
 | `artist_title`       | Uses the Artist's Title attribute to match               |      &#10060;      |     &#10060;      |      &#9989;       |
 | `album_title`        | Uses the Album's Title attribute to match                |      &#10060;      |     &#10060;      |      &#9989;       |
 | `track_title`        | Uses the Track's Title attribute to match                |      &#10060;      |     &#10060;      |      &#9989;       |
@@ -143,41 +144,47 @@ Tag filter can take multiple values as a **list or a comma-separated string**.
 
 ### Tag Attributes
 
-| Tag Search           | Description                                                                 | Movie<br>Libraries | Show<br>Libraries | Music<br>Libraries |
-|:---------------------|:----------------------------------------------------------------------------|:------------------:|:-----------------:|:------------------:|
-| `actor`              | Uses the actor tags to match                                                |      &#9989;       |      &#9989;      |      &#10060;      |
-| `audio_language`     | Uses the audio language tags to match                                       |      &#9989;       |      &#9989;      |      &#10060;      |
-| `collection`         | Uses the collection tags to match for top level collections                 |      &#9989;       |      &#9989;      |      &#10060;      |
-| `season_collection`  | Uses the collection tags to match for season collections                    |      &#10060;      |      &#9989;      |      &#10060;      |
-| `episode_collection` | Uses the collection tags to match for episode collections                   |      &#10060;      |      &#9989;      |      &#10060;      |
-| `content_rating`     | Uses the content rating tags to match                                       |      &#9989;       |      &#9989;      |      &#10060;      |
-| `country`            | Uses the country tags to match                                              |      &#9989;       |     &#10060;      |      &#10060;      |
-| `decade`             | Uses the year tag to match the decade                                       |      &#9989;       |     &#10060;      |      &#10060;      |
-| `director`           | Uses the director tags to match                                             |      &#9989;       |     &#10060;      |      &#10060;      |
-| `genre`              | Uses the genre tags to match                                                |      &#9989;       |      &#9989;      |      &#10060;      |
-| `label`              | Uses the label tags to match                                                |      &#9989;       |      &#9989;      |      &#10060;      |
-| `network`            | Uses the network tags to match<br>**Only works with the New Plex TV Agent** |      &#10060;      |      &#9989;      |      &#10060;      |
-| `producer`           | Uses the actor tags to match                                                |      &#9989;       |     &#10060;      |      &#10060;      |
-| `resolution`         | Uses the resolution tags to match                                           |      &#9989;       |      &#9989;      |      &#10060;      |
-| `subtitle_language`  | Uses the subtitle language tags to match                                    |      &#9989;       |      &#9989;      |      &#10060;      |
-| `writer`             | Uses the writer tags to match                                               |      &#9989;       |     &#10060;      |      &#10060;      |
-| `year`               | Uses the year tag to match                                                  |      &#9989;       |      &#9989;      |      &#10060;      |
-| `episode_year`       | Uses the year tag to match                                                  |      &#10060;      |      &#9989;      |      &#10060;      |
-| `artist_genre`       | Uses the Artist's Genre attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
-| `artist_collection`  | Uses the Artist's Collection attribute to match                             |      &#10060;      |     &#10060;      |      &#9989;       |
-| `artist_country`     | Uses the Artist's Country attribute to match                                |      &#10060;      |     &#10060;      |      &#9989;       |
-| `artist_mood`        | Uses the Artist's Mood attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
-| `artist_style`       | Uses the Artist's Style attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_genre`        | Uses the Album's Genre attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_mood`         | Uses the Album's Mood attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_style`        | Uses the Album's Style attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_format`       | Uses the Album's Format attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_type`         | Uses the Album's Type attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_collection`   | Uses the Album's Collection attribute to match                              |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_source`       | Uses the Album's Source attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_label`        | Uses the Album's Label attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
-| `track_mood`         | Uses the Track's Mood attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
-| `track_source`       | Uses the Track's Style attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| Tag Search                 | Description                                                                 | Movie<br>Libraries | Show<br>Libraries | Music<br>Libraries |
+|:---------------------------|:----------------------------------------------------------------------------|:------------------:|:-----------------:|:------------------:|
+| `actor`                    | Uses the actor tags to match                                                |      &#9989;       |      &#9989;      |      &#10060;      |
+| `audio_language`           | Uses the audio language tags to match                                       |      &#9989;       |      &#9989;      |      &#10060;      |
+| `collection`               | Uses the collection tags to match for top level collections                 |      &#9989;       |      &#9989;      |      &#10060;      |
+| `season_collection`        | Uses the collection tags to match for season collections                    |      &#10060;      |      &#9989;      |      &#10060;      |
+| `episode_collection`       | Uses the collection tags to match for episode collections                   |      &#10060;      |      &#9989;      |      &#10060;      |
+| `content_rating`           | Uses the content rating tags to match                                       |      &#9989;       |      &#9989;      |      &#10060;      |
+| `country`                  | Uses the country tags to match                                              |      &#9989;       |     &#10060;      |      &#10060;      |
+| `decade`<sup>1</sup>       | Uses the year tag to match the decade                                       |      &#9989;       |     &#10060;      |      &#10060;      |
+| `director`                 | Uses the director tags to match                                             |      &#9989;       |     &#10060;      |      &#10060;      |
+| `genre`                    | Uses the genre tags to match                                                |      &#9989;       |      &#9989;      |      &#10060;      |
+| `label`                    | Uses the label tags to match for top level collections                      |      &#9989;       |      &#9989;      |      &#10060;      |
+| `season_label`             | Uses the label tags to match for season collections                         |      &#10060;      |      &#9989;      |      &#10060;      |
+| `episode_label`            | Uses the label tags to match for episode collections                        |      &#10060;      |      &#9989;      |      &#10060;      |
+| `network`                  | Uses the network tags to match<br>**Only works with the New Plex TV Agent** |      &#10060;      |      &#9989;      |      &#10060;      |
+| `producer`                 | Uses the actor tags to match                                                |      &#9989;       |     &#10060;      |      &#10060;      |
+| `resolution`               | Uses the resolution tags to match                                           |      &#9989;       |      &#9989;      |      &#10060;      |
+| `subtitle_language`        | Uses the subtitle language tags to match                                    |      &#9989;       |      &#9989;      |      &#10060;      |
+| `writer`                   | Uses the writer tags to match                                               |      &#9989;       |     &#10060;      |      &#10060;      |
+| `year`<sup>1</sup>         | Uses the year tag to match                                                  |      &#9989;       |      &#9989;      |      &#10060;      |
+| `episode_year`<sup>1</sup> | Uses the year tag to match                                                  |      &#10060;      |      &#9989;      |      &#10060;      |
+| `artist_genre`             | Uses the Artist's Genre attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_collection`        | Uses the Artist's Collection attribute to match                             |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_country`           | Uses the Artist's Country attribute to match                                |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_mood`              | Uses the Artist's Mood attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_style`             | Uses the Artist's Style attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_label`             | Uses the Artist's Label attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_genre`              | Uses the Album's Genre attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_mood`               | Uses the Album's Mood attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_style`              | Uses the Album's Style attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_format`             | Uses the Album's Format attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_type`               | Uses the Album's Type attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_collection`         | Uses the Album's Collection attribute to match                              |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_source`             | Uses the Album's Source attribute to match                                  |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_label`              | Uses the Album's Label attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_mood`               | Uses the Track's Mood attribute to match                                    |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_source`             | Uses the Track's Style attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_label`              | Uses the Track's Label attribute to match                                   |      &#10060;      |     &#10060;      |      &#9989;       |
+
+<sup>1</sup> You can use `current_year` to have PMM use the current years value. This can be combined with a `-#` at the end to subtract that number of years. i.e. `current-2`
 
 ## Date Filters
 
@@ -234,26 +241,28 @@ No number filter can take multiple values.
 
 ### Number Attributes
 
-| Number Search         | Description                                                                                 | Movie<br>Libraries | Show<br>Libraries | Music<br>Libraries |
-|:----------------------|:--------------------------------------------------------------------------------------------|:------------------:|:-----------------:|:------------------:|
-| `duration`            | Uses the duration attribute to match using minutes<br>**Minimum:** `0`                      |      &#9989;       |     &#10060;      |      &#10060;      |
-| `plays`               | Uses the plays attribute to match<br>**Minimum:** `0`                                       |      &#9989;       |      &#9989;      |      &#10060;      |
-| `episode_plays`       | Uses the Episode's plays attribute to match<br>**Minimum:** `0`                             |      &#10060;      |      &#9989;      |      &#10060;      |
-| `critic_rating`       | Uses the critic rating attribute to match<br>**Range:** `0.0` - `10.0`                      |      &#9989;       |      &#9989;      |      &#10060;      |
-| `audience_rating`     | Uses the audience rating attribute to match<br>**Range:** `0.0` - `10.0`                    |      &#9989;       |      &#9989;      |      &#10060;      |
-| `user_rating`         | Uses the user rating attribute to match<br>**Range:** `0.0` - `10.0`                        |      &#9989;       |      &#9989;      |      &#10060;      |
-| `episode_user_rating` | Uses the user rating attribute of the show's episodes to match<br>**Range:** `0.0` - `10.0` |      &#10060;      |      &#9989;      |      &#10060;      |
-| `year`                | Uses the year attribute to match<br>**Minimum:** `0`                                        |      &#9989;       |      &#9989;      |      &#10060;      |
-| `episode_year`        | Uses the Episode's year attribute to match<br> **Minimum:** `0`                             |      &#10060;      |      &#9989;      |      &#10060;      |
-| `album_year`          | Uses the Album's year attribute to match<br>**Minimum:** `0`                                |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_decade`        | Uses the Album's decade attribute to match<br>**Minimum:** `0`                              |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_plays`         | Uses the Album's plays attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
-| `track_plays`         | Uses the Track's plays attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
-| `track_skips`         | Uses the Track's skips attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
-| `artist_user_rating`  | Uses the Artist's user rating attribute to match<br>**Range:** `0.0` - `10.0`               |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_user_rating`   | Uses the Album's user rating attribute to match<br>**Range:** `0.0` - `10.0`                |      &#10060;      |     &#10060;      |      &#9989;       |
-| `album_critic_rating` | Uses the Album's critic rating attribute to match<br>**Range:** `0.0` - `10.0`              |      &#10060;      |     &#10060;      |      &#9989;       |
-| `track_user_rating`   | Uses the Track's user rating attribute to match<br>**Range:** `0.0` - `10.0`                |      &#10060;      |     &#10060;      |      &#9989;       |
+| Number Search              | Description                                                                                 | Movie<br>Libraries | Show<br>Libraries | Music<br>Libraries |
+|:---------------------------|:--------------------------------------------------------------------------------------------|:------------------:|:-----------------:|:------------------:|
+| `duration`                 | Uses the duration attribute to match using minutes<br>**Minimum:** `0`                      |      &#9989;       |     &#10060;      |      &#10060;      |
+| `plays`                    | Uses the plays attribute to match<br>**Minimum:** `0`                                       |      &#9989;       |      &#9989;      |      &#10060;      |
+| `episode_plays`            | Uses the Episode's plays attribute to match<br>**Minimum:** `0`                             |      &#10060;      |      &#9989;      |      &#10060;      |
+| `critic_rating`            | Uses the critic rating attribute to match<br>**Range:** `0.0` - `10.0`                      |      &#9989;       |      &#9989;      |      &#10060;      |
+| `audience_rating`          | Uses the audience rating attribute to match<br>**Range:** `0.0` - `10.0`                    |      &#9989;       |      &#9989;      |      &#10060;      |
+| `user_rating`              | Uses the user rating attribute to match<br>**Range:** `0.0` - `10.0`                        |      &#9989;       |      &#9989;      |      &#10060;      |
+| `episode_user_rating`      | Uses the user rating attribute of the show's episodes to match<br>**Range:** `0.0` - `10.0` |      &#10060;      |      &#9989;      |      &#10060;      |
+| `year`<sup>1</sup>         | Uses the year attribute to match<br>**Minimum:** `0`                                        |      &#9989;       |      &#9989;      |      &#10060;      |
+| `episode_year`<sup>1</sup> | Uses the Episode's year attribute to match<br> **Minimum:** `0`                             |      &#10060;      |      &#9989;      |      &#10060;      |
+| `album_year`<sup>1</sup>   | Uses the Album's year attribute to match<br>**Minimum:** `0`                                |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_decade`<sup>1</sup> | Uses the Album's decade attribute to match<br>**Minimum:** `0`                              |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_plays`              | Uses the Album's plays attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_plays`              | Uses the Track's plays attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_skips`              | Uses the Track's skips attribute to match<br>**Minimum:** `0`                               |      &#10060;      |     &#10060;      |      &#9989;       |
+| `artist_user_rating`       | Uses the Artist's user rating attribute to match<br>**Range:** `0.0` - `10.0`               |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_user_rating`        | Uses the Album's user rating attribute to match<br>**Range:** `0.0` - `10.0`                |      &#10060;      |     &#10060;      |      &#9989;       |
+| `album_critic_rating`      | Uses the Album's critic rating attribute to match<br>**Range:** `0.0` - `10.0`              |      &#10060;      |     &#10060;      |      &#9989;       |
+| `track_user_rating`        | Uses the Track's user rating attribute to match<br>**Range:** `0.0` - `10.0`                |      &#10060;      |     &#10060;      |      &#9989;       |
+
+<sup>1</sup> You can use `current_year` to have PMM use the current years value. This can be combined with a `-#` at the end to subtract that number of years. i.e. `current-2`
 
 ## Boolean Filters
 

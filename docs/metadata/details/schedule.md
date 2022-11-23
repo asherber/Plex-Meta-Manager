@@ -1,48 +1,55 @@
-# Schedule Detail
+# Schedule Setting
 
 The script is designed to run continuously and certain attributes can be scheduled using these attributes.
 
 Below is an example of a scheduled library: 
+
 ```yaml
 libraries:
   Movies:
     schedule: weekly(sunday)
     metadata_path:
       - file: config/Movies.yml
-      - git: meisnate12/MovieCharts
-      - git: meisnate12/Studios
-      - git: meisnate12/IMDBGenres
-      - git: meisnate12/People
+      - pmm: imdb
+      - pmm: studio
+      - pmm: genre
+      - pmm: actor
     operations:
       mass_critic_rating_update: tmdb
 ```
 
-Below is an example of a scheduled Metadata File, Overlay File, and Playlist File: 
+Below is an example of scheduling Metadata Files, Playlist Files, and Overlay Files: 
+
+**Note: Overlay Files cannot be individually Scheduled.**
+
 ```yaml
 libraries:
   Movies:
     metadata_path:
       - file: config/Movies.yml
         schedule: weekly(monday)
-      - git: meisnate12/MovieCharts
+      - pmm: imdb
         schedule: weekly(tuesday)
-      - git: meisnate12/Studios
+      - pmm: studio
         schedule: weekly(wednesday)
-      - git: meisnate12/IMDBGenres
+      - pmm: genre
         schedule: weekly(thursday)
-      - git: meisnate12/People
+      - pmm: actor
         schedule: weekly(friday)
     overlay_path:
-      - git: PMM/overlays/imdb
-        schedule: weekly(saturday)
-    operations:
-      mass_critic_rating_update: tmdb
+      - schedule: weekly(saturday)
+      - pmm: audio_codec
+      - pmm: resolution
+      - pmm: video_format
 playlist_files:
   - file: config/Playlists.yml
     schedule: weekly(sunday)
+  - file: config/Playlists2.yml
+    schedule: weekly(monday)
 ```
 
 Below is an example of a scheduled collection: 
+
 ```yaml
 collections:
   TMDb Trending Weekly:
@@ -58,12 +65,13 @@ collections:
 ```
 
 Below is an example of a scheduled pinning collection: 
+
 ```yaml
 collections:
   Christmas Movies:
     imdb_list: https://www.imdb.com/list/ls000096828/
     sync_mode: sync
-    visible_home: range(12/01-12-31)
+    visible_home: range(12/01-12/31)
 ```
 
 The scheduling options are:

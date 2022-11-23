@@ -1,0 +1,56 @@
+##############################################################################
+#                          IMDb Charts Collections                           #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#        https://metamanager.wiki/en/latest/defaults/chart/imdb.html         #
+##############################################################################
+
+external_templates:
+  pmm: templates
+  template_variables:
+    collection_section: "01"
+    image: chart/<<collection_name_encoded>>
+
+translations:
+  pmm: translations
+
+templates:
+  imdb_chart:
+    imdb_chart: <<chart>>_<<library_type>>s
+
+collections:
+  IMDb Popular:
+    variables:
+      key: popular
+    template:
+      - name: imdb_chart
+        chart: popular
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: imdb_popular
+
+  IMDb Top 250:
+    variables:
+      key: top
+    template:
+      - name: imdb_chart
+        chart: top
+      - name: shared
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: imdb_top
+
+  IMDb Lowest Rated:
+    variables:
+      key: lowest
+    imdb_chart: lowest_rated
+    template:
+      - name: shared
+        allowed_libraries: movie
+      - name: arr
+      - name: custom
+      - name: translation
+        translation_key: imdb_lowest

@@ -1,0 +1,37 @@
+##############################################################################
+#                         Collectionless Collection                          #
+#                 Created by Yozora, Bullmoose20, & Sohjiro                  #
+#          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
+#    https://metamanager.wiki/en/latest/defaults/both/collectionless.html    #
+##############################################################################
+
+translations:
+  pmm: translations
+
+templates:
+  collectionless:
+    default:
+      exclude_prefix:
+        - "!"
+        - "~"
+      summary_collectionless: <<collectionless_summary>>
+      name_collectionless: <<collectionless_name>>
+      sort_title: ~_Collectionless
+      collection_order: alpha
+      url_poster: https://raw.githubusercontent.com/meisnate12/Plex-Meta-Manager-Images/master/collectionless.jpg
+    optional:
+      - collection_mode
+      - exclude
+    url_poster: <<url_poster>>
+    collection_order: <<collection_order>>
+    sort_title: <<sort_title>>
+    summary: <<summary_collectionless>>
+    name: <<name_collectionless>>
+    plex_collectionless:
+      exclude_prefix: <<exclude_prefix>>
+      exclude: <<exclude>>
+
+collections:
+  Collectionless:
+    template:
+      - name: collectionless

@@ -17,6 +17,7 @@ WARNING = 30
 WARN = WARNING
 INFO = 20
 DEBUG = 10
+TRACE = 0
 
 
 def fmt_filter(record):
@@ -28,12 +29,13 @@ _srcfile = os.path.normcase(fmt_filter.__code__.co_filename)
 
 
 class MyLogger:
-    def __init__(self, logger_name, default_dir, screen_width, separating_character, ignore_ghost, is_debug):
+    def __init__(self, logger_name, default_dir, screen_width, separating_character, ignore_ghost, is_debug, is_trace):
         self.logger_name = logger_name
         self.default_dir = default_dir
         self.screen_width = screen_width
         self.separating_character = separating_character
         self.is_debug = is_debug
+        self.is_trace = is_trace
         self.ignore_ghost = ignore_ghost
         self.log_dir = os.path.join(default_dir, LOG_DIR)
         self.playlists_dir = os.path.join(self.log_dir, PLAYLIST_DIR)
@@ -136,7 +138,9 @@ class MyLogger:
         final_text = f"{text}{sep * side}{sep * side}" if left else f"{sep * side}{text}{sep * side}"
         return final_text
 
-    def separator(self, text=None, space=True, border=True, debug=False, side_space=True, left=False):
+    def separator(self, text=None, space=True, border=True, debug=False, trace=False, side_space=True, left=False):
+        if trace and not self.is_trace:
+            return None
         sep = " " if space else self.separating_character
         for handler in self._logger.handlers:
             self._formatter(handler, border=False)
@@ -148,10 +152,13 @@ class MyLogger:
         if text:
             text_list = text.split("\n")
             for t in text_list:
-                if debug:
-                    self.debug(f"|{sep}{self._centered(t, sep=sep, side_space=side_space, left=left)}{sep}|")
+                msg = f"|{sep}{self._centered(t, sep=sep, side_space=side_space, left=left)}{sep}|"
+                if trace:
+                    self.trace(msg)
+                elif debug:
+                    self.debug(msg)
                 else:
-                    self.info(f"|{sep}{self._centered(t, sep=sep, side_space=side_space, left=left)}{sep}|")
+                    self.info(msg)
             if border and debug:
                 self.debug(border_text)
             elif border:
@@ -174,6 +181,10 @@ class MyLogger:
         if self._logger.isEnabledFor(WARNING):
             self._log(WARNING, str(msg), args, **kwargs)
 
+    def trace(self, msg, *args, **kwargs):
+        if self.is_trace:
+            self._log(TRACE, str(msg), args, **kwargs)
+
     def error(self, msg, *args, **kwargs):
         if self.save_errors:
             self.saved_errors.append(msg)
@@ -186,8 +197,11 @@ class MyLogger:
         if self._logger.isEnabledFor(CRITICAL):
             self._log(CRITICAL, str(msg), args, **kwargs)
 
-    def stacktrace(self):
-        self.debug(traceback.format_exc())
+    def stacktrace(self, trace=False):
+        if trace:
+            self.trace(traceback.format_exc())
+        else:
+            self.debug(traceback.format_exc())
 
     def _space(self, display_title):
         display_title = str(display_title)
@@ -216,6 +230,16 @@ class MyLogger:
             self.secrets.append(str(text))
 
     def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, stacklevel=1):
+        trace = False
+        original_format_str = "[%(asctime)s] %(filename)-27s %(levelname)-10s | %(message)s"
+        format_str = original_format_str
+        if level == TRACE:
+            trace = True
+            level = DEBUG
+            format_str = "[%(asctime)s] %(filename)-27s [TRACE]    | %(message)s"
+            for handler in self._logger.handlers:
+                if isinstance(handler, RotatingFileHandler):
+                    handler.setFormatter(logging.Formatter(format_str))
         if self.spacing > 0:
             self.exorcise()
         if "\n" in msg:
@@ -227,7 +251,7 @@ class MyLogger:
                             handler.setFormatter(logging.Formatter(" " * 65 + "| %(message)s"))
             for handler in self._logger.handlers:
                 if isinstance(handler, RotatingFileHandler):
-                    handler.setFormatter(logging.Formatter("[%(asctime)s] %(filename)-27s %(levelname)-10s | %(message)s"))
+                    handler.setFormatter(logging.Formatter(format_str))
         else:
             for secret in self.secrets:
                 if secret in msg:
@@ -249,6 +273,10 @@ class MyLogger:
                     exc_info = sys.exc_info()
             record = self._logger.makeRecord(self._logger.name, level, fn, lno, msg, args, exc_info, func, extra, sinfo)
             self._logger.handle(record)
+        if trace:
+            for handler in self._logger.handlers:
+                if isinstance(handler, RotatingFileHandler):
+                    handler.setFormatter(logging.Formatter(original_format_str))
 
     def findCaller(self, stack_info=False, stacklevel=1):
         f = logging.currentframe()
