@@ -1,5 +1,6 @@
-import glob, logging, os, re, requests, ruamel.yaml, signal, sys, time
+import glob, os, re, requests, ruamel.yaml, signal, sys, time
 from datetime import datetime, timedelta
+from modules.logs import MyLogger
 from num2words import num2words
 from pathvalidate import is_valid_filename, sanitize_filename
 from plexapi.audio import Album, Track
@@ -13,7 +14,7 @@ except ModuleNotFoundError:
     windows = False
 
 
-logger = logging.getLogger("Plex Meta Manager")
+logger: MyLogger = None
 
 class TimeoutExpired(Exception):
     pass
@@ -22,6 +23,12 @@ class LimitReached(Exception):
     pass
 
 class Failed(Exception):
+    pass
+
+class FilterFailed(Failed):
+    pass
+
+class Continue(Exception):
     pass
 
 class Deleted(Exception):
@@ -53,7 +60,7 @@ def retry_if_not_failed(exception):
     return not isinstance(exception, Failed)
 
 def retry_if_not_plex(exception):
-    return not isinstance(exception, (BadRequest, NotFound, Unauthorized))
+    return not isinstance(exception, (BadRequest, NotFound, Unauthorized, Failed))
 
 days_alias = {
     "monday": 0, "mon": 0, "m": 0,
@@ -74,11 +81,9 @@ pretty_months = {
     7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
 }
 seasons = ["current", "winter", "spring", "summer", "fall"]
-pretty_ids = {"anidbid": "AniDB", "imdbid": "IMDb", "mal_id": "MyAnimeList", "themoviedb_id": "TMDb", "thetvdb_id": "TVDb", "tvdbid": "TVDb"}
 advance_tags_to_edit = {
     "Movie": ["metadata_language", "use_original_title"],
-    "Show": ["episode_sorting", "keep_episodes", "delete_episodes", "season_display", "episode_ordering",
-             "metadata_language", "use_original_title"],
+    "Show": ["episode_sorting", "keep_episodes", "delete_episodes", "season_display", "episode_ordering", "metadata_language", "use_original_title"],
     "Artist": ["album_sorting"]
 }
 tags_to_edit = {
@@ -87,7 +92,6 @@ tags_to_edit = {
     "Show": ["genre", "label", "collection"],
     "Artist": ["genre", "label", "style", "mood", "country", "collection", "similar_artist"]
 }
-mdb_types = ["mdb", "mdb_imdb", "mdb_metacritic", "mdb_metacriticuser", "mdb_trakt", "mdb_tomatoes", "mdb_tomatoesaudience", "mdb_tmdb", "mdb_letterboxd"]
 collection_mode_options = {
     "default": "default", "hide": "hide",
     "hide_items": "hideItems", "hideitems": "hideItems",
@@ -195,6 +199,10 @@ def pick_image(title, images, prioritize_assets, download_url_assets, item_dir, 
             final_attr = f"tmdb_{image_type}"
         elif "tmdb_profile" in images:
             final_attr = "tmdb_profile"
+        elif "tmdb_list_poster" in images:
+            final_attr = "tmdb_list_poster"
+        elif "tvdb_list_poster" in images:
+            final_attr = "tvdb_list_poster"
         elif f"tvdb_{image_type}" in images:
             final_attr = f"tvdb_{image_type}"
         elif "asset_directory" in images:
@@ -215,6 +223,10 @@ def pick_image(title, images, prioritize_assets, download_url_assets, item_dir, 
             final_attr = "tmdb_writer_details"
         elif "tmdb_movie_details" in images:
             final_attr = "tmdb_movie_details"
+        elif "tmdb_list_details" in images:
+            final_attr = "tmdb_list_details"
+        elif "tvdb_list_details" in images:
+            final_attr = "tvdb_list_details"
         elif "tvdb_movie_details" in images:
             final_attr = "tvdb_movie_details"
         elif "tvdb_show_details" in images:
@@ -392,8 +404,10 @@ def time_window(tw):
         return f"{today - timedelta(weeks=1):%Y-0%V}"
     elif tw == "this_month":
         return f"{today:%Y-%m}"
+    elif tw == "last_month" and today.month == 1:
+        return f"{today.year - 1}-12"
     elif tw == "last_month":
-        return f"{today.year}-{today.month - 1 or 12}"
+        return f"{today.year}-{today.month - 1:02}"
     elif tw == "this_year":
         return f"{today.year}"
     elif tw == "last_year":
@@ -526,6 +540,8 @@ def is_boolean_filter(value, data):
 
 def is_string_filter(values, modifier, data):
     jailbreak = False
+    if modifier == ".regex":
+        logger.trace(f"Regex Values: {values}")
     for value in values:
         for check_value in data:
             if (modifier in ["", ".not"] and check_value.lower() in value.lower()) \
@@ -665,6 +681,28 @@ def check_int(value, datatype="int", minimum=1, maximum=None):
             return value
     except ValueError:
         pass
+
+def parse_and_or(error, attribute, data, test_list=None):
+    out = ""
+    ands = [d.strip() for d in data.split(",")]
+    for an in ands:
+        ors = [a.strip() for a in an.split("|")]
+        for item in ors:
+            if not item:
+                raise Failed(f"{error} Error: Cannot have a blank {attribute}")
+            if test_list and item not in test_list:
+                raise Failed(f"{error} Error: {attribute} {item} is invalid")
+        if out:
+            out += f" and "
+        if len(ands) > 1 and len(ors) > 1:
+            out += "("
+        if len(ors) > 1:
+            out += ' or '.join([test_list[int(o)] if test_list else o for o in ors])
+        else:
+            out += test_list[int(ors[0])] if test_list else ors[0]
+        if len(ands) > 1 and len(ors) > 1:
+            out += ")"
+    return out
 
 def parse(error, attribute, data, datatype=None, methods=None, parent=None, default=None, options=None, translation=None, minimum=1, maximum=None, regex=None, range_split=None):
     display = f"{parent + ' ' if parent else ''}{attribute} attribute"
@@ -895,7 +933,7 @@ def get_system_fonts():
     return system_fonts
 
 class YAML:
-    def __init__(self, path=None, input_data=None, check_empty=False, create=False):
+    def __init__(self, path=None, input_data=None, check_empty=False, create=False, start_empty=False):
         self.path = path
         self.input_data = input_data
         self.yaml = ruamel.yaml.YAML()
@@ -904,7 +942,7 @@ class YAML:
             if input_data:
                 self.data = self.yaml.load(input_data)
             else:
-                if create and not os.path.exists(self.path):
+                if start_empty or (create and not os.path.exists(self.path)):
                     with open(self.path, 'w'):
                         pass
                     self.data = {}

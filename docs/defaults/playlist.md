@@ -8,16 +8,17 @@ This Default file requires [Trakt Authentication](../config/trakt)
 
 ## Playlists
 
-| Playlist                                     |     Key     | Description                                                                       |
-|:---------------------------------------------|:-----------:|:----------------------------------------------------------------------------------|
-| `Arrowverse (Timeline Order)`                |   `arrow`   | Playlist of Movies and Episodes in the Arrowverse (Timeline Order)                |
-| `Marvel Cinematic Universe (Timeline Order)` |    `mcu`    | Playlist of Movies and Episodes in the Marvel Cinematic Universe (Timeline Order) |
-| `DC Animated Universe (Timeline Order)`      |   `dcau`    | Playlist of Movies and Episodes in the DC Animated Universe (Timeline Order)      |
-| `Pokémon (Timeline Order)`                   |  `pokemon`  | Playlist of Movies and Episodes in the Pokémon (Timeline Order)                   |
-| `Star Trek (Timeline Order)`                 | `startrek`  | Playlist of Movies and Episodes in the Star Trek (Timeline Order)                 |
-| `Star Wars (Timeline Order)`                 | `starwars`  | Playlist of Movies and Episodes in the Star Wars (Timeline Order)                 |
-| `Star Wars The Clone Wars (Timeline Order)`  | `clonewars` | Playlist of Movies and Episodes in the Star Wars The Clone Wars (Timeline Order)  |
-| `X-Men (Timeline Order)`                     |   `xmen`    | Playlist of Movies and Episodes in the X-Men (Timeline Order)                     |
+| Playlist                                     | Key          | Description                                                                       |
+|:---------------------------------------------|:-------------|:----------------------------------------------------------------------------------|
+| `Arrowverse (Timeline Order)`                | `arrow`      | Playlist of Movies and Episodes in the Arrowverse (Timeline Order)                |
+| `Marvel Cinematic Universe (Timeline Order)` | `mcu`        | Playlist of Movies and Episodes in the Marvel Cinematic Universe (Timeline Order) |
+| `DC Animated Universe (Timeline Order)`      | `dcau`       | Playlist of Movies and Episodes in the DC Animated Universe (Timeline Order)      |
+| `Pokémon (Timeline Order)`                   | `pokemon`    | Playlist of Movies and Episodes in the Pokémon (Timeline Order)                   |
+| `Star Trek (Timeline Order)`                 | `startrek`   | Playlist of Movies and Episodes in the Star Trek (Timeline Order)                 |
+| `Star Wars (Timeline Order)`                 | `starwars`   | Playlist of Movies and Episodes in the Star Wars (Timeline Order)                 |
+| `Star Wars The Clone Wars (Timeline Order)`  | `clonewars`  | Playlist of Movies and Episodes in the Star Wars The Clone Wars (Timeline Order)  |
+| `X-Men (Timeline Order)`                     | `xmen`       | Playlist of Movies and Episodes in the X-Men (Timeline Order)                     |
+| `Dragon Ball (Timeline Order)`               | `dragonball` | Playlist of Movies and Episodes in the Dragon Ball (Timeline Order)               |
 
 ## Config
 
@@ -32,7 +33,7 @@ playlist_files:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 **[Shared Variables](collection_variables) are NOT available to this default file.**
 
@@ -42,6 +43,10 @@ Note that the `templates_variables:` section only needs to be used if you do wan
 | `name_<<key>>`<sup>1</sup>               | **Description:** Changes the name of the specified key's playlist.<br>**Values:** New Playlist Name                                                                                                                                                                                          |
 | `summary_<<key>>`<sup>1</sup>            | **Description:** Changes the summary of the specified key's playlist.<br>**Values:** New Playlist Summary                                                                                                                                                                                    |
 | `libraries`                              | **Description:** Sets the names of the libraries to use for the Playlists.<br>**Default:** `Movies, TV Shows`<br>**Values:** Comma-separated string or list of library mapping names defined in the `libraries` attribute in the base of your [Configuration File](../config/configuration). |
+| `sync_to_user`                           | **Description:** Sets the users to sync all playlists to.<br>**Default:** `playlist_sync_to_user` Global Setting Value<br>**Values:** Comma-separated string or list of user names.                                                                                                          |
+| `sync_to_user_<<key>>`<sup>1</sup>       | **Description:** Sets the users to sync the specified key's playlist to.<br>**Default:** `sync_to_user` Value<br>**Values:** Comma-separated string or list of user names.                                                                                                                   |
+| `exclude_user`                           | **Description:** Sets the users to exclude from sync for all playlists.<br>**Default:** `playlist_sync_to_user` Global Setting Value<br>**Values:** Comma-separated string or list of user names.                                                                                            |
+| `exclude_user_<<key>>`<sup>1</sup>       | **Description:** Sets the users to exclude from sync the specified key's playlist.<br>**Default:** `sync_to_user` Value<br>**Values:** Comma-separated string or list of user names.                                                                                                         |
 | `trakt_list_<<key>>`<sup>1</sup>         | **Description:** Adds the Movies in the Trakt List to the specified key's playlist. Overrides the [default trakt_list](#default-trakt_list) for that playlist if used.<br>**Values:** List of Trakt List URLs                                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `ignore_ids`                             | **Description:** Set a list or comma-separated string of TMDb/TVDb IDs to ignore in all playlists.<br>**Values:** List or comma-separated string of TMDb/TVDb IDs                                                                                                                            |
 | `ignore_imdb_ids`                        | **Description:** Set a list or comma-separated string of IMDb IDs to ignore in all playlists.<br>**Values:** List or comma-separated string of IMDb IDs                                                                                                                                      |
@@ -74,7 +79,11 @@ playlist_files:
       radarr_add_missing: true
 ```
 
-## Default `trakt_list`
+## Default values
+
+These are lists provided for reference to show what values will be in use if you do no customization.  If you want to customize these values, use the methods described above.  These do not show how to change a name or a list.
+
+### Default `trakt_list`
 
 The below Trakt lists are used to populate the playlists associated with the keys.
 
@@ -88,4 +97,5 @@ trakt_list:
   starwars: https://trakt.tv/users/ruben_vw_/lists/star-wars-canon-timeline
   clonewars: https://trakt.tv/users/tomfin46/lists/star-wars-the-clone-wars-chronological-episode-order
   xmen: https://trakt.tv/users/heyitsbea/lists/x-men
+  dragonball: https://trakt.tv/users/qamazi/lists/dragon-ball-binged-out
 ```

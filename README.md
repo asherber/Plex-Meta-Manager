@@ -11,10 +11,13 @@
 [![Wiki](https://img.shields.io/readthedocs/plex-meta-manager?color=%2300bc8c&style=plastic)](https://metamanager.wiki)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/meisnate12?color=%238a2be2&style=plastic)](https://github.com/sponsors/meisnate12)
 [![Sponsor or Donate](https://img.shields.io/badge/-Sponsor%2FDonate-blueviolet?style=plastic)](https://github.com/sponsors/meisnate12)
+[![Feature Requests](https://img.shields.io/badge/Feature%20Requests-blueviolet?style=plastic)](https://features.metamanager.wiki/)
 
 Plex Meta Manager is an open source Python 3 project that has been designed to ease the creation and maintenance of metadata, collections, and playlists within a Plex Media Server. The script is designed to be run continuously and be able to update information based on sources outside your plex environment. Plex Meta Manager supports Movie/TV/Music libraries and Playlists.
 
 ## Getting Started
+
+These are the high-level steps you must take to get Plex Meta Manager up and running:
 
 1. Install Plex Meta Manager; this process is described [here](https://metamanager.wiki/en/latest/home/installation.html).
 
@@ -33,6 +36,10 @@ If you find steps 1-3 above daunting, there are some walkthroughs available that
    3. The [unRAID Walkthrough](https://metamanager.wiki/en/latest/home/guides/unraid.html) gets you started configuring the script in UNRaid.  It doesn't go through the same steps with regard to creating the config file and metadata file, so you may want to go through the [Docker Walkthrough](https://metamanager.wiki/en/latest/home/guides/docker.html) first on your computer to gain that understanding.
 
 ## Development & Nightly Builds
+
+Development and Nightly builds are deemed as "beta" builds which are updated far more frequently than the master branch. Bug fixes, new features and and any other code added to Plex Meta Manager first goes to the nightly branch, followed by the develop branch, before finally being released to the master branch.
+
+The development builds (particularly the nightly branch) is only recommended for those who have a technical knowledge of Plex Meta Manager, and are happy with having to frequently update to receive the latest changes.
 
 ### Development
 

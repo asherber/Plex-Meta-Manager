@@ -11,10 +11,12 @@ class Webhooks:
         self.version_webhooks = system_webhooks["version"] if "version" in system_webhooks else []
         self.run_start_webhooks = system_webhooks["run_start"] if "run_start" in system_webhooks else []
         self.run_end_webhooks = system_webhooks["run_end"] if "run_end" in system_webhooks else []
+        self.delete_webhooks = system_webhooks["delete"] if "delete" in system_webhooks else []
         self.library = library
         self.notifiarr = notifiarr
 
     def _request(self, webhooks, json):
+        logger.trace("")
         logger.separator("Webhooks", space=False, border=False, trace=True)
         logger.trace("")
         logger.trace(f"JSON: {json}")
@@ -68,7 +70,7 @@ class Webhooks:
 
     def start_time_hooks(self, start_time):
         if self.run_start_webhooks:
-            self._request(self.run_start_webhooks, {"start_time": start_time.strftime("%Y-%m-%d %H:%M:%S")})
+            self._request(self.run_start_webhooks, {"event": "run_start", "start_time": start_time.strftime("%Y-%m-%d %H:%M:%S")})
 
     def version_hooks(self, version, latest_version):
         if self.version_webhooks:
@@ -77,11 +79,12 @@ class Webhooks:
                 notes = self.config.GitHub.latest_release_notes()
             elif version[2] and version[2] < latest_version[2]:
                 notes = self.config.GitHub.get_commits(version[2], nightly=self.config.check_nightly)
-            self._request(self.version_webhooks, {"current": version[0], "latest": latest_version[0], "notes": notes})
+            self._request(self.version_webhooks, {"event": "version", "current": version[0], "latest": latest_version[0], "notes": notes})
 
     def end_time_hooks(self, start_time, end_time, run_time, stats):
         if self.run_end_webhooks:
             self._request(self.run_end_webhooks, {
+                "event": "run_end",
                 "start_time": start_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "end_time": end_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "run_time": run_time,
@@ -97,14 +100,21 @@ class Webhooks:
 
     def error_hooks(self, text, server=None, library=None, collection=None, playlist=None, critical=True):
         if self.error_webhooks:
-            json = {"error": str(text), "critical": critical}
+            json = {"event": "error", "error": str(text), "critical": critical}
             if server:          json["server_name"] = str(server)
             if library:         json["library_name"] = str(library)
             if collection:      json["collection"] = str(collection)
             if playlist:        json["playlist"] = str(playlist)
             self._request(self.error_webhooks, json)
 
-    def collection_hooks(self, webhooks, collection, poster_url=None, background_url=None, created=False, deleted=False,
+    def delete_hooks(self, message, server=None, library=None):
+        if self.delete_webhooks:
+            json = {"event": "delete", "message": message}
+            if server:          json["server_name"] = str(server)
+            if library:         json["library_name"] = str(library)
+            self._request(self.delete_webhooks, json)
+
+    def collection_hooks(self, webhooks, collection, poster_url=None, background_url=None, created=False,
                          additions=None, removals=None, radarr=None, sonarr=None, playlist=False):
         if self.library:
             thumb = None
@@ -114,11 +124,11 @@ class Webhooks:
             if not playlist and not background_url and collection.art and next((f for f in collection.fields if f.name == "art"), None):
                 art = self.config.get_image_encoded(f"{self.library.url}{collection.art}?X-Plex-Token={self.library.token}")
             self._request(webhooks, {
+                "event": "changes",
                 "server_name": self.library.PlexServer.friendlyName,
                 "library_name": self.library.name,
                 "playlist" if playlist else "collection": collection.title,
                 "created": created,
-                "deleted": deleted,
                 "poster": thumb,
                 "background": art,
                 "poster_url": poster_url,
@@ -130,15 +140,15 @@ class Webhooks:
             })
 
     def slack(self, json):
-        if "end_time" in json:
+        if json["event"] == "run_end":
             title = ":white_check_mark: Plex Meta Manager Has Finished a Run"
             rows = [
                 [("*Start Time*", json["start_time"]), ("*End Time*", json["end_time"]), ("*Run Time*", json["run_time"])],
                 [],
                 [
-                    (":heavy_plus_sign: *Collections Created*", json["collections_created"]),
-                    (":infinity: *Collections Modified*", json["collections_modified"]),
-                    (":heavy_minus_sign: *Collections Deleted*", json["collections_deleted"])
+                    (":heavy_plus_sign: *Collections Created*", str(json["collections_created"])),
+                    (":infinity: *Collections Modified*", str(json["collections_modified"])),
+                    (":heavy_minus_sign: *Collections Deleted*", str(json["collections_deleted"]))
                 ]
             ]
             if json["added_to_radarr"] or json["added_to_sonarr"]:
@@ -148,10 +158,10 @@ class Webhooks:
             if json["added_to_sonarr"]:
                 rows.append([("*Added To Sonarr*", json['added_to_sonarr'])])
 
-        elif "start_time" in json:
+        elif json["event"] == "run_start":
             title = ":information_source: Plex Meta Manager Has Started!"
             rows = [[("*Start Time*", json["start_time"])]]
-        elif "current" in json:
+        elif json["event"] == "version":
             title = "Plex Meta Manager Has a New Version Available"
             rows = [
                 [("*Current Version*", json["current"]), ("*Latest Version*", json["latest"])],
@@ -173,35 +183,34 @@ class Webhooks:
                 row1.append(("*Playlist Name*", json["playlist"]))
             if row1:
                 rows.append(row1)
-            if "error" in json:
+            if json["event"] == "delete":
+                title = json["message"]
+            elif "error" in json:
                 title = f":warning: Plex Meta Manager Encountered {'a Critical' if json['critical'] else 'an'} Error"
                 rows.append([])
                 rows.append([(json["error"], )])
             else:
-                if json["deleted"]:
-                    title = f":heavy_minus_sign: A {text} has Been Deleted!"
-                else:
-                    title = f"{':heavy_plus_sign:' if json['created'] else ':infinity:'} A {text} has Been {'Created' if json['created'] else 'Modified'}!"
+                title = f"{':heavy_plus_sign:' if json['created'] else ':infinity:'} A {text} has Been {'Created' if json['created'] else 'Modified'}!"
 
-                    def get_field_text(items_list):
-                        field_text = ""
-                        for i, item in enumerate(items_list, 1):
-                            if "tmdb_id" in item:
-                                field_text += f"\n{i}. [{item['title']}](https://www.themoviedb.org/movie/{item['tmdb_id']})"
-                            elif "tvdb_id" in item:
-                                field_text += f"\n{i}. [{item['title']}](https://www.thetvdb.com/dereferrer/series/{item['tvdb_id']})"
-                            else:
-                                field_text += f"\n{i}. {item['title']}"
-                        return field_text
+                def get_field_text(items_list):
+                    field_text = ""
+                    for i, item in enumerate(items_list, 1):
+                        if "tmdb_id" in item:
+                            field_text += f"\n{i}. [{item['title']}](https://www.themoviedb.org/movie/{item['tmdb_id']})"
+                        elif "tvdb_id" in item:
+                            field_text += f"\n{i}. [{item['title']}](https://www.thetvdb.com/dereferrer/series/{item['tvdb_id']})"
+                        else:
+                            field_text += f"\n{i}. {item['title']}"
+                    return field_text
 
-                    if json["additions"]:
-                        rows.append([])
-                        rows.append([("*Items Added*", " ")])
-                        rows.append([(get_field_text(json["additions"]), )])
-                    if json["removals"]:
-                        rows.append([])
-                        rows.append([("*Items Removed*", " ")])
-                        rows.append([(get_field_text(json["removals"]), )])
+                if json["additions"]:
+                    rows.append([])
+                    rows.append([("*Items Added*", " ")])
+                    rows.append([(get_field_text(json["additions"]), )])
+                if json["removals"]:
+                    rows.append([])
+                    rows.append([("*Items Removed*", " ")])
+                    rows.append([(get_field_text(json["removals"]), )])
 
         new_json = {
             "text": title,
@@ -215,7 +224,8 @@ class Webhooks:
             for row in rows:
                 if row:
                     if len(row[0]) == 1:
-                        new_json["blocks"].append({"type": "section", "text": row[0][0]})
+                        section = {"type": "section", "text": {"type": "plain_text", "text": row[0][0]}}
+                        new_json["blocks"].append(section)
                     else:
                         section = {"type": "section", "fields": []}
                         for col in row:
@@ -229,7 +239,7 @@ class Webhooks:
     def discord(self, json):
         description = None
         rows = []
-        if "end_time" in json:
+        if json["event"] == "run_end":
             title = "Run Completed"
             rows = [
                 [("Start Time", json["start_time"]), ("End Time", json["end_time"]), ("Run Time", json["run_time"])],
@@ -240,10 +250,10 @@ class Webhooks:
                 rows.append([(f"{json['added_to_radarr']} Movies Added To Radarr", None)])
             if json["added_to_sonarr"]:
                 rows.append([(f"{json['added_to_sonarr']} Series Added To Sonarr", None)])
-        elif "start_time" in json:
+        elif json["event"] == "run_start":
             title = "Run Started"
             description = json["start_time"]
-        elif "current" in json:
+        elif json["event"] == "version":
             title = "New Version Available"
             rows = [
                 [("Current", json["current"]), ("Latest", json["latest"])],
@@ -264,30 +274,29 @@ class Webhooks:
                 row1.append(("Playlist", json["playlist"]))
             if row1:
                 rows.append(row1)
-            if "error" in json:
+            if json["event"] == "delete":
+                title = json["message"]
+            elif "error" in json:
                 title = f"{'Critical ' if json['critical'] else ''}Error"
                 rows.append([("Error Message", json["error"])])
             else:
-                if json["deleted"]:
-                    title = f"{text} Deleted"
-                else:
-                    title = f"{text} {'Created' if json['created'] else 'Modified'}"
+                title = f"{text} {'Created' if json['created'] else 'Modified'}"
 
-                    def get_field_text(items_list):
-                        field_text = ""
-                        for i, item in enumerate(items_list, 1):
-                            if "tmdb_id" in item:
-                                field_text += f"\n{i}. [{item['title']}](https://www.themoviedb.org/movie/{item['tmdb_id']})"
-                            elif "tvdb_id" in item:
-                                field_text += f"\n{i}. [{item['title']}](https://www.thetvdb.com/dereferrer/series/{item['tvdb_id']})"
-                            else:
-                                field_text += f"\n{i}. {item['title']}"
-                        return field_text
+                def get_field_text(items_list):
+                    field_text = ""
+                    for i, item in enumerate(items_list, 1):
+                        if "tmdb_id" in item:
+                            field_text += f"\n{i}. [{item['title']}](https://www.themoviedb.org/movie/{item['tmdb_id']})"
+                        elif "tvdb_id" in item:
+                            field_text += f"\n{i}. [{item['title']}](https://www.thetvdb.com/dereferrer/series/{item['tvdb_id']})"
+                        else:
+                            field_text += f"\n{i}. {item['title']}"
+                    return field_text
 
-                    if json["additions"]:
-                        rows.append([("Items Added", get_field_text(json["additions"]))])
-                    if json["removals"]:
-                        rows.append([("Items Removed", get_field_text(json["removals"]))])
+                if json["additions"]:
+                    rows.append([("Items Added", get_field_text(json["additions"]))])
+                if json["removals"]:
+                    rows.append([("Items Removed", get_field_text(json["removals"]))])
         new_json = {
             "embeds": [
                 {

@@ -10,21 +10,21 @@ This Default file requires [Trakt Authentication](../../config/trakt)
 
 ## Collections Section 02
 
-| Collection                  |     Key     | Description                                                                 |
-|:----------------------------|:-----------:|:----------------------------------------------------------------------------|
+| Collection                  | Key         | Description                                                                 |
+|:----------------------------|:------------|:----------------------------------------------------------------------------|
 | `Universe Collections`      | `separator` | [Separator Collection](../separators) to denote the Section of Collections. |
-| `Star Wars Universe`        |   `star`    | Collection of Movies in the Star Wars Universe                              |
-| `DC Animated Universe`      |    `dca`    | Collection of Movies in the DC Animated Universe                            |
-| `DC Extended Universe`      |    `dcu`    | Collection of Movies in the DC Extended Universe                            |
-| `Marvel Cinematic Universe` |    `mcu`    | Collection of Movies in the Marvel Cinematic Universe                       |
-| `Wizarding World`           |  `wizard`   | Collection of Movies in the Wizarding World Universe                        |
-| `Alien / Predator`          |    `avp`    | Collection of Movies in the Alien / Predator Universe                       |
-| `X-Men Universe`            |   `xmen`    | Collection of Movies in the X-Men Universe                                  |
-| `Middle Earth`              |  `middle`   | Collection of Movies in the Middle Earth Universe                           |
-| `Fast & Furious`            |   `fast`    | Collection of Movies in the Fast & Furious Universe                         |
-| `Star Trek`                 |   `trek`    | Collection of Movies in the Star Trek Universe                              |
-| `Rocky / Creed`             |   `rocky`   | Collection of Movies in the Rocky / Creed Universe                          |
-| `The Mummy Universe`        |   `mummy`   | Collection of Movies in the The Mummy Universe                              |
+| `Star Wars Universe`        | `star`      | Collection of Movies in the Star Wars Universe                              |
+| `DC Animated Universe`      | `dca`       | Collection of Movies in the DC Animated Universe                            |
+| `DC Extended Universe`      | `dcu`       | Collection of Movies in the DC Extended Universe                            |
+| `Marvel Cinematic Universe` | `mcu`       | Collection of Movies in the Marvel Cinematic Universe                       |
+| `Wizarding World`           | `wizard`    | Collection of Movies in the Wizarding World Universe                        |
+| `Alien / Predator`          | `avp`       | Collection of Movies in the Alien / Predator Universe                       |
+| `X-Men Universe`            | `xmen`      | Collection of Movies in the X-Men Universe                                  |
+| `Middle Earth`              | `middle`    | Collection of Movies in the Middle Earth Universe                           |
+| `Fast & Furious`            | `fast`      | Collection of Movies in the Fast & Furious Universe                         |
+| `Star Trek`                 | `trek`      | Collection of Movies in the Star Trek Universe                              |
+| `Rocky / Creed`             | `rocky`     | Collection of Movies in the Rocky / Creed Universe                          |
+| `The Mummy Universe`        | `mummy`     | Collection of Movies in the The Mummy Universe                              |
 
 ## Config
 
@@ -41,7 +41,7 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 All [Shared Collection Variables](../collection_variables) are available as well as the additional Variables below which can be used to customize the file.
 
@@ -49,6 +49,8 @@ This file contains a [Separator](../separators) so all [Shared Separator Variabl
 
 | Variable                               | Description & Values                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 |:---------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `sync_mode`                            | **Description:** Changes the Sync Mode for all collections in a Defaults file.<br>**Default:** `sync`<br>**Values:**<table class="clearTable"><tr><td>`sync`</td><td>Add and Remove Items based on Builders</td></tr><tr><td>`append`</td><td>Only Add Items based on Builders</td></tr></table>                                                                                                                                                                                                                                             |
+| `sync_mode_<<key>>`<sup>1</sup>        | **Description:** Changes the Sync Mode of the specified key's collection.<br>**Default:** `sync_mode`<br>**Values:**<table class="clearTable"><tr><td>`sync`</td><td>Add and Remove Items based on Builders</td></tr><tr><td>`append`</td><td>Only Add Items based on Builders</td></tr></table>                                                                                                                                                                                                                                             |
 | `collection_order`                     | **Description:** Changes the Collection Order for all collections in a Defaults file.<br>**Default:** `custom`<br>**Values:**<table class="clearTable"><tr><td>`release`</td><td>Order Collection by Release Dates</td></tr><tr><td>`alpha`</td><td>Order Collection Alphabetically</td></tr><tr><td>`custom`</td><td>Order Collection Via the Builder Order</td></tr><tr><td>[Any `plex_search` Sort Option](../../metadata/builders/plex.md#sort-options)</td><td>Order Collection by any `plex_search` Sort Option</td></tr></table>      |
 | `collection_order_<<key>>`<sup>1</sup> | **Description:** Changes the Collection Order of the specified key's collection.<br>**Default:** `collection_order`<br>**Values:**<table class="clearTable"><tr><td>`release`</td><td>Order Collection by Release Dates</td></tr><tr><td>`alpha`</td><td>Order Collection Alphabetically</td></tr><tr><td>`custom`</td><td>Order Collection Via the Builder Order</td></tr><tr><td>[Any `plex_search` Sort Option](../../metadata/builders/plex.md#sort-options)</td><td>Order Collection by any `plex_search` Sort Option</td></tr></table> |
 | `minimum_items`                        | **Description:** Controls the minimum items that the collection must have to be created.<br>**Default:** `2`<br>**Values:** Any number                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -79,7 +81,11 @@ libraries:
           trakt_list_veteran: https://trakt.tv/users/rzepkowski/lists/monsterverse-movies
 ```
 
-## Default `data`
+## Default values
+
+These are lists provided for reference to show what values will be in use if you do no customization.  If you want to customize these values, use the methods described above.  These do not show how to change a name or a list.
+
+### Default `data`
 
 ```yaml
 data:
@@ -97,7 +103,7 @@ data:
   mummy: The Mummy Universe
 ```
 
-## Default `trakt_list`
+### Default `trakt_list`
 
 ```yaml
 trakt_list:

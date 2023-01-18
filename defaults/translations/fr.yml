@@ -1,4 +1,4 @@
-version: 1.18.0.7
+version: 1.18.2.1
 variables:
   library_translation:
     # For Movie Libraries
@@ -267,8 +267,11 @@ translations:
   emmy_year_name: Emmys <<translated_key_name>>
   emmy_year_summary: Lauréats des Emmy Awards <<translated_key_name>>.
 
-  golden_best_name: Golden Globe meilleurs films
-  golden_best_summary: Golden Globe meilleurs films.
+  golden_picture_name: Gagnants du meilleur film aux Golden Globes
+  golden_picture_summary: Gagnants du meilleur film aux Golden Globes.
+
+  golden_director_name: Gagnants des Golden Globes du meilleur réalisateur
+  golden_director_summary: Gagnants des Golden Globes du meilleur réalisateur.
 
   # example key_name: 2022
   golden_year_name: Golden Globe <<translated_key_name>>
@@ -418,7 +421,7 @@ translations:
   actor_summary: <<library_translationU>>s avec <<translated_key_name>>.
 
   # example key_name: English
-  audio_language_name: Audio <<translated_key_name>>
+  audio_language_name: <<translated_key_name>>
   audio_language_summary: <<library_translationU>>s tournés en langue <<translated_key_name>>.
 
   audio_language_other_name: Autres audio
@@ -449,16 +452,12 @@ translations:
   decade_name: Les meilleurs des années <<translated_key_name>>
   decade_summary: Top <<limit>> des <<library_translation>>s des années <<translated_key_name>>.
 
-  # example key_name: 2010
-  decade_show_name: Les meilleurs des années <<translated_key_name>>
-  decade_show_summary: Top <<limit>> des <<library_translation>>s des années <<translated_key_name>>.
-
   # example key_name: Robin Williams
   director_name: <<translated_key_name>> (Réalisateur)
   director_summary: <<library_translationU>>s réalisés par <<translated_key_name>>.
 
   # example key_name: Action
-  genre_name: <<library_translationU>>s de <<translated_key_name>>
+  genre_name: <<translated_key_name>>
   genre_summary: <<library_translationU>>s qui ont le genre <<translated_key_name>>.
 
   # example key_name: NBC

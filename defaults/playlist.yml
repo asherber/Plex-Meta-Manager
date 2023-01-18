@@ -20,12 +20,16 @@ templates:
       trakt_url_<<key>>: <<trakt_url>>
       url_poster_<<key>>: https://raw.githubusercontent.com/meisnate12/Plex-Meta-Manager-Images/master/playlist/<<mapping_name_encoded>>.jpg
       name_<<key>>: <<mapping_name>>
+      sync_to_users_<<key>>: <<sync_to_users>>
+      exclude_users_<<key>>: <<exclude_users>>
     optional:
       - use_<<key>>
       - item_radarr_tag
       - item_sonarr_tag
       - ignore_ids
       - ignore_imdb_ids
+      - sync_to_users
+      - exclude_users
     allowed_library_types:
       - <<use_<<key>>>>
     ignore_ids: <<ignore_ids>>
@@ -34,7 +38,8 @@ templates:
     item_sonarr_tag: <<item_sonarr_tag_<<key>>>>
     trakt_list: <<trakt_url_<<key>>>>
     cache_builders: 1
-    sync_to_users: all
+    sync_to_users: <<sync_to_users_<<key>>>>
+    exclude_users: <<exclude_users_<<key>>>>
     sync_mode: sync
     libraries: <<libraries>>
     url_poster: <<url_poster_<<key>>>>
@@ -114,4 +119,13 @@ playlists:
       - name: playlist
         trakt_url: https://trakt.tv/users/heyitsbea/lists/x-men
         summary_xmen: The X-Men are a fictional team of superheroes appearing in American comic books published by Marvel Comics, first appearing in The X-Men Issue 1. Although initially cancelled in 1970, following its 1975 revival and subsequent direction under writer Chris Claremont, it became one of the most recognizable and successful franchises of Marvel Comics.
+      - name: arr
+
+  Dragon Ball (Timeline Order):
+    variables:
+      key: dragonball
+    template:
+      - name: playlist
+        trakt_url: https://trakt.tv/users/qamazi/lists/dragon-ball-binged-out
+        summary_dragonball: Dragon Ball follows the adventures of an extraordinarily strong young boy named Goku as he searches for the seven dragon balls. These balls, when combined, can grant the owner any one wish he desires. Along the way he makes many new friends, and enemies, and he trains to become the strongest fighter in the world.
       - name: arr

@@ -22,7 +22,6 @@ class Library(ABC):
         self.queue_current = 0
         self.metadata_files = []
         self.overlay_files = []
-        self.overlay_names = []
         self.movie_map = {}
         self.show_map = {}
         self.imdb_map = {}
@@ -32,7 +31,6 @@ class Library(ABC):
         self.show_rating_key_map = {}
         self.cached_items = {}
         self.run_again = []
-        self.overlays_old = []
         self.type = ""
         self.config = config
         self.name = params["name"]
@@ -102,7 +100,6 @@ class Library(ABC):
         self.metadata_backup = params["metadata_backup"]
         self.genre_mapper = params["genre_mapper"]
         self.content_rating_mapper = params["content_rating_mapper"]
-        self.error_webhooks = params["error_webhooks"]
         self.changes_webhooks = params["changes_webhooks"]
         self.split_duplicates = params["split_duplicates"] # TODO: Here or just in Plex?
         self.clean_bundles = params["plex"]["clean_bundles"] # TODO: Here or just in Plex?
@@ -217,6 +214,10 @@ class Library(ABC):
         pass
 
     @abstractmethod
+    def notify_delete(self, message):
+        pass
+
+    @abstractmethod
     def _upload_image(self, item, image):
         pass
 
@@ -278,8 +279,7 @@ class Library(ABC):
                         self.report_data[collection][other] = []
                     self.report_data[collection][other].append(title)
 
-        with open(self.report_path, "w"): pass
-        yaml = YAML(self.report_path)
+        yaml = YAML(self.report_path, start_empty=True)
         yaml.data = self.report_data
         yaml.save()
 

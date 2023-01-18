@@ -8,9 +8,9 @@ The `actor` Default Metadata File is used to dynamically create collections base
 
 ## Collections Section 17
 
-| Collection                                      |                       Key                       | Description                                                                 |
-|:------------------------------------------------|:-----------------------------------------------:|:----------------------------------------------------------------------------|
-| `Actors Collections`                            |                   `separator`                   | [Separator Collection](../separators) to denote the Section of Collections. |
+| Collection                                      | Key                                             | Description                                                                 |
+|:------------------------------------------------|:------------------------------------------------|:----------------------------------------------------------------------------|
+| `Actors Collections`                            | `separator`                                     | [Separator Collection](../separators) to denote the Section of Collections. |
 | `<<actor_name>>`<br>**Example:** `Frank Welker` | `<<actor_name>>`<br>**Example:** `Frank Welker` | Collection of Movies/Shows the actor is top billing in.                     |
 
 ### Rainier Style
@@ -37,7 +37,7 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 All [Shared Collection Variables](../collection_variables) are available as well as the additional Variables below which can be used to customize the file.
 

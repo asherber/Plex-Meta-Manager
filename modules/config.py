@@ -70,7 +70,8 @@ mass_rating_options = {
     "imdb": "Use IMDb Rating",
     "trakt_user": "Use Trakt User Rating",
     "omdb": "Use IMDb Rating through OMDb",
-    "mdb": "Use MdbList Average Score",
+    "mdb": "Use MdbList Score",
+    "mdb_average": "Use MdbList Average Score",
     "mdb_imdb": "Use IMDb Rating through MDbList",
     "mdb_metacritic": "Use Metacritic Rating through MDbList",
     "mdb_metacriticuser": "Use Metacritic User Rating through MDbList",
@@ -124,6 +125,8 @@ class ConfigFile:
         self.collection_only = attrs["collection_only"] if "collection_only" in attrs else False
         self.operations_only = attrs["operations_only"] if "operations_only" in attrs else False
         self.overlays_only = attrs["overlays_only"] if "overlays_only" in attrs else False
+        self.env_plex_url = attrs["plex_url"] if "plex_url" in attrs else ""
+        self.env_plex_token = attrs["plex_token"] if "plex_token" in attrs else ""
         current_time = datetime.now()
 
         with open(self.config_path, encoding="utf-8") as fp:
@@ -177,6 +180,8 @@ class ConfigFile:
                     if "save_missing" in self.data["libraries"][library]["settings"]:
                         self.data["libraries"][library]["settings"]["save_report"] = self.data["libraries"][library]["settings"].pop("save_missing")
                 if "radarr" in self.data["libraries"][library] and self.data["libraries"][library]["radarr"]:
+                    if "monitor" in self.data["libraries"][library]["radarr"] and isinstance(self.data["libraries"][library]["radarr"]["monitor"], bool):
+                        self.data["libraries"][library]["radarr"]["monitor"] = True if self.data["libraries"][library]["radarr"]["monitor"] else False
                     if "add" in self.data["libraries"][library]["radarr"]:
                         self.data["libraries"][library]["radarr"]["add_missing"] = self.data["libraries"][library]["radarr"].pop("add")
                 if "sonarr" in self.data["libraries"][library] and self.data["libraries"][library]["sonarr"]:
@@ -231,6 +236,8 @@ class ConfigFile:
         if "notifiarr" in self.data:                   self.data["notifiarr"] = self.data.pop("notifiarr")
         if "anidb" in self.data:                       self.data["anidb"] = self.data.pop("anidb")
         if "radarr" in self.data:
+            if "monitor" in self.data["radarr"] and isinstance(self.data["radarr"]["monitor"], bool):
+                self.data["radarr"]["monitor"] = True if self.data["radarr"]["monitor"] else False
             temp = self.data.pop("radarr")
             if temp and "add" in temp:
                 temp["add_missing"] = temp.pop("add")
@@ -276,8 +283,9 @@ class ConfigFile:
                 if isinstance(data[attribute], bool):                               return data[attribute]
                 else:                                                               message = f"{text} must be either true or false"
             elif var_type == "int":
-                if isinstance(data[attribute], int) and data[attribute] >= int_min: return data[attribute]
-                else:                                                               message = f"{text} must an integer >= 0"
+                if isinstance(data[attribute], bool):                               message = f"{text} must an integer >= {int_min}"
+                elif isinstance(data[attribute], int) and data[attribute] >= int_min: return data[attribute]
+                else:                                                               message = f"{text} must an integer >= {int_min}"
             elif var_type == "path":
                 if os.path.exists(os.path.abspath(data[attribute])):                return data[attribute]
                 else:                                                               message = f"Path {os.path.abspath(data[attribute])} does not exist"
@@ -363,6 +371,7 @@ class ConfigFile:
             "ignore_ids": check_for_attribute(self.data, "ignore_ids", parent="settings", var_type="int_list", default_is_none=True),
             "ignore_imdb_ids": check_for_attribute(self.data, "ignore_imdb_ids", parent="settings", var_type="list", default_is_none=True),
             "playlist_sync_to_users": check_for_attribute(self.data, "playlist_sync_to_users", parent="settings", default="all", default_is_none=True),
+            "playlist_exclude_users": check_for_attribute(self.data, "playlist_exclude_users", parent="settings", default_is_none=True),
             "playlist_report": check_for_attribute(self.data, "playlist_report", parent="settings", var_type="bool", default=True),
             "verify_ssl": check_for_attribute(self.data, "verify_ssl", parent="settings", var_type="bool", default=True),
             "custom_repo": check_for_attribute(self.data, "custom_repo", parent="settings", default_is_none=True),
@@ -414,7 +423,8 @@ class ConfigFile:
             "version": check_for_attribute(self.data, "version", parent="webhooks", var_type="list", default_is_none=True),
             "run_start": check_for_attribute(self.data, "run_start", parent="webhooks", var_type="list", default_is_none=True),
             "run_end": check_for_attribute(self.data, "run_end", parent="webhooks", var_type="list", default_is_none=True),
-            "changes": check_for_attribute(self.data, "changes", parent="webhooks", var_type="list", default_is_none=True)
+            "changes": check_for_attribute(self.data, "changes", parent="webhooks", var_type="list", default_is_none=True),
+            "delete": check_for_attribute(self.data, "delete", parent="webhooks", var_type="list", default_is_none=True)
         }
         self.Webhooks = Webhooks(self, self.webhooks, notifiarr=self.NotifiarrFactory)
         try:
@@ -685,7 +695,6 @@ class ConfigFile:
                 params["ignore_ids"].extend([i for i in self.general["ignore_ids"] if i not in params["ignore_ids"]])
                 params["ignore_imdb_ids"] = check_for_attribute(lib, "ignore_imdb_ids", parent="settings", var_type="list", default_is_none=True, do_print=False, save=False)
                 params["ignore_imdb_ids"].extend([i for i in self.general["ignore_imdb_ids"] if i not in params["ignore_imdb_ids"]])
-                params["error_webhooks"] = check_for_attribute(lib, "error", parent="webhooks", var_type="list", default=self.webhooks["error"], do_print=False, save=False, default_is_none=True)
                 params["changes_webhooks"] = check_for_attribute(lib, "changes", parent="webhooks", var_type="list", default=self.webhooks["changes"], do_print=False, save=False, default_is_none=True)
                 params["report_path"] = None
                 if lib and "report_path" in lib and lib["report_path"]:
@@ -732,10 +741,8 @@ class ConfigFile:
                                             params[op][old_value] = new_value if new_value else None
                                 if data_type == "delete_collections":
                                     params[op] = {
-                                        "managed": check_for_attribute(lib["operations"][op], "managed", var_type="bool", default=False, save=False),
-                                        "unmanaged": check_for_attribute(lib["operations"][op], "unmanaged", var_type="bool", default=False, save=False),
-                                        "configured": check_for_attribute(lib["operations"][op], "configured", var_type="bool", default=False, save=False),
-                                        "unconfigured": check_for_attribute(lib["operations"][op], "unconfigured", var_type="bool", default=False, save=False),
+                                        "managed": check_for_attribute(lib["operations"][op], "managed", var_type="bool", default_is_none=True, save=False),
+                                        "configured": check_for_attribute(lib["operations"][op], "configured", var_type="bool", default_is_none=True, save=False),
                                         "less": check_for_attribute(lib["operations"][op], "less", var_type="int", default_is_none=True, save=False, int_min=1),
                                     }
                             else:
@@ -763,6 +770,7 @@ class ConfigFile:
                 if lib and "template_variables" in lib and lib["template_variables"] and isinstance(lib["template_variables"], dict):
                     lib_vars = lib["template_variables"]
 
+                params["metadata_path"] = []
                 try:
                     if lib and "metadata_path" in lib:
                         if not lib["metadata_path"]:
@@ -773,8 +781,6 @@ class ConfigFile:
                         params["metadata_path"] = files
                     elif os.path.exists(os.path.join(default_dir, f"{library_name}.yml")):
                         params["metadata_path"] = [("File", os.path.join(default_dir, f"{library_name}.yml"), lib_vars, None)]
-                    else:
-                        params["metadata_path"] = []
                 except Failed as e:
                     logger.error(e)
                 params["default_dir"] = default_dir
@@ -799,8 +805,6 @@ class ConfigFile:
                         if not lib["overlay_path"]:
                             raise Failed("Config Error: overlay_path attribute is blank")
                         files = util.load_files(lib["overlay_path"], "overlay_path", lib_vars=lib_vars)
-                        if not files:
-                            raise Failed("Config Error: No Paths Found for overlay_path")
                         for file in util.get_list(lib["overlay_path"], split=False):
                             if isinstance(file, dict):
                                 if ("remove_overlays" in file and file["remove_overlays"] is True) \
@@ -812,10 +816,23 @@ class ConfigFile:
                                     params["reapply_overlays"] = True
                                 if "reset_overlays" in file or "reset_overlay" in file:
                                     attr = f"reset_overlay{'s' if 'reset_overlays' in file else ''}"
-                                    if file[attr] and file[attr] in reset_overlay_options:
-                                        params["reset_overlays"] = file[attr]
+                                    if file[attr] and not isinstance(file[attr], list):
+                                        test_list = [file[attr]]
                                     else:
-                                        final_text = f"Config Error: reset_overlays attribute {file[attr]} invalid. Options: "
+                                        test_list = file[attr]
+                                    final_list = []
+                                    for test_item in test_list:
+                                        if test_item and test_item in reset_overlay_options:
+                                            final_list.append(test_item)
+                                        else:
+                                            final_text = f"Config Error: reset_overlays attribute {test_item} invalid. Options: "
+                                            for option, description in reset_overlay_options.items():
+                                                final_text = f"{final_text}\n    {option} ({description})"
+                                            logger.error(final_text)
+                                    if final_list:
+                                        params["reset_overlays"] = final_list
+                                    else:
+                                        final_text = f"Config Error: No proper reset_overlays option found. {file[attr]}. Options: "
                                         for option, description in reset_overlay_options.items():
                                             final_text = f"{final_text}\n    {option} ({description})"
                                         logger.error(final_text)
@@ -831,6 +848,8 @@ class ConfigFile:
                                             err = e
                                     if err:
                                         raise NotScheduled(f"Overlay Schedule:{err}\n\nOverlays not scheduled to run")
+                        if not files and params["remove_overlays"] is False and params["reset_overlays"] is False:
+                            raise Failed("Config Error: No Paths Found for overlay_path")
                         params["overlay_path"] = files
                     except NotScheduled as e:
                         logger.info("")
@@ -851,6 +870,10 @@ class ConfigFile:
                         "empty_trash": check_for_attribute(lib, "empty_trash", parent="plex", var_type="bool", default=self.general["plex"]["empty_trash"], save=False),
                         "optimize": check_for_attribute(lib, "optimize", parent="plex", var_type="bool", default=self.general["plex"]["optimize"], save=False)
                     }
+                    if params["plex"]["url"].lower() == "env":
+                        params["plex"]["url"] = self.env_plex_url
+                    if params["plex"]["token"].lower() == "env":
+                        params["plex"]["token"] = self.env_plex_token
                     library = Plex(self, params)
                     logger.info("")
                     logger.info(f"{display_name} Library Connection Successful")
@@ -942,7 +965,7 @@ class ConfigFile:
                         logger.info("")
                     logger.info(f"{display_name} library's Tautulli Connection {'Failed' if library.Tautulli is None else 'Successful'}")
 
-                library.Webhooks = Webhooks(self, {"error_webhooks": library.error_webhooks}, library=library, notifiarr=self.NotifiarrFactory)
+                library.Webhooks = Webhooks(self, {}, library=library, notifiarr=self.NotifiarrFactory)
                 library.Overlays = Overlays(self, library)
 
                 logger.info("")
@@ -955,7 +978,7 @@ class ConfigFile:
             if len(self.libraries) > 0:
                 logger.info(f"{len(self.libraries)} Plex Library Connection{'s' if len(self.libraries) > 1 else ''} Successful")
             else:
-                raise Failed("Plex Error: No Plex libraries were connected to")
+                raise Failed("Config Error: No libraries were found in config")
 
             logger.separator()
 
@@ -976,11 +999,23 @@ class ConfigFile:
                 logger.stacktrace()
                 logger.error(f"Webhooks Error: {e}")
 
+    def notify_delete(self, message, server=None, library=None):
+        try:
+            self.Webhooks.delete_hooks(message, server=server, library=library)
+        except Failed as e:
+            logger.stacktrace()
+            logger.error(f"Webhooks Error: {e}")
+
     def get_html(self, url, headers=None, params=None):
         return html.fromstring(self.get(url, headers=headers, params=params).content)
 
     def get_json(self, url, json=None, headers=None, params=None):
-        return self.get(url, json=json, headers=headers, params=params).json()
+        response = self.get(url, json=json, headers=headers, params=params)
+        try:
+            return response.json()
+        except ValueError:
+            logger.error(str(response.content))
+            raise
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000)
     def get(self, url, json=None, headers=None, params=None):
@@ -993,7 +1028,12 @@ class ConfigFile:
         return html.fromstring(self.post(url, data=data, json=json, headers=headers).content)
 
     def post_json(self, url, data=None, json=None, headers=None):
-        return self.post(url, data=data, json=json, headers=headers).json()
+        response = self.post(url, data=data, json=json, headers=headers)
+        try:
+            return response.json()
+        except ValueError:
+            logger.error(str(response.content))
+            raise
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000)
     def post(self, url, data=None, json=None, headers=None):

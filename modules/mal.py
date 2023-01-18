@@ -41,7 +41,7 @@ search_ratings = ["g", "pg", "pg13", "r17", "r", "rx"]
 search_sorts = ["mal_id", "title", "type", "rating", "start_date", "end_date", "episodes", "score", "scored_by", "rank", "popularity", "members", "favorites"]
 search_combos = [f"{s}.{d}" for s in search_sorts for d in ["desc", "asc"]]
 base_url = "https://api.myanimelist.net/v2/"
-jiken_base_url = "https://api.jikan.moe/v4/"
+jikan_base_url = "https://api.jikan.moe/v4/"
 uni_code_verifier = "k_UHwN_eHAPQVXiceC-rYGkozKqrJmKxPUIUOBIKo1noq_4XGRVCViP_dGcwB-fkPql8f56mmWj5aWCa2HDeugf6sRvnc9Rjhbb1vKGYLY0IwWsDNXRqXdksaVGJthux"
 urls = {
     "oauth_token": "https://myanimelist.net/v1/oauth2/token",
@@ -97,7 +97,7 @@ class MyAnimeList:
     @property
     def genres(self):
         if not self._genres:
-            for data in self._jiken_request("genres/anime")["data"]:
+            for data in self._jikan_request("genres/anime")["data"]:
                 self._genres[data["name"]] = int(data["mal_id"])
                 self._genres[data["name"].lower()] = int(data["mal_id"])
                 self._genres[str(data["mal_id"])] = int(data["mal_id"])
@@ -107,11 +107,11 @@ class MyAnimeList:
     @property
     def studios(self):
         if not self._studios:
-            for data in self._jiken_request("producers")["data"]:
-                self._studios[data["name"]] = int(data["mal_id"])
-                self._studios[data["name"].lower()] = int(data["mal_id"])
+            for data in self._pagination("producers"):
+                self._studios[data["titles"][0]["title"]] = int(data["mal_id"])
+                self._studios[data["titles"][0]["title"].lower()] = int(data["mal_id"])
                 self._studios[str(data["mal_id"])] = int(data["mal_id"])
-                self._studios[int(data["mal_id"])] = data["name"]
+                self._studios[int(data["mal_id"])] = data["titles"][0]["title"]
         return self._studios
 
     def _authorization(self):
@@ -199,18 +199,20 @@ class MyAnimeList:
         except JSONDecodeError:
             raise Failed(f"MyAnimeList Error: Connection Failed")
 
-    def _jiken_request(self, url, params=None):
+    def _jikan_request(self, url, params=None):
+        logger.trace(f"URL: {jikan_base_url}{url}")
+        logger.trace(f"Params: {params}")
         time_check = time.time()
         if self._delay is not None:
             while time_check - self._delay < 1:
                 time_check = time.time()
-        data = self.config.get_json(f"{jiken_base_url}{url}", params=params)
+        data = self.config.get_json(f"{jikan_base_url}{url}", params=params)
         self._delay = time.time()
         return data
 
-    def _parse_request(self, url):
+    def _parse_request(self, url, node=False):
         data = self._request(url)
-        return [d["node"]["id"] for d in data["data"]] if "data" in data else []
+        return [d["node"] if node else d["node"]["id"] for d in data["data"]] if "data" in data else []
 
     def _username(self):
         return self._request(f"{urls['user']}/@me")["name"]
@@ -219,9 +221,18 @@ class MyAnimeList:
         url = f"{urls['ranking']}?ranking_type={ranking_type}&limit={limit}"
         return self._parse_request(url)
 
-    def _season(self, season, year, sort_by, limit):
-        url = f"{urls['season']}/{year}/{season}?sort={sort_by}&limit={limit}"
-        return self._parse_request(url)
+    def _season(self, data):
+        url = f"{urls['season']}/{data['year']}/{data['season']}?sort={data['sort_by']}&limit=500"
+        if data["starting_only"]:
+            url += "&fields=start_season"
+        results = []
+        for anime in self._parse_request(url, node=True):
+            if data["starting_only"] and (anime["start_season"]["year"] != data["year"] or anime["start_season"]["season"] != data["season"]):
+                continue
+            results.append(anime["id"])
+            if len(results) == data["limit"]:
+                break
+        return results
 
     def _suggestions(self, limit):
         url = f"{urls['suggestions']}?limit={limit}"
@@ -233,7 +244,7 @@ class MyAnimeList:
         return self._parse_request(url)
 
     def _pagination(self, endpoint, params=None, limit=None):
-        data = self._jiken_request(endpoint, params)
+        data = self._jikan_request(endpoint, params)
         last_visible_page = data["pagination"]["last_visible_page"]
         if limit is not None:
             total_items = data["pagination"]["items"]["total"]
@@ -256,7 +267,7 @@ class MyAnimeList:
                 if params is None:
                     params = {}
                 params["page"] = current_page
-                data = self._jiken_request(endpoint, params)
+                data = self._jikan_request(endpoint, params)
             if "data" in data:
                 chances = 0
                 mal_ids.extend(data["data"])
@@ -275,7 +286,7 @@ class MyAnimeList:
             if mal_dict and expired is False:
                 return MyAnimeListObj(self, mal_id, mal_dict, cache=True)
         try:
-            response = self._jiken_request(f"anime/{mal_id}")
+            response = self._jikan_request(f"anime/{mal_id}")
         except JSONDecodeError:
             raise Failed("MyAnimeList Error: JSON Decoding Failed")
         if "data" not in response:
@@ -295,15 +306,9 @@ class MyAnimeList:
         elif method == "mal_search":
             logger.info(f"Processing {data[1]}")
             mal_ids = [mal_data["mal_id"] for mal_data in self._pagination("anime", params=data[0], limit=data[2])]
-        elif method == "mal_genre":
-            logger.info(f"Processing {mal_ranked_pretty[method]} ID: {data['genre_id']}")
-            mal_ids = [mal_data["mal_id"] for mal_data in self._pagination("anime", params={"genres": data["genre_id"]}, limit=data["limit"])]
-        elif method == "mal_studio":
-            logger.info(f"Processing {mal_ranked_pretty[method]} ID: {data['studio_id']}")
-            mal_ids = [mal_data["mal_id"] for mal_data in self._pagination("anime", params={"producers": data["studio_id"]}, limit=data["limit"])]
         elif method == "mal_season":
             logger.info(f"Processing MyAnimeList Season: {data['limit']} Anime from {data['season'].title()} {data['year']} sorted by {pretty_names[data['sort_by']]}")
-            mal_ids = self._season(data["season"], data["year"], data["sort_by"], data["limit"])
+            mal_ids = self._season(data)
         elif method == "mal_suggested":
             logger.info(f"Processing MyAnimeList Suggested: {data} Anime")
             mal_ids = self._suggestions(data)

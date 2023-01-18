@@ -6,35 +6,37 @@ If you run into a race condition where you have set an Environment Variable with
 
 These docs are assuming you have a basic understanding of Docker concepts.  One place to get familiar with Docker would be the [official tutorial](https://www.docker.com/101-tutorial/).
 
-| Attribute                                             | Shell Command                      | Environment Variable     |
-|:------------------------------------------------------|:-----------------------------------|:-------------------------|
-| [Config](#config)                                     | `-c` or `--config`                 | `PMM_CONFIG`             |
-| [Time to Run](#time-to-run)                           | `-t` or `--time`                   | `PMM_TIME`               |
-| [Run](#run)                                           | `-r` or `--run`                    | `PMM_RUN`                |
-| [Run Tests](#run-tests)                               | `-rt`, `--tests`, or `--run-tests` | `PMM_TEST`               |
-| [Debug](#debug)                                       | `-db` or `--debug`                 | `PMM_DEBUG`              |
-| [Trace](#trace)                                       | `-tr` or `--trace`                 | `PMM_TRACE`              |
-| [Timeout](#timeout)                                   | `-ti` or `--timeout`               | `PMM_TIMEOUT`            |
-| [Collections Only](#collections-only)                 | `-co` or `--collections-only`      | `PMM_COLLECTIONS_ONLY`   |
-| [Playlists Only](#playlists-only)                     | `-po` or `--playlists-only`        | `PMM_PLAYLISTS_ONLY`     |
-| [Operations](#operations)                             | `-op` or `--operations`            | `PMM_OPERATIONS`         |
-| [Overlays](#overlays)                                 | `-ov` or `--overlays`              | `PMM_OVERLAYS`           |
-| [Run Collections](#run-collections)                   | `-rc` or `--run-collections`       | `PMM_COLLECTIONS`        |
-| [Run Libraries](#run-libraries)                       | `-rl` or `--run-libraries`         | `PMM_LIBRARIES`          |
-| [Run Metadata Files](#run-metadata-files)             | `-rm` or `--run-metadata-files`    | `PMM_METADATA_FILES`     |
-| [Libraries First](#libraries-first)                   | `-lf` or `--libraries-first`       | `PMM_LIBRARIES_FIRST`    |
-| [Ignore Schedules](#ignore-schedules)                 | `-is` or `--ignore-schedules`      | `PMM_IGNORE_SCHEDULES`   |
-| [Ignore Ghost](#ignore-ghost)                         | `-ig` or `--ignore-ghost`          | `PMM_IGNORE_GHOST`       |
-| [Cache Libraries](#cache-libraries)                   | `-ca` or `--cache-libraries`       | `PMM_CACHE_LIBRARIES`    |
-| [Delete Collections](#delete-collections)             | `-dc` or `--delete-collections`    | `PMM_DELETE_COLLECTIONS` |
-| [Delete Labels](#delete-labels)                       | `-dl` or `--delete-labels`         | `PMM_DELETE_LABELS`      |
-| [Resume Run](#resume-run)                             | `-re` or `--resume`                | `PMM_RESUME`             |
-| [No Countdown](#no-countdown)                         | `-nc` or `--no-countdown`          | `PMM_NO_COUNTDOWN`       |
-| [No Missing](#no-missing)                             | `-nm` or `--no-missing`            | `PMM_NO_MISSING`         |
-| [No Report](#no-report)                               | `-nr` or `--no-report`             | `PMM_NO_REPORT`          |
-| [Read Only Config](#read-only-config)                 | `-ro` or `--read-only-config`      | `PMM_READ_ONLY_CONFIG`   |
-| [Divider Character](#divider-character--screen-width) | `-d` or `--divider`                | `PMM_DIVIDER`            |
-| [Screen Width](#divider-character--screen-width)      | `-w` or `--width`                  | `PMM_WIDTH`              |
+| Attribute                                             | Shell Command                                 | Environment Variable     |
+|:------------------------------------------------------|:----------------------------------------------|:-------------------------|
+| [Config](#config)                                     | `-c` or `--config`                            | `PMM_CONFIG`             |
+| [Time to Run](#time-to-run)                           | `-t` or `--time`                              | `PMM_TIME`               |
+| [Run Immediately](#run-immediately)                   | `-r` or `--run`                               | `PMM_RUN`                |
+| [Run Tests](#run-tests)                               | `-rt`, `--tests`, or `--run-tests`            | `PMM_TEST`               |
+| [Debug](#debug)                                       | `-db` or `--debug`                            | `PMM_DEBUG`              |
+| [Trace](#trace)                                       | `-tr` or `--trace`                            | `PMM_TRACE`              |
+| [Timeout](#timeout)                                   | `-ti` or `--timeout`                          | `PMM_TIMEOUT`            |
+| [Collections Only](#collections-only)                 | `-co` or `--collections-only`                 | `PMM_COLLECTIONS_ONLY`   |
+| [Playlists Only](#playlists-only)                     | `-po` or `--playlists-only`                   | `PMM_PLAYLISTS_ONLY`     |
+| [Operations Only](#operations-only)                   | `-op`, `--operations`, or `--operations-only` | `PMM_OPERATIONS`         |
+| [Overlays Only](#overlays-only)                       | `-ov`, `--overlays`, or `--overlays-only`     | `PMM_OVERLAYS`           |
+| [Run Collections](#run-collections)                   | `-rc` or `--run-collections`                  | `PMM_COLLECTIONS`        |
+| [Run Libraries](#run-libraries)                       | `-rl` or `--run-libraries`                    | `PMM_LIBRARIES`          |
+| [Run Metadata Files](#run-metadata-files)             | `-rm` or `--run-metadata-files`               | `PMM_METADATA_FILES`     |
+| [Libraries First](#libraries-first)                   | `-lf` or `--libraries-first`                  | `PMM_LIBRARIES_FIRST`    |
+| [Ignore Schedules](#ignore-schedules)                 | `-is` or `--ignore-schedules`                 | `PMM_IGNORE_SCHEDULES`   |
+| [Ignore Ghost](#ignore-ghost)                         | `-ig` or `--ignore-ghost`                     | `PMM_IGNORE_GHOST`       |
+| [Cache Libraries](#cache-libraries)                   | `-ca` or `--cache-libraries`                  | `PMM_CACHE_LIBRARIES`    |
+| [Delete Collections](#delete-collections)             | `-dc` or `--delete-collections`               | `PMM_DELETE_COLLECTIONS` |
+| [Delete Labels](#delete-labels)                       | `-dl` or `--delete-labels`                    | `PMM_DELETE_LABELS`      |
+| [Resume Run](#resume-run)                             | `-re` or `--resume`                           | `PMM_RESUME`             |
+| [No Countdown](#no-countdown)                         | `-nc` or `--no-countdown`                     | `PMM_NO_COUNTDOWN`       |
+| [No Missing](#no-missing)                             | `-nm` or `--no-missing`                       | `PMM_NO_MISSING`         |
+| [No Report](#no-report)                               | `-nr` or `--no-report`                        | `PMM_NO_REPORT`          |
+| [Read Only Config](#read-only-config)                 | `-ro` or `--read-only-config`                 | `PMM_READ_ONLY_CONFIG`   |
+| [ENV Plex URL](#env-plex-url--token)                  | `-pu` or `--plex-url`                         | `PMM_PLEX_URL`           |
+| [ENV Plex Token](#env-plex-url--token)                | `-pt` or `--plex-token`                       | `PMM_PLEX_TOKEN`         |
+| [Divider Character](#divider-character--screen-width) | `-d` or `--divider`                           | `PMM_DIVIDER`            |
+| [Screen Width](#divider-character--screen-width)      | `-w` or `--width`                             | `PMM_WIDTH`              |
 
 Further explanation and examples of each command can be found below.
 
@@ -48,7 +50,7 @@ Specify the location of the configuration YAML file.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -72,22 +74,16 @@ Specify the location of the configuration YAML file.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --config <path_to_config>
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --config <path_to_config>
 ```
-
-</details>
+````
 
 ### Time to Run
 
@@ -95,7 +91,7 @@ Specify the time of day that Plex Meta Manager will run.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -119,30 +115,24 @@ Specify the time of day that Plex Meta Manager will run.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --time 22:00,03:00
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --time 22:00,03:00
 ```
+````
 
-</details>
-
-### Run
+### Run Immediately
 
 Perform a run immediately, bypassing the time to run flag.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -158,22 +148,17 @@ Perform a run immediately, bypassing the time to run flag.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
+````{tab} Local Environment
 
-```shell
+```
 python plex_meta_manager.py --run
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --run
 ```
-
-</details>
+````
 
 ### Run Tests
 
@@ -181,7 +166,7 @@ Perform a debug test run immediately, bypassing the time to run flag. This will 
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -199,22 +184,16 @@ Perform a debug test run immediately, bypassing the time to run flag. This will 
 
 * Only collections with `test: true` enabled will be run
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --run-tests
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --run-tests
 ```
-
-</details>
+````
 
 ### Debug
 
@@ -222,7 +201,7 @@ Run with Debug Logs Reporting to the Command Window.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -234,26 +213,20 @@ Run with Debug Logs Reporting to the Command Window.
   <tr>
     <th>Example</th>
     <td><code>--debug</code></td>
-    <td><code>PMM_TIMEOUT=true</code></td>
+    <td><code>PMM_DEBUG=true</code></td>
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --debug
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --debug
 ```
-
-</details>
+````
 
 ### Trace
 
@@ -261,14 +234,14 @@ Run with extra Trace Debug Logs.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
   <tr>
     <th>Flags</th>
     <td><code>-tr</code> or <code>--trace</code></td>
-    <td><code>PMM_TIMEOUT</code></td>
+    <td><code>PMM_TRACE</code></td>
   </tr>
   <tr>
     <th>Example</th>
@@ -277,30 +250,24 @@ Run with extra Trace Debug Logs.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --trace
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --trace0
 ```
-
-</details>
+````
 
 ### Timeout
 
-Change the main Plex Meta Manager timeout. This timeout is overwritten byt those in your config file for those services.
+Change the main Plex Meta Manager timeout. This timeout is overwritten by those in your config file for those services.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -314,32 +281,30 @@ Change the main Plex Meta Manager timeout. This timeout is overwritten byt those
     <td><code>--timeout 360</code></td>
     <td><code>PMM_TIMEOUT=360</code></td>
   </tr>
+  <tr>
+    <th>Values</th>
+    <td colspan="2">Integer Number of Seconds</td>
+  </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --timeout 360
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --timeout 360
 ```
-
-</details>
+````
 
 ### Collections Only
 
-Only run collection metadata/YAML files, skip library operations, overlays, and collections/metadata.
+Only run collection metadata/YAML files, skip library operations, overlays, and playlists.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -356,22 +321,16 @@ Only run collection metadata/YAML files, skip library operations, overlays, and 
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --collections-only
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --collections-only
 ```
-
-</details>
+````
 
 ### Playlists Only
 
@@ -379,7 +338,7 @@ Only run playlist metadata/YAML files, skip library operations, overlays, and co
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -395,30 +354,24 @@ Only run playlist metadata/YAML files, skip library operations, overlays, and co
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --playlists-only
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --playlists-only
 ```
+````
 
-</details>
-
-### Operations
+### Operations Only
 
 Only run library operations skipping collections/metadata, playlists, and overlays.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -434,30 +387,24 @@ Only run library operations skipping collections/metadata, playlists, and overla
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --operations
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --operations
 ```
+````
 
-</details>
-
-### Overlays
+### Overlays Only
 
 Only run library overlays skipping collections/metadata, playlists, and operations.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -473,22 +420,16 @@ Only run library overlays skipping collections/metadata, playlists, and operatio
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --overlays
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --overlays
 ```
-
-</details>
+````
 
 ### Run Collections
 
@@ -496,7 +437,7 @@ Perform a collections run immediately to run only the pre-defined collections, b
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -516,22 +457,16 @@ Perform a collections run immediately to run only the pre-defined collections, b
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --run-collections "Harry Potter, Star Wars"
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --run-collections "Harry Potter, Star Wars"
 ```
-
-</details>
+````
 
 ### Run Libraries
 
@@ -539,7 +474,7 @@ Perform a libraries run immediately to run only the pre-defined libraries, bypas
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -559,22 +494,16 @@ Perform a libraries run immediately to run only the pre-defined libraries, bypas
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --run-libraries "TV Shows"
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --run-libraries "TV Shows"
 ```
-
-</details>
+````
 
 ### Run Metadata Files
 
@@ -582,7 +511,7 @@ Perform a metadata files run immediately to run only the pre-defined metadata fi
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -603,22 +532,16 @@ Perform a metadata files run immediately to run only the pre-defined metadata fi
 </table>
 
 * This works for all different metadata paths i.e. `git`, `url`, `file`, or `repo`.
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --run-metadata-files "Movies"
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --run-metadata-files "Movies"
 ```
-
-</details>
+````
 
 ### Libraries First
 
@@ -626,7 +549,7 @@ Run library operations prior to running collections.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -642,22 +565,16 @@ Run library operations prior to running collections.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --libraries-first
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --libraries-first
 ```
-
-</details>
+````
 
 ### Ignore Schedules
 
@@ -665,7 +582,7 @@ Ignore all schedules for the run.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -682,22 +599,16 @@ Ignore all schedules for the run.
 </table>
 
 * Range Scheduled collections (such as Christmas movies) will still be ignored.
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --ignore-schedules
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --ignore-schedules
 ```
-
-</details>
+````
 
 ### Ignore Ghost
 
@@ -705,7 +616,7 @@ Ignore all ghost logging for the run. A ghost log is what's printed to the conso
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -721,22 +632,16 @@ Ignore all ghost logging for the run. A ghost log is what's printed to the conso
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --ignore-ghost
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --ignore-ghost
 ```
-
-</details>
+````
 
 ### Cache Libraries
 
@@ -744,7 +649,7 @@ Cache the library Load for 1 day.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -760,22 +665,16 @@ Cache the library Load for 1 day.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --cache-libraries
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --cache-libraries
 ```
-
-</details>
+````
 
 ### Delete Collections
 
@@ -783,7 +682,7 @@ Delete all collections in a Library prior to running collections/operations.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -799,22 +698,16 @@ Delete all collections in a Library prior to running collections/operations.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --delete-collections
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --delete-collections
 ```
-
-</details>
+````
 
 ### Delete Labels
 
@@ -822,7 +715,7 @@ Delete all labels on every item in a Library prior to running collections/operat
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -838,22 +731,16 @@ Delete all labels on every item in a Library prior to running collections/operat
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --delete-labels
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --delete-labels
 ```
-
-</details>
+````
 
 ### Resume Run
 
@@ -861,7 +748,7 @@ Perform a resume run immediately resuming from the first instance of the specifi
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -881,22 +768,16 @@ Perform a resume run immediately resuming from the first instance of the specifi
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --resume "Star Wars"
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --resume "Star Wars"
 ```
-
-</details>
+````
 
 ### No Countdown
 
@@ -904,7 +785,7 @@ Run without displaying a countdown to the next scheduled run.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -920,22 +801,16 @@ Run without displaying a countdown to the next scheduled run.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --no-countdown
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --no-countdown
 ```
-
-</details>
+````
 
 ### No Missing
 
@@ -943,7 +818,7 @@ Run without utilizing the missing movie/show functions.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -959,22 +834,16 @@ Run without utilizing the missing movie/show functions.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --no-missing
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --no-missing
 ```
-
-</details>
+````
 
 ### No Report
 
@@ -982,7 +851,7 @@ Run without saving the report.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -998,22 +867,16 @@ Run without saving the report.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --no-report
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --no-report
 ```
-
-</details>
+````
 
 ### Read Only Config
 
@@ -1021,7 +884,7 @@ Run without writing to the configuration file.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -1037,22 +900,72 @@ Run without writing to the configuration file.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --read-only-config
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --read-only-config
 ```
+````
 
-</details>
+### ENV Plex URL & Token
+
+Replaces `ENV` when it is used plex `url` or `token`. 
+
+#### Plex URL
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #1d1d1d;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-pu</code> or <code>--plex-url</code></td>
+    <td><code>PMM_PLEX_URL</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--plex-url 192.168.1.12:32400</code></td>
+    <td><code>PMM_PLEX_URL=192.168.1.12:32400</code></td>
+  </tr>
+</table>
+
+#### Plex Token
+
+<table class="dualTable colwidths-auto align-default table">
+  <tr>
+    <th style="background-color: #1d1d1d;"></th>
+    <th>Shell</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <th>Flags</th>
+    <td><code>-pt</code> or <code>--plex-token</code></td>
+    <td><code>PMM_PLEX_TOKEN</code></td>
+  </tr>
+  <tr>
+    <th>Example</th>
+    <td><code>--plex-token AB23HE4588</code></td>
+    <td><code>PMM_PLEX_TOKEN=AB23HE4588</code></td>
+  </tr>
+</table>
+
+````{tab} Local Environment
+```
+python plex_meta_manager.py --plex-url 192.168.1.12:32400 --plex-token AB23HE4588
+```
+````
+````{tab} Docker Environment
+```
+docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --plex-url 192.168.1.12:32400 --plex-token AB23HE4588
+```
+````
+
 
 ### Divider Character & Screen Width
 
@@ -1062,7 +975,7 @@ Change the terminal output divider character or width.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -1090,7 +1003,7 @@ Change the terminal output divider character or width.
 
 <table class="dualTable colwidths-auto align-default table">
   <tr>
-    <th style="background-color: #222;"></th>
+    <th style="background-color: #1d1d1d;"></th>
     <th>Shell</th>
     <th>Environment</th>
   </tr>
@@ -1114,19 +1027,13 @@ Change the terminal output divider character or width.
   </tr>
 </table>
 
-<details>
-  <summary>Local Environment</summary>
-
-```shell
+````{tab} Local Environment
+```
 python plex_meta_manager.py --divider * --width 200
 ```
-
-</details>
-<details>
-  <summary>Docker Environment</summary>
-
-```shell
+````
+````{tab} Docker Environment
+```
 docker run -it -v "X:\Media\Plex Meta Manager\config:/config:rw" meisnate12/plex-meta-manager --divider * --width 200
 ```
-
-</details>
+````

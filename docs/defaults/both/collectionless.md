@@ -36,7 +36,7 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 **[Shared Collection Variables](../collection_variables) are NOT available to this default file.**
 
@@ -66,7 +66,11 @@ libraries:
           collection_order: release
 ```
 
-## Default `exclude_prefix`
+## Default values
+
+These are lists provided for reference to show what values will be in use if you do no customization.  If you want to customize these values, use the methods described above.  These do not show how to change a name or a list.
+
+### Default `exclude_prefix`
 
 ```yaml
 exclude_prefix:

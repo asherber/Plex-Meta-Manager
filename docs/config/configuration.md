@@ -8,22 +8,22 @@ A template Configuration File can be found in the [GitHub Repo](https://github.c
 
 This table outlines the third-party services that Plex Meta Manager can make use of. Each service has specific requirements for setup that can be found by clicking the links within the table.
 
-| Attribute                     |                Required                 |
-|:------------------------------|:---------------------------------------:|
-| [`libraries`](libraries)      |                 &#9989;                 |
-| [`playlist_files`](playlists) |                &#10060;                 |
-| [`settings`](settings)        |                &#10060;                 |
-| [`webhooks`](webhooks)        |                &#10060;                 |
+| Attribute                     | Required                                |
+|:------------------------------|:----------------------------------------|
+| [`libraries`](libraries)      | &#9989;                                 |
+| [`playlist_files`](playlists) | &#10060;                                |
+| [`settings`](settings)        | &#10060;                                |
+| [`webhooks`](webhooks)        | &#10060;                                |
 | [`plex`](plex)                | &#9989; <br/>Either here or per library |
-| [`tmdb`](tmdb)                |                 &#9989;                 |
-| [`tautulli`](tautulli)        |                &#10060;                 |
-| [`omdb`](omdb)                |                &#10060;                 |
-| [`notifiarr`](notifiarr)      |                &#10060;                 |
-| [`anidb`](anidb)              |                &#10060;                 |
-| [`radarr`](radarr)            |                &#10060;                 |
-| [`sonarr`](sonarr)            |                &#10060;                 |
-| [`trakt`](trakt)              |                &#10060;                 |
-| [`mal`](myanimelist)          |                &#10060;                 |
+| [`tmdb`](tmdb)                | &#9989;                                 |
+| [`tautulli`](tautulli)        | &#10060;                                |
+| [`omdb`](omdb)                | &#10060;                                |
+| [`notifiarr`](notifiarr)      | &#10060;                                |
+| [`anidb`](anidb)              | &#10060;                                |
+| [`radarr`](radarr)            | &#10060;                                |
+| [`sonarr`](sonarr)            | &#10060;                                |
+| [`trakt`](trakt)              | &#10060;                                |
+| [`mal`](myanimelist)          | &#10060;                                |
 
 ## Configuration File Example
 
@@ -31,41 +31,40 @@ This example outlines what a "standard" config.yml file might look like when in 
 
 <details>
   <summary>Example config.yml file</summary>
-  <br />
 
 ```yaml
-libraries:                          # This is called out once within the config.yml file                                       
-  Movies:                           # Each library must match the Plex library name
+## This file is a template remove the .template to use the file
+
+libraries:                       # This is called out once within the config.yml file
+  Movies:                        # These are names of libraries in your Plex
     metadata_path:
-      - file: config/Movies.yml     # This is a local file on the system
-      - folder: config/Movies/      # This is a local directory on the system
-      - pmm: basic                  # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
-      - pmm: imdb                   # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
+      - pmm: basic               # This is a file within PMM's defaults folder
+      - pmm: imdb                # This is a file within PMM's defaults folder
+      # see the wiki for how to use local files, folders, URLs, or files from git
     overlay_path:
-      - remove_overlays: false      # Set this to true to remove all overlays
-      - file: config/Overlays.yml   # This is a local file on the system
-      - pmm: ribbon                 # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
-  TV Shows:                           
+      - remove_overlays: false   # Set this to true to remove all overlays
+      - pmm: ribbon              # This is a file within PMM's defaults folder
+      # see the wiki for how to use local files, folders, URLs, or files from git
+  TV Shows:
     metadata_path:
-      - file: config/TVShows.yml
-      - folder: config/TV Shows/
-      - pmm: basic                  # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
-      - pmm: imdb                   # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
+      - pmm: basic               # This is a file within PMM's defaults folder
+      - pmm: imdb                # This is a file within PMM's defaults folder
+      # see the wiki for how to use local files, folders, URLs, or files from git
     overlay_path:
-      - remove_overlays: false      # Set this to true to remove all overlays
-      - file: config/Overlays.yml   # This is a local file on the system
-      - pmm: ribbon                 # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
+      - remove_overlays: false   # Set this to true to remove all overlays
+      - pmm: ribbon              # This is a file within PMM's defaults folder
+      # see the wiki for how to use local files, folders, URLs, or files from git
   Anime:
     metadata_path:
-      - file: config/Anime.yml
-      - pmm: basic                  # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
-      - pmm: anilist                # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
+      - pmm: basic               # This is a file within PMM's defaults folder
+      - pmm: anilist             # This is a file within PMM's defaults folder
+      # see the wiki for how to use local files, folders, URLs, or files from git
   Music:
     metadata_path:
-      - file: config/Music.yml
+      - file: config/Music.yml   # This is a local file THAT YOU MIGHT CREATE
 playlist_files:
-  - file: config/playlists.yml       
-  - pmm: playlist                   # This is a local PMM Default file. Usage Guide: https://metamanager.wiki/en/nightly/defaults/guide.html
+  - pmm: playlist                # This is a file within PMM's defaults folder
+  # see the wiki for how to use local files, folders, URLs, or files from git
 settings:
   cache: true
   cache_expiration: 60
@@ -73,6 +72,7 @@ settings:
   asset_folders: true
   asset_depth: 0
   create_asset_folders: false
+  prioritize_assets: false
   dimensional_asset_rename: false
   download_url_assets: false
   show_missing_season_assets: false
@@ -91,40 +91,48 @@ settings:
   show_options: false
   show_missing: true
   show_missing_assets: true
-  save_report: true
+  save_report: false
   tvdb_language: eng
   ignore_ids:
   ignore_imdb_ids:
   item_refresh_delay: 0
-  playlist_sync_to_users: all
+  playlist_sync_to_user: all
+  playlist_exclude_user: 
+  playlist_report: false
   verify_ssl: true
-webhooks:
+  custom_repo:
+  check_nightly: false
+webhooks:                        # Can be individually specified per library as well
   error:
+  version:
   run_start:
   run_end:
   changes:
-    version:
-plex:
+plex:                            # Can be individually specified per library as well; REQUIRED for the script to run
   url: http://192.168.1.12:32400
   token: ####################
   timeout: 60
   clean_bundles: false
   empty_trash: false
   optimize: false
-tmdb:
+tmdb:                            # REQUIRED for the script to run
   apikey: ################################
   language: en
-tautulli:
+tautulli:                        # Can be individually specified per library as well
   url: http://192.168.1.12:8181
   apikey: ################################
 omdb:
   apikey: ########
+  cache_expiration: 60
+mdblist:
+  apikey: #########################
+  cache_expiration: 60
 notifiarr:
   apikey: ####################################
-anidb:
+anidb:                           # Not required for AniDB builders unless you want mature content
   username: ######
   password: ######
-radarr:
+radarr:                          # Can be individually specified per library as well
   url: http://192.168.1.12:7878
   token: ################################
   add_missing: false
@@ -137,7 +145,7 @@ radarr:
   search: false
   radarr_path:
   plex_path:
-sonarr:
+sonarr:                          # Can be individually specified per library as well
   url: http://192.168.1.12:8989
   token: ################################
   add_missing: false
@@ -154,8 +162,9 @@ sonarr:
   sonarr_path:
   plex_path:
 trakt:
-  client_id: ################################################################
-  client_secret: ################################################################
+  client_id: ####################
+  client_secret: ####################
+  pin:
   authorization:
     # everything below is autofilled by the script
     access_token:
@@ -165,8 +174,8 @@ trakt:
     scope: public
     created_at:
 mal:
-  client_id: ################################
-  client_secret: ################################################################
+  client_id: ####################
+  client_secret: ####################
   authorization:
     # everything below is autofilled by the script
     access_token:

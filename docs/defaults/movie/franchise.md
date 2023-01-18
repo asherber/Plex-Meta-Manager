@@ -10,8 +10,8 @@ Unlike most Default Metadata Files, Franchise works by placing collections inlin
 
 ## Collections
 
-| Collection                                       |                        Key                        | Description                                            |
-|:-------------------------------------------------|:-------------------------------------------------:|:-------------------------------------------------------|
+| Collection                                       | Key                                               | Description                                            |
+|:-------------------------------------------------|:--------------------------------------------------|:-------------------------------------------------------|
 | `<<Collection Name>>`<br>**Example:** `Iron Man` | `<<TMDb Collection ID>>`<br>**Example:** `131292` | Collection of Movies found in this Collection on TMDb. |
 
 ## Config
@@ -29,13 +29,12 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 **[Shared Collection Variables](../collection_variables) are NOT available to this default file.**
 
 | Variable                                 | Description & Values                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 |:-----------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name_<<key>>`<sup>1</sup>               | **Description:** Changes the name of the specified key's collection.<br>**Values:** New Collection Name                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `summary_<<key>>`<sup>1</sup>            | **Description:** Changes the summary of the specified key's collection.<br>**Values:** New Collection Summary                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `collection_section`                     | **Description:** Adds a sort title with this collection sections.<br>**Values:** Any number                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `order_<<key>>`<sup>1</sup>              | **Description:** Controls the sort order of the collections in their collection section.<br>**Values:** Any number                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -46,6 +45,8 @@ Note that the `templates_variables:` section only needs to be used if you do wan
 | `sort_title`                             | **Description:** Sets the sort title for all collections. Use `<<collection_name>>` to use the collection name. **Example:** `"!02_<<collection_name>>"`<br>**Values:** Any String with `<<collection_name>>`                                                                                                                                                                                                                                                                                                                                |
 | `sort_title_<<key>>`<sup>1</sup>         | **Description:** Sets the sort title of the specified key's collection.<br>**Default:** `sort_title`<br>**Values:** Any String                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `build_collection`                       | **Description:** Controls if you want the collection to actually be built. i.e. you may just want these movies sent to Radarr.<br>**Values:** `false` to not build the collection                                                                                                                                                                                                                                                                                                                                                            |
+| `sync_mode`                              | **Description:** Changes the Sync Mode for all collections in a Defaults file.<br>**Default:** `sync`<br>**Values:**<table class="clearTable"><tr><td>`sync`</td><td>Add and Remove Items based on Builders</td></tr><tr><td>`append`</td><td>Only Add Items based on Builders</td></tr></table>                                                                                                                                                                                                                                             |
+| `sync_mode_<<key>>`<sup>1</sup>          | **Description:** Changes the Sync Mode of the specified key's collection.<br>**Default:** `sync_mode`<br>**Values:**<table class="clearTable"><tr><td>`sync`</td><td>Add and Remove Items based on Builders</td></tr><tr><td>`append`</td><td>Only Add Items based on Builders</td></tr></table>                                                                                                                                                                                                                                             |
 | `collection_order`                       | **Description:** Changes the Collection Order for all collections in this file.<br>**Values:**<table class="clearTable"><tr><td>`release`</td><td>Order Collection by Release Dates</td></tr><tr><td>`alpha`</td><td>Order Collection Alphabetically</td></tr><tr><td>`custom`</td><td>Order Collection Via the Builder Order</td></tr><tr><td>[Any `plex_search` Sort Option](../../metadata/builders/plex.md#sort-options)</td><td>Order Collection by any `plex_search` Sort Option</td></tr></table>                                     |
 | `collection_order_<<key>>`<sup>1</sup>   | **Description:** Changes the Collection Order of the specified key's collection.<br>**Default:** `collection_order`<br>**Values:**<table class="clearTable"><tr><td>`release`</td><td>Order Collection by Release Dates</td></tr><tr><td>`alpha`</td><td>Order Collection Alphabetically</td></tr><tr><td>`custom`</td><td>Order Collection Via the Builder Order</td></tr><tr><td>[Any `plex_search` Sort Option](../../metadata/builders/plex.md#sort-options)</td><td>Order Collection by any `plex_search` Sort Option</td></tr></table> |
 | `title_override`                         | **Description:** Overrides the [default title_override dictionary](#default-title_override).<br>**Values:** Dictionary with `key: new_title` entries                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -77,8 +78,11 @@ libraries:
           movie_105995: 336560
           radarr_add_missing: true
 ```
+## Default values
 
-## Default `addons`
+These are lists provided for reference to show what values will be in use if you do no customization.  If you want to customize these values, use the methods described above.  These do not show how to change a name or a list.
+
+### Default `addons`
 
 ```yaml
 addons:
@@ -112,7 +116,7 @@ addons:
     - 453993    # The Wolverine
 ```
 
-## Default `title_override`
+### Default `title_override`
 
 ```yaml
 title_override:
@@ -121,7 +125,7 @@ title_override:
   535790: Godzilla (Anime)
 ```
 
-## Default `movie`
+### Default `movie`
 
 ```yaml
 105995: 336560    # Anaconda: Lake Placid vs. Anaconda
@@ -152,7 +156,7 @@ title_override:
 748: 567604 # X-Men: Once Upon a Deadpool
 ```
 
-## Default `name_mapping`
+### Default `name_mapping`
 
 ```yaml
 1565: 28 Days-Weeks Later

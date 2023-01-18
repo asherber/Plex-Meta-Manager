@@ -477,6 +477,9 @@ class Plex(Library):
     def notify(self, text, collection=None, critical=True):
         self.config.notify(text, server=self.PlexServer.friendlyName, library=self.name, collection=collection, critical=critical)
 
+    def notify_delete(self, message):
+        self.config.notify_delete(message, server=self.PlexServer.friendlyName, library=self.name)
+
     def set_server_preroll(self, preroll):
         self.PlexServer.settings.get('cinemaTrailersPrerollID').set(preroll)
         self.PlexServer.settings.save()
@@ -545,11 +548,22 @@ class Plex(Library):
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
     def moveItem(self, obj, item, after):
-        obj.moveItem(item, after=after)
+        try:
+            obj.moveItem(item, after=after)
+        except (BadRequest, NotFound, Unauthorized) as e:
+            logger.error(e)
+            raise Failed("Move Failed")
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
     def query(self, method):
         return method()
+
+    def delete(self, obj):
+        try:
+            return self.query(obj.delete)
+        except Exception:
+            logger.stacktrace()
+            raise Failed(f"Plex Error: Failed to delete {obj.title}")
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_plex)
     def query_data(self, method, data):
@@ -704,7 +718,10 @@ class Plex(Library):
         return self._users
 
     def delete_user_playlist(self, title, user):
-        self.PlexServer.switchUser(user).playlist(title).delete()
+        try:
+            self.delete(self.PlexServer.switchUser(user).playlist(title))
+        except NotFound as e:
+            raise Failed(e)
 
     @property
     def account(self):
@@ -750,7 +767,11 @@ class Plex(Library):
         self._query(key, put=True)
 
     def smart_label_check(self, label):
-        return label in [la.title for la in self.get_tags("label")]
+        labels = [la.title for la in self.get_tags("label")]
+        if label in labels:
+            return True
+        logger.trace(f"Label not found in Plex. Options: {labels}")
+        return False
 
     def test_smart_filter(self, uri_args):
         logger.debug(f"Smart Collection Test: {uri_args}")
@@ -822,7 +843,7 @@ class Plex(Library):
         except NotFound:
             raise Failed(f"Plex Error: Playlist {title} not found")
 
-    def get_collection(self, data, force_search=False):
+    def get_collection(self, data, force_search=False, debug=True):
         if isinstance(data, Collection):
             return data
         elif isinstance(data, int) and not force_search:
@@ -832,10 +853,11 @@ class Plex(Library):
             for d in cols:
                 if d.title == data:
                     return d
-            logger.debug("")
-            for d in cols:
-                logger.debug(f"Found: {d.title}")
-            logger.debug(f"Looking for: {data}")
+            if debug:
+                logger.debug("")
+                for d in cols:
+                    logger.debug(f"Found: {d.title}")
+                logger.debug(f"Looking for: {data}")
         raise Failed(f"Plex Error: Collection {data} not found")
 
     def validate_collections(self, collections):
@@ -1045,12 +1067,12 @@ class Plex(Library):
                 logger.info(final)
         return final[28:] if final else final
 
-    def item_images(self, item, group, alias, initial=False, asset_location=None, title=None, image_name=None, folder_name=None):
+    def item_images(self, item, group, alias, initial=False, asset_location=None, asset_directory=None, title=None, image_name=None, folder_name=None):
         if title is None:
             title = item.title
         posters, backgrounds = util.get_image_dicts(group, alias)
         try:
-            asset_poster, asset_background, item_dir, folder_name = self.find_item_assets(item, item_asset_directory=asset_location)
+            asset_poster, asset_background, item_dir, folder_name = self.find_item_assets(item, item_asset_directory=asset_location, asset_directory=asset_directory)
             if asset_poster:
                 posters["asset_directory"] = asset_poster
             if asset_background:
@@ -1062,22 +1084,25 @@ class Plex(Library):
         poster = util.pick_image(title, posters, self.prioritize_assets, self.download_url_assets, asset_location, image_name=image_name)
         background = util.pick_image(title, backgrounds, self.prioritize_assets, self.download_url_assets, asset_location,
                                      is_poster=False, image_name=f"{image_name}_background" if image_name else image_name)
+        updated = False
         if poster or background:
-            self.upload_images(item, poster=poster, background=background, overlay=True)
-        return asset_location, folder_name
+            pu, bu = self.upload_images(item, poster=poster, background=background, overlay=True)
+            if pu or bu:
+                updated = True
+        return asset_location, folder_name, updated
 
-    def find_and_upload_assets(self, item, current_labels):
+    def find_and_upload_assets(self, item, current_labels, asset_directory=None):
         item_dir = None
         name = None
         try:
-            poster, background, item_dir, name = self.find_item_assets(item)
+            poster, background, item_dir, name = self.find_item_assets(item, asset_directory=asset_directory)
             if "Overlay" not in current_labels:
                 if poster or background:
                     self.upload_images(item, poster=poster, background=background)
-                elif self.show_missing_assets and self.asset_folders:
-                    logger.warning(f"Asset Warning: No poster or background found in the assets folder '{item_dir}'")
                 elif self.show_missing_assets:
-                    logger.warning(f"Asset Warning: {name} has an Overlay and will be updated when overlays are run")
+                    logger.warning(f"Asset Warning: No poster or background found in the assets folder '{item_dir}'")
+            else:
+                logger.warning(f"Asset Warning: {name} has an Overlay and will be updated when overlays are run")
         except Failed as e:
             if self.show_missing_assets:
                 logger.warning(e)
@@ -1088,7 +1113,7 @@ class Plex(Library):
             found_episode = False
             for season in self.query(item.seasons):
                 try:
-                    season_poster, season_background, _, _ = self.find_item_assets(season, item_asset_directory=item_dir, folder_name=name)
+                    season_poster, season_background, _, _ = self.find_item_assets(season, item_asset_directory=item_dir, asset_directory=asset_directory, folder_name=name)
                     if season_poster:
                         found_season = True
                     elif self.show_missing_season_assets and season.seasonNumber > 0:
@@ -1101,7 +1126,7 @@ class Plex(Library):
                 for episode in self.query(season.episodes):
                     try:
                         if episode.seasonEpisode:
-                            episode_poster, episode_background, _, _ = self.find_item_assets(episode, item_asset_directory=item_dir, folder_name=name)
+                            episode_poster, episode_background, _, _ = self.find_item_assets(episode, item_asset_directory=item_dir, asset_directory=asset_directory, folder_name=name)
                             if episode_poster or episode_background:
                                 found_episode = True
                                 if "Overlay" not in [la.tag for la in self.item_labels(episode)]:
@@ -1118,7 +1143,7 @@ class Plex(Library):
             found_album = False
             for album in self.query(item.albums):
                 try:
-                    album_poster, album_background, _, _ = self.find_item_assets(album, item_asset_directory=item_dir, folder_name=name)
+                    album_poster, album_background, _, _ = self.find_item_assets(album, item_asset_directory=item_dir, asset_directory=asset_directory, folder_name=name)
                     if album_poster or album_background:
                         found_album = True
                     elif self.show_missing_season_assets:
@@ -1218,7 +1243,7 @@ class Plex(Library):
 
         if is_top_level and self.asset_folders and self.dimensional_asset_rename and (not poster or not background):
             for file in util.glob_filter(os.path.join(item_asset_directory, "*.*")):
-                if file.lower().endswith((".jpg", ".png", ".jpeg")):
+                if file.lower().endswith((".png", ".jpg", ".jpeg", "webp")):
                     try:
                         image = Image.open(file)
                         _w, _h = image.size

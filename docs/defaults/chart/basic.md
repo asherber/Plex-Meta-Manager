@@ -8,8 +8,8 @@ The `basic` Default Metadata File is used to create collections based on recentl
 
 ## Collections Section 01
 
-| Collection       |    Key     | Description                                                    |
-|:-----------------|:----------:|:---------------------------------------------------------------|
+| Collection       | Key        | Description                                                    |
+|:-----------------|:-----------|:---------------------------------------------------------------|
 | `Newly Released` | `released` | Collection of Movies or TV Shows released in the last 90 days. |
 | `New Episodes`   | `episodes` | Collection of Episodes released in the last 7 days.            |
 
@@ -31,7 +31,7 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 All [Shared Collection Variables](../collection_variables) are available as well as the additional Variables below which can be used to customize the file.
 

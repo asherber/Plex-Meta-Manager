@@ -8,12 +8,12 @@ The `status` Default Overlay File is used to create an overlay on a show detaili
 
 ## Supported Status
 
-| Audio Codec |     Key     | Weight |
-|:------------|:-----------:|:------:|
-| AIRING      |  `airing`   |  `40`  |
-| RETURNING   | `returning` |  `30`  |
-| CANCELED    | `canceled`  |  `20`  |
-| ENDED       |   `ended`   |  `10`  |
+| Audio Codec | Key         | Weight |
+|:------------|:------------|:-------|
+| AIRING      | `airing`    | `40`   |
+| RETURNING   | `returning` | `30`   |
+| CANCELED    | `canceled`  | `20`   |
+| ENDED       | `ended`     | `10`   |
 
 ## Config
 
@@ -33,20 +33,20 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 All [Shared Overlay Variables](../overlay_variables) are available with the default values below as well as the additional Variables below which can be used to customize the file.
 
-| Variable            |   Default   |
-|:--------------------|:-----------:|
-| `horizontal_offset` |    `15`     |
-| `horizontal_align`  |   `left`    |
-| `vertical_offset`   |    `330`    |
-| `vertical_align`    |    `top`    |
+| Variable            | Default     |
+|:--------------------|:------------|
+| `horizontal_offset` | `15`        |
+| `horizontal_align`  | `left`      |
+| `vertical_offset`   | `330`       |
+| `vertical_align`    | `top`       |
 | `back_color`        | `#00000099` |
-| `back_radius`       |    `30`     |
-| `back_width`        |    `305`    |
-| `back_height`       |    `105`    |
+| `back_radius`       | `30`        |
+| `back_width`        | `305`       |
+| `back_height`       | `105`       |
 
 | Variable                     | Description & Values                                                                                                                                                                                                                                                                                                                                |
 |:-----------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -69,5 +69,6 @@ libraries:
   Movies:
     overlay_path:
       - pmm: status
-        text_canceled: CANCELLED
+        template_variables:
+          text_canceled: CANCELLED
 ```

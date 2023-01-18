@@ -2,7 +2,7 @@ import os, re, time
 from datetime import datetime
 from modules import plex, util, overlay
 from modules.builder import CollectionBuilder
-from modules.util import Failed, NonExisting, NotScheduled
+from modules.util import Failed, FilterFailed, NonExisting, NotScheduled
 from num2words import num2words
 from plexapi.exceptions import BadRequest
 from plexapi.video import Movie, Show, Season, Episode
@@ -159,18 +159,31 @@ class Overlays:
                             has_original = os.path.join(self.library.overlay_backup, f"{item.ratingKey}.png")
                         elif os.path.exists(os.path.join(self.library.overlay_backup, f"{item.ratingKey}.jpg")):
                             has_original = os.path.join(self.library.overlay_backup, f"{item.ratingKey}.jpg")
-                        if self.library.reset_overlays is not None or has_original is None:
-                            if self.library.reset_overlays == "tmdb":
-                                try:
-                                    new_backup = self.find_poster_url(item)
-                                except Failed as e:
-                                    logger.error(e)
-                            else:
-                                temp_poster = next((p for p in item.posters() if p.provider == "local"), None)
+                        if self.library.reset_overlays:
+                            reset_list = self.library.reset_overlays
+                        elif has_original is None and not self.library.reset_overlays:
+                            reset_list = ["plex", "tmdb"]
+                        else:
+                            reset_list = []
+                        reset_attempted = False
+                        for reset in reset_list:
+                            if reset == "plex":
+                                reset_attempted = True
+                                temp_poster = next((p for p in item.posters()), None)
                                 if temp_poster:
                                     new_backup = f"{self.library.url}{temp_poster.key}&X-Plex-Token={self.library.token}"
-                            if not new_backup:
-                                logger.error("Overlay Error: Reset Failed")
+                                    break
+                                else:
+                                    logger.trace("Plex Error: Plex Poster Download Failed")
+                            if reset == "tmdb":
+                                reset_attempted = True
+                                try:
+                                    new_backup = self.find_poster_url(item)
+                                    break
+                                except Failed as e:
+                                    logger.trace(e)
+                        if reset_attempted and not new_backup:
+                            logger.error("Overlay Error: Reset Failed")
                     else:
                         new_backup = item.posterUrl
                     if new_backup:
@@ -178,9 +191,14 @@ class Overlays:
                         image_response = self.config.get(new_backup)
                         if image_response.status_code >= 400:
                             raise Failed(f"{item_title[:60]:<60} | Overlay Error: Image Download Failed")
-                        if image_response.headers["Content-Type"] not in ["image/png", "image/jpeg"]:
-                            raise Failed(f"{item_title[:60]:<60} | Overlay Error: Image Not JPG or PNG")
-                        i_ext = "jpg" if image_response.headers["Content-Type"] == "image/jpeg" else "png"
+                        if image_response.headers["Content-Type"] not in ["image/png", "image/jpeg", "image/webp"]:
+                            raise Failed(f"{item_title[:60]:<60} | Overlay Error: Image Not PNG, JPG, or WEBP")
+                        if image_response.headers["Content-Type"] == "image/jpeg":
+                            i_ext = "jpg"
+                        elif image_response.headers["Content-Type"] == "image/webp":
+                            i_ext = "webp"
+                        else:
+                            i_ext = "png"
                         backup_image_path = os.path.join(self.library.overlay_backup, f"{item.ratingKey}.{i_ext}")
                         with open(backup_image_path, "wb") as handler:
                             handler.write(image_response.content)
@@ -378,9 +396,8 @@ class Overlays:
 
                     logger.separator(f"Gathering Items for {k} Overlay", space=False, border=False)
 
-                    if builder.overlay.mapping_name in properties:
-                        raise Failed(f"Overlay Error: Overlay {builder.overlay.mapping_name} already exists")
-                    properties[builder.overlay.mapping_name] = builder.overlay
+                    prop_name = builder.overlay.mapping_name
+                    properties[prop_name] = builder.overlay
 
                     builder.display_filters()
 
@@ -402,19 +419,25 @@ class Overlays:
                         for item in builder.found_items:
                             key_to_item[item.ratingKey] = item
                             added_titles.append(item)
-                            if item.ratingKey not in properties[builder.overlay.mapping_name].keys:
-                                properties[builder.overlay.mapping_name].keys.append(item.ratingKey)
+                            if item.ratingKey not in properties[prop_name].keys:
+                                properties[prop_name].keys.append(item.ratingKey)
                     if added_titles:
-                        logger.info(f"{len(added_titles)} Items found for {builder.overlay.mapping_name} Overlay")
+                        logger.info(f"{len(added_titles)} Items found for {prop_name}")
                         logger.trace(f"Titles Found: {[self.library.get_item_sort_title(a, atr='title') for a in added_titles]}")
                     else:
-                        logger.warning(f"No Items found for {builder.overlay.mapping_name} Overlay")
+                        logger.warning(f"No Items found for {prop_name}")
                     logger.info("")
                 except NotScheduled as e:
                     logger.info(e)
+                except FilterFailed:
+                    pass
                 except Failed as e:
                     logger.stacktrace()
                     logger.error(e)
+                    logger.info("")
+                except Exception as e:
+                    logger.stacktrace()
+                    logger.error(f"Unknown Error: {e}")
                     logger.info("")
 
         logger.separator(f"Overlay Operation for the {self.library.name} Library")

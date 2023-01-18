@@ -1,4 +1,5 @@
-import argparse, os, sys, time, uuid
+import argparse, os, platform, psutil, sys, time, uuid
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from modules.logs import MyLogger
@@ -43,6 +44,8 @@ parser.add_argument("-nc", "--no-countdown", dest="no_countdown", help="Run with
 parser.add_argument("-nm", "--no-missing", dest="no_missing", help="Run without running the missing section", action="store_true", default=False)
 parser.add_argument("-nr", "--no-report", dest="no_report", help="Run without saving a report", action="store_true", default=False)
 parser.add_argument("-ro", "--read-only-config", dest="read_only_config", help="Run without writing to the config", action="store_true", default=False)
+parser.add_argument("-pu", "--plex-url", dest="plex_url", help="Plex URL for Plex ENV URLs", default="", type=str)
+parser.add_argument("-pt", "--plex-token", dest="plex_token", help="Plex Token for Plex ENV Tokens", default="", type=str)
 parser.add_argument("-d", "--divider", dest="divider", help="Character that divides the sections (Default: '=')", default="=", type=str)
 parser.add_argument("-w", "--width", dest="width", help="Screen Width (Default: 100)", default=100, type=int)
 args = parser.parse_args()
@@ -55,7 +58,7 @@ def get_arg(env_str, default, arg_bool=False, arg_int=False):
         if env_value is not None:
             final_value = env_value
             break
-    if final_value is not None:
+    if final_value or (arg_int and final_value == 0):
         if arg_bool:
             if final_value is True or final_value is False:
                 return final_value
@@ -64,13 +67,17 @@ def get_arg(env_str, default, arg_bool=False, arg_int=False):
             else:
                 return False
         elif arg_int:
-            return int(final_value)
+            try:
+                return int(final_value)
+            except ValueError:
+                return default
         else:
             return str(final_value)
     else:
         return default
 
-
+is_docker = get_arg("PMM_DOCKER", False, arg_bool=True)
+is_linuxserver = get_arg("PMM_LINUXSERVER", False, arg_bool=True)
 run_arg = " ".join([f'"{s}"' if " " in s else s for s in sys.argv[:]])
 config_file = get_arg("PMM_CONFIG", args.config)
 times = get_arg("PMM_TIME", args.times)
@@ -80,7 +87,7 @@ ignore_schedules = get_arg("PMM_IGNORE_SCHEDULES", args.ignore_schedules, arg_bo
 ignore_ghost = get_arg("PMM_IGNORE_GHOST", args.ignore_ghost, arg_bool=True)
 collection_only = get_arg("PMM_COLLECTIONS_ONLY", args.collection_only, arg_bool=True)
 playlist_only = get_arg("PMM_PLAYLISTS_ONLY", args.playlist_only, arg_bool=True)
-operations_only = get_arg(["PMM_OPERATIONS", "PMM_LIBRARIES_ONLY"], args.operations, arg_bool=True)
+operations_only = get_arg(["PMM_OPERATIONS", "PMM_OPERATIONS_ONLY", "PMM_LIBRARIES_ONLY"], args.operations, arg_bool=True)
 overlays_only = get_arg(["PMM_OVERLAYS", "PMM_OVERLAYS_ONLY"], args.overlays, arg_bool=True)
 library_first = get_arg("PMM_LIBRARIES_FIRST", args.library_first, arg_bool=True)
 collections = get_arg("PMM_COLLECTIONS", args.collections)
@@ -99,6 +106,8 @@ screen_width = get_arg("PMM_WIDTH", args.width, arg_int=True)
 timeout = get_arg("PMM_TIMEOUT", args.timeout, arg_int=True)
 debug = get_arg("PMM_DEBUG", args.debug, arg_bool=True)
 trace = get_arg("PMM_TRACE", args.trace, arg_bool=True)
+plex_url = get_arg("PMM_PLEX_URL", args.plex_url)
+plex_token = get_arg("PMM_PLEX_TOKEN", args.plex_token)
 
 if collections:
     collection_only = True
@@ -123,7 +132,7 @@ from modules import util
 util.logger = logger
 from modules.builder import CollectionBuilder
 from modules.config import ConfigFile
-from modules.util import Failed, NonExisting, NotScheduled, Deleted
+from modules.util import Failed, FilterFailed, NonExisting, NotScheduled, Deleted
 
 def my_except_hook(exctype, value, tb):
     if issubclass(exctype, KeyboardInterrupt):
@@ -181,11 +190,14 @@ def start(attrs):
     logger.info_center("|  __/| |  __/>  <  | |  | |  __/ || (_| | | |  | | (_| | | | | (_| | (_| |  __/ |   ")
     logger.info_center("|_|   |_|\\___/_/\\_\\ |_|  |_|\\___|\\__\\__,_| |_|  |_|\\__,_|_| |_|\\__,_|\\__, |\\___|_|   ")
     logger.info_center("                                                                     |___/           ")
-    logger.info(f"    Version: {version[0]}")
+    system_ver = "Docker" if is_docker else "Linuxserver" if is_linuxserver else f"Python {platform.python_version()}"
+    logger.info(f"    Version: {version[0]} ({system_ver})")
     latest_version = util.current_version(version)
     new_version = latest_version[0] if latest_version and (version[1] != latest_version[1] or (version[2] and version[2] < latest_version[2])) else None
     if new_version:
         logger.info(f"    Newest Version: {new_version}")
+    logger.info(f"    Platform: {platform.platform()}")
+    logger.info(f"    Memory: {round(psutil.virtual_memory().total / (1024.0 ** 3))} GB")
     if "time" in attrs and attrs["time"]:                   start_type = f"{attrs['time']} "
     elif "test" in attrs and attrs["test"]:                 start_type = "Test "
     elif "collections" in attrs and attrs["collections"]:   start_type = "Collections "
@@ -203,6 +215,8 @@ def start(attrs):
     attrs["playlist_only"] = playlist_only
     attrs["operations_only"] = operations_only
     attrs["overlays_only"] = overlays_only
+    attrs["plex_url"] = plex_url
+    attrs["plex_token"] = plex_token
     logger.separator(debug=True)
     logger.debug(f"Run Command: {run_arg}")
     logger.debug(f"--config (PMM_CONFIG): {config_file}")
@@ -227,6 +241,8 @@ def start(attrs):
     logger.debug(f"--no-missing (PMM_NO_MISSING): {no_missing}")
     logger.debug(f"--no-report (PMM_NO_REPORT): {no_report}")
     logger.debug(f"--read-only-config (PMM_READ_ONLY_CONFIG): {read_only_config}")
+    logger.debug(f"--plex-url (PMM_PLEX_URL): {'Used' if plex_url else ''}")
+    logger.debug(f"--plex-token (PMM_PLEX_TOKEN): {'Used' if plex_token else ''}")
     logger.debug(f"--divider (PMM_DIVIDER): {divider}")
     logger.debug(f"--width (PMM_WIDTH): {screen_width}")
     logger.debug(f"--debug (PMM_DEBUG): {debug}")
@@ -259,6 +275,32 @@ def start(attrs):
     version_line = f"Version: {version[0]}"
     if new_version:
         version_line = f"{version_line}        Newest Version: {new_version}"
+    try:
+        log_data = {}
+        with open(logger.main_log, encoding="utf-8") as f:
+            for log_line in f:
+                for err_type in ["WARNING", "ERROR", "CRITICAL"]:
+                    if f"[{err_type}]" in log_line:
+                        log_line = log_line.split("|")[1].strip()
+                        if err_type not in log_data:
+                            log_data[err_type] = []
+                        log_data[err_type].append(log_line)
+
+        for err_type in ["WARNING", "ERROR", "CRITICAL"]:
+            if err_type not in log_data:
+                continue
+            logger.separator(f"{err_type.lower().capitalize()} Summary", space=False, border=False)
+
+            logger.info("")
+            logger.info("Count | Message")
+            logger.separator(f"{logger.separating_character * 5}|", space=False, border=False, side_space=False, left=True)
+            for k, v in Counter(log_data[err_type]).most_common():
+                logger.info(f"{v:>5} | {k}")
+            logger.info("")
+    except Failed as e:
+        logger.stacktrace()
+        logger.error(f"Report Error: {e}")
+
     logger.separator(f"Finished {start_type}Run\n{version_line}\nFinished: {end_time.strftime('%H:%M:%S %Y-%m-%d')} Run Time: {run_time}")
     logger.remove_main_handler()
 
@@ -456,10 +498,10 @@ def run_libraries(config):
                 logger.info("")
                 for collection in library.get_all_collections():
                     try:
-                        library.query(collection.delete)
+                        library.delete(collection)
                         logger.info(f"Collection {collection.title} Deleted")
-                    except NotFound:
-                        logger.error(f"Collection {collection.title} Failed to Delete")
+                    except Failed as e:
+                        logger.error(e)
                 library_status[library.name]["All Collections Deleted"] = str(datetime.now() - time_start).split('.')[0]
 
             if delete_labels and not playlist_only:
@@ -601,6 +643,8 @@ def run_collection(config, library, metadata, requested_collections):
             if len(builder.smart_filter_details) > 0:
                 logger.info("")
                 logger.info(builder.smart_filter_details)
+                logger.info("")
+                logger.info(f"Items Found: {builder.beginning_count}")
 
             items_added = 0
             items_removed = 0
@@ -620,7 +664,7 @@ def run_collection(config, library, metadata, requested_collections):
                         else:
                             raise Failed(e)
 
-                if not builder.found_items and builder.ignore_blank_results:
+                if not builder.found_items and not builder.ignore_blank_results:
                     raise NonExisting(f"{builder.Type} Warning: No items found")
 
                 builder.display_filters()
@@ -645,10 +689,7 @@ def run_collection(config, library, metadata, requested_collections):
                     library.status[str(mapping_name)]["sonarr"] += sonarr_add
 
             valid = True
-            if builder.build_collection and not builder.blank_collection and (
-                    (not builder.smart_url and items_added + builder.beginning_count < builder.minimum)
-                    or (builder.smart_url and len(library.get_filter_items(builder.smart_url)) < builder.minimum)
-            ):
+            if builder.build_collection and not builder.blank_collection and items_added + builder.beginning_count < builder.minimum:
                 logger.info("")
                 logger.info(f"{builder.Type} Minimum: {builder.minimum} not met for {mapping_name} Collection")
                 delete_status = f"Minimum {builder.minimum} Not Met"
@@ -713,12 +754,15 @@ def run_collection(config, library, metadata, requested_collections):
         except NotScheduled as e:
             logger.info(e)
             if str(e).endswith("and was deleted"):
+                library.notify_delete(e)
                 library.stats["deleted"] += 1
                 library.status[str(mapping_name)]["status"] = "Deleted Not Scheduled"
             elif str(e).startswith("Skipped because allowed_library_types"):
                 library.status[str(mapping_name)]["status"] = "Skipped Invalid Library Type"
             else:
                 library.status[str(mapping_name)]["status"] = "Not Scheduled"
+        except FilterFailed:
+            pass
         except Failed as e:
             library.notify(e, collection=mapping_name)
             logger.stacktrace()
@@ -890,11 +934,13 @@ def run_playlists(config):
             except Deleted as e:
                 logger.info(e)
                 status[mapping_name]["status"] = "Deleted"
+                config.notify_delete(e)
             except NotScheduled as e:
                 logger.info(e)
                 if str(e).endswith("and was deleted"):
                     stats["deleted"] += 1
                     status[mapping_name]["status"] = "Deleted Not Scheduled"
+                    config.notify_delete(e)
                 else:
                     status[mapping_name]["status"] = "Not Scheduled"
             except Failed as e:
@@ -937,6 +983,7 @@ if __name__ == "__main__":
                     else:
                         raise Failed(f"Argument Error: blank time argument")
             for time_to_run in valid_times:
+                params["time"] = time_to_run
                 schedule.every().day.at(time_to_run).do(process, params)
             while True:
                 schedule.run_pending()

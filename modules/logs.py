@@ -64,16 +64,20 @@ class MyLogger:
 
     def _get_handler(self, log_file, count=3):
         _handler = RotatingFileHandler(log_file, delay=True, mode="w", backupCount=count, encoding="utf-8")
-        self._formatter(_handler)
+        self._formatter(handler=_handler)
         if os.path.isfile(log_file):
+            self._logger.removeHandler(_handler)
             _handler.doRollover()
+            self._logger.addHandler(_handler)
         return _handler
 
-    def _formatter(self, handler, border=True):
-        text = f"| %(message)-{self.screen_width - 2}s |" if border else f"%(message)-{self.screen_width - 2}s"
-        if isinstance(handler, RotatingFileHandler):
-            text = f"[%(asctime)s] %(filename)-27s %(levelname)-10s {text}"
-        handler.setFormatter(logging.Formatter(text))
+    def _formatter(self, handler=None, border=True, trace=False, log_only=False, space=False):
+        console = f"| %(message)-{self.screen_width - 2}s |" if border else f"%(message)-{self.screen_width - 2}s"
+        file = f"{' '*65}" if space else f"[%(asctime)s] %(filename)-27s {'[TRACE]   ' if trace else '%(levelname)-10s'} "
+        handlers = [handler] if handler else self._logger.handlers
+        for h in handlers:
+            if not log_only or isinstance(h, RotatingFileHandler):
+                h.setFormatter(logging.Formatter(f"{file if isinstance(h, RotatingFileHandler) else ''}{console}"))
 
     def add_main_handler(self):
         self.main_handler = self._get_handler(self.main_log, count=9)
@@ -142,29 +146,28 @@ class MyLogger:
         if trace and not self.is_trace:
             return None
         sep = " " if space else self.separating_character
-        for handler in self._logger.handlers:
-            self._formatter(handler, border=False)
         border_text = f"|{self.separating_character * self.screen_width}|"
-        if border and debug:
-            self.debug(border_text)
-        elif border:
-            self.info(border_text)
+        if border:
+            self.print(border_text, debug=debug, trace=trace)
         if text:
             text_list = text.split("\n")
             for t in text_list:
                 msg = f"|{sep}{self._centered(t, sep=sep, side_space=side_space, left=left)}{sep}|"
-                if trace:
-                    self.trace(msg)
-                elif debug:
-                    self.debug(msg)
-                else:
-                    self.info(msg)
-            if border and debug:
-                self.debug(border_text)
-            elif border:
-                self.info(border_text)
-        for handler in self._logger.handlers:
-            self._formatter(handler)
+                self.print(msg, debug=debug, trace=trace)
+            if border:
+                self.print(border_text, debug=debug, trace=trace)
+
+    def print(self, msg, error=False, warning=False, debug=False, trace=False):
+        if error:
+            self.error(msg)
+        elif warning:
+            self.warning(msg)
+        elif debug:
+            self.debug(msg)
+        elif trace:
+            self.trace(msg)
+        else:
+            self.info(msg)
 
     def debug(self, msg, *args, **kwargs):
         if self._logger.isEnabledFor(DEBUG):
@@ -198,10 +201,7 @@ class MyLogger:
             self._log(CRITICAL, str(msg), args, **kwargs)
 
     def stacktrace(self, trace=False):
-        if trace:
-            self.trace(traceback.format_exc())
-        else:
-            self.debug(traceback.format_exc())
+        self.print(traceback.format_exc(), debug=not trace, trace=trace)
 
     def _space(self, display_title):
         display_title = str(display_title)
@@ -226,32 +226,24 @@ class MyLogger:
             self.spacing = 0
 
     def secret(self, text):
-        if str(text) not in self.secrets:
+        if text and str(text) not in self.secrets:
             self.secrets.append(str(text))
 
     def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, stacklevel=1):
-        trace = False
-        original_format_str = "[%(asctime)s] %(filename)-27s %(levelname)-10s | %(message)s"
-        format_str = original_format_str
-        if level == TRACE:
-            trace = True
+        trace = level == TRACE
+        log_only = False
+        if trace:
             level = DEBUG
-            format_str = "[%(asctime)s] %(filename)-27s [TRACE]    | %(message)s"
-            for handler in self._logger.handlers:
-                if isinstance(handler, RotatingFileHandler):
-                    handler.setFormatter(logging.Formatter(format_str))
+        if trace or msg.startswith("|"):
+            self._formatter(trace=trace, border=not msg.startswith("|"))
         if self.spacing > 0:
             self.exorcise()
         if "\n" in msg:
             for i, line in enumerate(msg.split("\n")):
                 self._log(level, line, args, exc_info=exc_info, extra=extra, stack_info=stack_info, stacklevel=stacklevel)
                 if i == 0:
-                    for handler in self._logger.handlers:
-                        if isinstance(handler, RotatingFileHandler):
-                            handler.setFormatter(logging.Formatter(" " * 65 + "| %(message)s"))
-            for handler in self._logger.handlers:
-                if isinstance(handler, RotatingFileHandler):
-                    handler.setFormatter(logging.Formatter(format_str))
+                    self._formatter(log_only=True, space=True)
+            log_only = True
         else:
             for secret in self.secrets:
                 if secret in msg:
@@ -273,10 +265,8 @@ class MyLogger:
                     exc_info = sys.exc_info()
             record = self._logger.makeRecord(self._logger.name, level, fn, lno, msg, args, exc_info, func, extra, sinfo)
             self._logger.handle(record)
-        if trace:
-            for handler in self._logger.handlers:
-                if isinstance(handler, RotatingFileHandler):
-                    handler.setFormatter(logging.Formatter(original_format_str))
+        if trace or log_only or msg.startswith("|"):
+            self._formatter()
 
     def findCaller(self, stack_info=False, stacklevel=1):
         f = logging.currentframe()

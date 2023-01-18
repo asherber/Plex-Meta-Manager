@@ -8,14 +8,14 @@ The `flixpatrol` Default Overlay File is used to create an overlay based on the 
 
 ## Supported Services
 
-| Service     |     Key     | Weight |
-|:------------|:-----------:|:------:|
-| Netflix     |  `netflix`  |  `60`  |
-| Disney+     |  `disney`   |  `50`  |
-| HBO         |    `hbo`    |  `40`  |
-| Hulu        |   `hulu`    |  `30`  |
-| Paramount+  | `paramount` |  `20`  |
-| Prime Video |   `prime`   |  `10`  |
+| Service     | Key         | Weight |
+|:------------|:------------|:-------|
+| Netflix     | `netflix`   | `60`   |
+| Disney+     | `disney`    | `50`   |
+| HBO         | `hbo`       | `40`   |
+| Hulu        | `hulu`      | `30`   |
+| Paramount+  | `paramount` | `20`   |
+| Prime Video | `prime`     | `10`   |
 
 ## Config
 
@@ -35,21 +35,21 @@ libraries:
 
 Template Variables can be used to manipulate the file in various ways to slightly change how it works without having to make your own local copy.
 
-Note that the `templates_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
+Note that the `template_variables:` section only needs to be used if you do want to actually change how the defaults work. Any value not specified is its default value if it has one if not it's just ignored.
 
 All [Shared Overlay Variables](../overlay_variables) except `horizontal_offset`, `horizontal_align`, `vertical_offset`, and `vertical_align` are available with the default values below as well as the additional Variables below which can be used to customize the file.
  
-| Variable            |      Default      |
-|:--------------------|:-----------------:|
-| `horizontal_offset` |       `30`        |
-| `horizontal_align`  |  `left`/`right`   |
+| Variable            | Default           |
+|:--------------------|:------------------|
+| `horizontal_offset` | `30`              |
+| `horizontal_align`  | `left`/`right`    |
 | `vertical_offset`   | `465`/`670`/`875` |
-| `vertical_align`    |       `top`       |
-| `back_color`        |    `#00000099`    |
-| `back_radius`       |       `30`        |
-| `back_width`        |       `160`       |
-| `back_height`       |       `160`       |
-| `back_padding`      |       `15`        |
+| `vertical_align`    | `top`             |
+| `back_color`        | `#00000099`       |
+| `back_radius`       | `30`              |
+| `back_width`        | `160`             |
+| `back_height`       | `160`             |
+| `back_padding`      | `15`              |
 
 | Variable                          | Description & Values                                                                                                                                                                                                              |
 |:----------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
