@@ -35,6 +35,8 @@ collections:
     collection_order: alpha
   Pure Mature:
     template: { name: Tree, folder_name: PureMature }
+  Sinful:
+    template: { name: Tree, folder_name: Sinful }
       
   PornoRip:
     template: { name: SingleFolder, folder_name: Adult Swim }

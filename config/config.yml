@@ -43,9 +43,12 @@ settings:
   verify_ssl: true
   custom_repo:
   check_nightly: false
+  show_unconfigured: true
+  playlist_exclude_users:
 plex:                                           # Can be individually specified per library as well; REQUIRED for the script to run
   url: http://192.168.1.2:32400
-  token: CKzRpwzLxHQoudMNGpks
+  # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+  token: MXHaoTu7Y6PHkTg8Nvr3
   timeout: 60
   clean_bundles: false
   empty_trash: false
