@@ -2,11 +2,13 @@
 
 The `network` Default Metadata File is used to dynamically create collections based on the networks available in your library.
 
-**This file only works with Show Libraries.**
-
 ![](../images/network.png)
 
-## Collections Section 04
+## Requirements & Recommendations
+
+Supported Library Types: Show
+
+## Collections Section 050
 
 | Collection                          | Key                                 | Description                                                                 |
 |:------------------------------------|:------------------------------------|:----------------------------------------------------------------------------|
@@ -44,9 +46,11 @@ This file contains a [Separator](../separators) so all [Shared Separator Variabl
 | `exclude`                     | **Description:** Exclude these Networks from creating a Dynamic Collection.<br>**Values:** List of Networks found in your library                                                                                                                                |
 | `addons`                      | **Description:** Overrides the [default addons dictionary](#default-addons). Defines how multiple keys can be combined under a parent key. The parent key doesn't have to already exist in Plex<br>**Values:** Dictionary List of Networks found in your library |
 | `append_include`              | **Description:** Appends to the [default include list](#default-include).<br>**Values:** List of Networks found in your library                                                                                                                                  |
+| `remove_include`              | **Description:** Removes from the [default include list](#default-include).<br>**Values:** List of Networks found in your library                                                                                                                                |
 | `append_addons`               | **Description:** Appends to the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of Networks found in your library                                                                                                                   |
-| `network_name`                | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                        |
-| `network_summary`             | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s broadcast on <<key_name>>.`<br>**Values:** Any string.                                                                                        |
+| `remove_addons`               | **Description:** Removes from the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of Networks found in your library                                                                                                                 |
+| `name_format`                 | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                        |
+| `summary_format`              | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s broadcast on <<key_name>>.`<br>**Values:** Any string.                                                                                        |
 
 1. Each default collection has a `key` that when calling to effect a specific collection you must replace `<<key>>` with when calling.
 
@@ -54,7 +58,7 @@ The below is an example config.yml extract with some Template Variables added in
 
 ```yaml
 libraries:
-  Movies:
+  TV Shows:
     metadata_path:
       - pmm: network
         template_variables:
@@ -65,7 +69,6 @@ libraries:
           sort_by: title.asc
 ```
 
-
 ## Default values
 
 These are lists provided for reference to show what values will be in use if you do no customization.  If you want to customize these values, use the methods described above.  These do not show how to change a name or a list.
@@ -73,254 +76,444 @@ These are lists provided for reference to show what values will be in use if you
 ### Default `include`
 
 ```yaml
-include:
-  - A&E
-  - ABC
-  - Amazon
-  - AMC
-  - Animal Planet
-  - BBC
-  - BET
-  - Cartoon Network
-  - Channel 4
-  - Channel 5
-  - CBC
-  - CBS
-  - Comedy Central
-  - Discovery
-  - Disney Channel
-  - E!
-  - ESPN
-  - Food Network
-  - FOX
-  - Hallmark
-  - HBO
-  - HGTV
-  - History
-  - ITV
-  - Lifetime
-  - MTV
-  - National Geographic
-  - NBC
-  - Nickelodeon
-  - PBS
-  - Showtime
-  - Sky
-  - Starz
-  - The CW
-  - TLC
-  - TNT
-  - UKTV
-  - USA
-  - YouTube
+    include:
+    - "#0"
+    - ABC
+    - ABC Family
+    - ABC Kids
+    - ABC TV
+    - ABS-CBN
+    - Acorn TV
+    - Adult Swim
+    - AHC
+    - Alibi
+    - ALTBalaji
+    - Amazon Kids+
+    - AMC
+    - Animal Planet
+    - Antena 3
+    - Apple TV+
+    - ARD
+    - Arte
+    - Atresplayer Premium
+    - AT-X
+    - Audience
+    - AXN
+    - Azteca Uno
+    - A&E
+    - BBC America
+    - BBC Four
+    - BBC iPlayer
+    - BBC One
+    - BBC Three
+    - BBC Two
+    - BET
+    - BET+
+    - bilibili
+    - BluTV
+    - Boomerang
+    - Bravo
+    - BritBox
+    - C More
+    - Canale 5
+    - Canal+
+    - Cartoon Network
+    - Cartoonito
+    - CBC
+    - CBC Television
+    - Cbeebies
+    - CBS
+    - Channel 3
+    - Channel 4
+    - Channel 5
+    - CHCH-DT
+    - Cinemax
+    - Citytv
+    - CNN
+    - Comedy Central
+    - Cooking Channel
+    - Crackle
+    - Criterion Channel
+    - Crunchyroll
+    - CTV
+    - Cuatro
+    - Curiosity Stream
+    - Dave
+    - DC Universe
+    - Discovery
+    - Discovery Kids
+    - discovery+
+    - Disney Channel
+    - Disney Junior
+    - Disney XD
+    - Disney+
+    - DR1
+    - Eden
+    - Elisa Viihde
+    - Elisa Viihde Viaplay
+    - Epix
+    - ESPN
+    - E!
+    - Facebook Watch
+    - Family Channel
+    - Ficción Producciones
+    - Flooxer
+    - Food Network
+    - FOX
+    - Fox Kids
+    - France 2
+    - Freeform
+    - Freevee
+    - Fuji TV
+    - FX
+    - FXX
+    - GAİN
+    - Game Show Network
+    - Global TV
+    - Globoplay
+    - GMA Network
+    - Hallmark
+    - HBO
+    - HBO Max
+    - HGTV
+    - History
+    - HOT3
+    - Hulu
+    - ICTV
+    - IFC
+    - IMDb TV
+    - Investigation Discovery
+    - ION Television
+    - iQiyi
+    - ITV
+    - ITV Encore
+    - ITV1
+    - ITVX
+    - joyn
+    - Kan 11
+    - KBS2
+    - Kids WB
+    - La 1
+    - La Une
+    - Las Estrellas
+    - Lifetime
+    - Lionsgate+
+    - Logo
+    - MasterClass
+    - Max
+    - MBC
+    - MGM+
+    - mitele
+    - Movistar Plus+
+    - MTV
+    - M-Net
+    - National Geographic
+    - NBC
+    - Netflix
+    - Network 10
+    - NHK
+    - Nick
+    - Nick Jr
+    - Nickelodeon
+    - Nicktoons
+    - Nine Network
+    - Nippon TV
+    - NRK1
+    - OCS City
+    - OCS Max
+    - ORF
+    - Oxygen
+    - Pantaya
+    - Paramount Network
+    - Paramount+
+    - PBS
+    - PBS Kids
+    - Peacock
+    - Planète+ A&E
+    - Prime Video
+    - Rai 1
+    - Reelz
+    - The Roku Channel
+    - RTÉ One
+    - RTL
+    - RTL Télé
+    - RTP1
+    - RÚV
+    - S4C
+    - SAT.1
+    - SBS
+    - Science
+    - Shahid
+    - Showcase
+    - Showmax
+    - Showtime
+    - Shudder
+    - Sky
+    - Smithsonian
+    - Space
+    - Spectrum
+    - Spike
+    - Stan
+    - Starz
+    - STAR+
+    - Sundance TV
+    - SVT1
+    - Syfy
+    - Syndication
+    - TBS
+    - Telecinco
+    - Telefe
+    - Telemundo
+    - Televisión de Galicia
+    - Televisión Pública Argentina
+    - Tencent Video
+    - TF1
+    - The CW
+    - The Roku Channel
+    - The WB
+    - TLC
+    - TNT
+    - Tokyo MX
+    - Travel Channel
+    - truTV
+    - Turner Classic Movies
+    - TV 2
+    - tv asahi
+    - TV Globo
+    - TV Land
+    - TV Tokyo
+    - TV3
+    - TV4
+    - TVB Jade
+    - tving
+    - tvN
+    - TVNZ 1
+    - TVP1
+    - UKTV
+    - UniMás
+    - Universal Kids
+    - Universal TV
+    - Univision
+    - UPN
+    - USA Network
+    - VH1
+    - Viaplay
+    - Vice
+    - Virgin Media One
+    - ViuTV
+    - ViX+
+    - VRT 1
+    - VTM
+    - W
+    - WE tv
+    - YLE
+    - Youku
+    - YouTube
+    - ZDF
+    - ZEE5
 ```
 
 ### Default `addons`
 
 ```yaml
+
 addons:
-  A&E:
-    - A+E Networks UK
   ABC:
-    - ABC (AU)
-    - ABC (US)
-    - ABC Comedy
-    - ABC Family
-    - ABC Kids
-    - ABC Me
-    - ABC Signature
-    - ABC Spark
-    - ABC Studios
     - ABC.com
-    - Freeform
-  Amazon:
-    - Amazon (Japan)
-    - Amazon Kids+
-    - Amazon Prime Video
-    - Amazon Productions
-    - Amazon Studios
-    - Prime
-    - Prime Video
+  ABC TV:
+    - ABC (AU)
+    - ABC Comedy
+    - ABC Me
+    - ABC News
+    - ABC iview
   AMC:
-    - AMC+
+    - AMC.com
   Animal Planet:
-    - Animal Planet (CA)
-    - Animal Planet (UK)
-  BBC:
-    - BBC Alba
-    - BBC America
-    - BBC Choice
-    - BBC First
-    - BBC Four
-    - BBC HD
-    - BBC iPlayer
-    - BBC Kids
-    - BBC Knowledge
-    - BBC News
-    - BBC One
-    - BBC One Northern Ireland
-    - BBC Scotland
-    - BBC Television
-    - BBC Three
-    - BBC Two
-    - BBC UKTV
-    - BBC Wales
-    - BBC World News
-    - CBBC
-    - CBeebies
+    - Animal Planet Brasil
+    - Animal Planet Deutschland
   BET:
-    - BET+
+    - BET Her
+  Canal+:
+    - Canal+ Poland
+    - Canal+ Family
+    - Canal+ Discovery
+    - Canal+ Afrique
   Cartoon Network:
-    - Cartoonito
-  Channel 4:
-    - 4seven
-    - All 4
-    - E4
-    - More4
-  Channel 5:
-    - Channel 5 (UK)
-    - 5Action
-    - 5Select
-    - 5Star
-    - 5USA
+    - Cartoon Network Latin America
+    - Cartoon Network Anything
   CBC:
-    - CBC (CA)
+    - CBCDrama
+  CBC Television:
     - CBC Gem
-    - CBC Television
+    - CBC News Network
+    - CBC Comedy
   CBS:
-    - CBS All Access
-    - CBS Reality
-    - CBS Reality (UK)
     - CBS.com
-  Comedy Central:
-    - Comedy Central (UK)
+    - CBS All Access
+  CTV:
+    - CTV Two
+    - CTV News Channel
+    - CTV Sci-Fi Channel
+    - CTV Comedy Channel
+    - CTV Life Channel
+    - ctv.ca
   Discovery:
-    - Discovery Asia
-    - Discovery Channel
-    - Discovery Channel (Asia)
-    - Discovery Channel (AU)
-    - Discovery Channel (CA)
-    - Discovery Channel (UK)
-    - Discovery Family
     - Discovery Health Channel
-    - Discovery Kids
-    - Discovery Life
+    - Discovery Channel
+    - Discovery Home & Health Brasil
+    - Discovery Family
     - Discovery Real Time
-    - Discovery Turbo
-    - Discovery Turbo UK
-    - discovery+
-    - Discovery+ (IN)
-    - Discovery+ (NO)
-    - Discovery+ (SE)
-    - Discovery+ (UK)
+    - Discovery Asia
+    - Discovery Home & Health
+    - Discovery Life
+    - Discovery World
+    - Discovery Science
   Disney Channel:
-    - Disney Channel (CZ)
-    - Disney Channel (UK)
-    - Disney Junior
-    - Disney XD
-    - Disney+
-    - Playhouse Disney
     - Toon Disney
-  E!:
-    - e.tv
+    - Playhouse Disney
+    - Disney Channel Asia
+    - disney.com
+    - Disney Channel Middle East
+  Disney Junior:
+    - Disney Junior Latin America
+    - Disney Junior Brasil
+  Disney+:
+    - Disney+ Hotstar
   ESPN:
+    - ESPN2
     - ESPN+
-  Food Network:
-    - Cooking Channel
+    - ESPN Classic
+    - ESPNU
+    - ESPNews
+    - ESPN Australia
+    - Sony ESPN
+    - ESPN.com
+    - ESPN Deportes
   FOX:
-    - Fox Action Movies
-    - Fox Business Network
-    - FOX España
-    - Fox Kids
-    - Fox Nation
-    - Fox Premium Series
-    - FOX Sports 1
+    - Fox
+    - Fox News Channel
+    - Fox Sports
+    - Fox Reality Channel
     - Fox Sports Networks
-    - Fox8
-    - FX
-    - FXX
+    - Fox Latin America
+    - Fox Brasil
+    - Fox Soccer
+    - Fox Sports 2
+    - Fox Nation
+    - Fox Sports 1
+    - fox.com
+    - Fox Sports Detroit
+  Freevee:
+    - Amazon Freevee
   Hallmark:
     - Hallmark Channel
-    - Hallmark Movies & Mysteries
+    - Hallmark Drama
+    - Hallmark Movie & Mysteries
     - Hallmark Movies Now
   HBO:
-    - HBO2
-    - HBO Asia
-    - HBO Canada
-    - HBO Comedy
-    - HBO España
+    - HBO Brasil
     - HBO Europe
-    - HBO Family
+    - HBO Asia
     - HBO Latin America
+    - HBO España
     - HBO Nordic
-    - HBO Signature
-    - HBO Zone
+    - HBO Canada
+    - HBO Family
+    - HBO Mundi
+  HGTV:
+    - HGTV Canada
   History:
-    - History (CA)
-    - History (UK)
-  ITV:
-    - ITV Encore
-    - ITV Wales
-    - ITV1
-    - ITV2
-    - ITV4
-    - ITVBe
-    - CITV
-    - STV
+    - History Channel Italia
+    - H2
   Lifetime:
     - Lifetime Movies
+  Max:
+    - HBO Go
+    - HBO Max
   MTV:
-    - MTV (AU/NZ)
-    - MTV (UK)
-    - MTV Japan
-    - MTV Nederland
     - MTV2
     - MTV3
+    - MTV Lebanon
+    - MTV Latin America
+    - MTV Italia
+    - MTV Australia
+    - MTV Canada
+    - MTV Global
+    - MTV Nederland
   National Geographic:
-    - Nat Geo Wild
-    - National Geographic Brasil
     - National Geographic Channel
-    - National Geographic Wild
+    - National Geographic Brasil
+    - National Geographic Latinoamerica
+    - National Geographic India
+  NBC:
+    - CNBC
+    - MSNBC
+    - NBCSN
+    - CNBC Europe
+    - CNBC Asia
+    - WNBC
+    - Nikkei CNBC
+    - KNBC
+    - CNBC World
+    - CNBC TV18
+    - NBC Weather Plus
+    - NBC Radio Network
+  Network Ten:
+    - Network 10
   Nickelodeon:
     - Nick at Nite
-    - Nick Jr.
-    - Nicktoons
-    - TeenNick
-  PBS:
-    - PBS Kids
+  ReelzChannel:
+    - Reelz
   Sky:
-    - Sky 1
-    - Sky Arts
+    - Sky One
     - Sky Atlantic
-    - "Sky Atlantic "
-    - Sky Atlantic (UK)
-    - Sky Cinema
-    - Sky Crime
-    - Sky Deutschland
-    - Sky Documentaries
+    - Sky Arts
     - Sky History
     - Sky Living
+    - Sky Crime
+    - Sky Uno
     - Sky Max
-    - Sky Nature
-    - Sky One
-    - Sky Showcase
     - Sky Sports
+    - Sky Documentaries
+    - Sky Nature
+    - Sky News
+    - Sky Cinema
+    - Sky News Australia
+    - Sky Italia
+    - Sky Comedy
+    - Sky Sports F1
     - Sky Two
     - Sky Witness
-    - Sky1
+    - sky Travel
+    - Sky Vision
+    - Sky News Weather Channel
+    - SkyShowtime
+  Smithsonian:
+    - Smithsonian Channel
+    - Smithsonian Earth
+  Spike:
+    - Spike TV
+  Starz:
+    - Starz Encore
+  Sundance TV:
+    - SundanceTV
+  TBS:
+    - TBS.com
+    - TBS Brasil
   The CW:
     - CW seed
-  TLC:
-    - TLC Go
-    - TLC UK
   TNT:
-    - TNT (US)
-  UKTV:
-    - UKTV Food
-    - UKTV History
-    - UKTV Yesterday
-  USA:
-    - USA Network
-  YouTube:
-    - YouTube Premium
+    - TNT Comedy
+    - TNT Latin America
+    - TNT España
+    - TNT Serie
+    - TNT Glitz
+  Travel Channel:
+    - Travel Channel United Kingdom
+  VH1:
+    - VH1 Classic
+  Vice:
+    - Viceland
+    - Vice TV
+    - Vice.com
 ```

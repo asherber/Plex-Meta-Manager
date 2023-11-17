@@ -1,10 +1,12 @@
 # Runtimes Overlay
 
-The `runtimes` Default Overlay File is used to create an overlay on of the movie or episodes runtime for all items in your library.
-
-**This file works with Movie and Show Libraries.**
+The `runtimes` Default Overlay File is used to create an overlay of the movie runtime, episode runtime, or average episode runtime for all items in your library.
 
 ![](images/runtimes.png)
+
+## Requirements & Recommendations
+
+Supported Overlay Level: Movie, Show, Season, Episode
 
 ## Config
 
@@ -18,6 +20,9 @@ libraries:
   TV Shows:
     overlay_path:
       - pmm: runtimes
+      - pmm: runtimes
+        template_variables:
+          builder_level: episode
 ```
 
 ## Template Variables
@@ -39,15 +44,15 @@ All [Shared Overlay Variables](../overlay_variables) are available with the defa
 | `back_width`        | `600`       |
 | `back_height`       | `105`       |
 
-| Variable       | Description & Values                                                                                                                                                |
-|:---------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `text`         | **Description:** Choose the text for the Overlay.<br>**Default:** `Runtime: `<br>**Values:** Any String                                                               |
-| `font`         | **Description:** Choose the font for the Overlay.<br>**Default:** `fonts/Inter-Medium.ttf`<br>**Values:** Path to font file                                         |
-| `font_style`   | **Description:** Font style for Variable Fonts.<br>**Values:** Variable Font Style                                                                                  |
-| `font_size`    | **Description:** Choose the font size for the Overlay.<br>**Default:** `55`<br>**Values:** Any Number greater then 0                                                |
-| `font_color`   | **Description:** Choose the font color for the Overlay.<br>**Default:** `#FFFFFF`<br>**Values:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA` |
-| `stroke_width` | **Description:** Font Stroke Width for the Text Overlay.<br>**Values:** Any Number greater then 0                                                                   |
-| `stroke_color` | **Description:** Font Stroke Color for the Text Overlay.<br>**Values:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`                          |
+| Variable       | Description & Values                                                                                                                                                 |
+|:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `text`         | **Description:** Choose the text for the Overlay.<br>**Default:** `Runtime: `<br>**Values:** Any String                                                              |
+| `font`         | **Description:** Choose the font for the Overlay.<br>**Default:** `fonts/Inter-Medium.ttf`<br>**Values:** Path to font file                                          |
+| `font_style`   | **Description:** Font style for Variable Fonts.<br>**Values:** Variable Font Style                                                                                   |
+| `font_size`    | **Description:** Choose the font size for the Overlay.<br>**Default:** `55`<br>**Values:** Any Number greater then 0                                                 |
+| `font_color`   | **Description:** Choose the font color for the Overlay.<br>**Default:** `#FFFFFF`<br>**Values:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`  |
+| `stroke_width` | **Description:** Font Stroke Width for the Text Overlay.<br>**Values:** Any Number greater then 0                                                                    |
+| `stroke_color` | **Description:** Font Stroke Color for the Text Overlay.<br>**Values:** Color Hex Code in format `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`                           |
 
 The below is an example config.yml extract with some Template Variables added in to change how the file works.
 
@@ -56,5 +61,7 @@ libraries:
   TV Shows:
     overlay_path:
       - pmm: runtimes
+        template_variables:
+          builder_level: episode
         font: fonts/Inter-Bold.ttf
 ```

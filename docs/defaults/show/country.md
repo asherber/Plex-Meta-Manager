@@ -2,11 +2,15 @@
 
 The `country` Default Metadata File is used to dynamically create collections based on the countries available in your library.
 
-**This file works with Show Libraries, but has a Movie Library [Counterpart](../movie/country).**
+**This file has a Movie Library [Counterpart](../movie/country).**
 
 ![](../images/country1.png)
 
-## Collections Section 09
+## Requirements & Recommendations
+
+Supported Library Types: Show
+
+## Collections Section 080
 
 | Collection                              | Key                                                | Description                                                                 |
 |:----------------------------------------|:---------------------------------------------------|:----------------------------------------------------------------------------|
@@ -54,11 +58,12 @@ This file contains a [Separator](../separators) so all [Shared Separator Variabl
 | `exclude`                       | **Description:** Exclude these Countries from creating a Dynamic Collection.<br>**Values:** List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                                                                                     |
 | `addons`                        | **Description:** Defines how multiple keys can be combined under a parent key. The parent key doesn't have to already exist in Plex<br>**Values:** Dictionary List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                   |
 | `append_include`                | **Description:** Appends to the [default include list](#default-include).<br>**Values:** List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                                                                                        |
+| `remove_include`                | **Description:** Removes from the [default include list](#default-include).<br>**Values:** List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                                                                                      |
+| `append_addons`                 | **Description:** Appends to the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                                                                         |
+| `remove_addons`                 | **Description:** Removes from the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of [2 digit ISO 3166-1 codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)                                                                                       |
 | `key_name_override`             | **Description:** Overrides the [default key_name_override dictionary](#default-key_name_override).<br>**Values:** Dictionary with `key: new_key_name` entries                                                                                                                                    |
-| `country_name`                  | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                                                        |
-| `country_other_name`            | **Description:** Changes the Other Collection name.<br>**Default:** `Other Countries`<br>**Values:** Any string.                                                                                                                                                                                 |
-| `country_summary`               | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s filmed in <<key_name>>.`<br>**Values:** Any string.                                                                                                                           |
-| `country_other_summary`         | **Description:** Changes the Other Collection summary.<br>**Default:** `<<library_translationU>>s filmed in other uncommon Countries.`<br>**Values:** Any string.                                                                                                                                |
+| `name_format`                   | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                                                        |
+| `summary_format`                | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s filmed in <<key_name>>.`<br>**Values:** Any string.                                                                                                                           |
 
 1. Each default collection has a `key` that when calling to effect a specific collection you must replace `<<key>>` with when calling.
 
@@ -72,6 +77,7 @@ libraries:
         template_variables:
           use_other: false
           use_separator: false
+          style: color
           sep_style: purple
           exclude:
             - fr
@@ -86,240 +92,298 @@ These are lists provided for reference to show what values will be in use if you
 
 ```yaml
 include:
-  # - af     # Afghanistan
-  # - ax     # Åland Islands
-  # - al     # Albania
-  # - dz     # Algeria
-  # - ad     # Andorra
-  # - ao     # Angola
-  # - ai     # Anguilla
-  # - aq     # Antarctica
-  # - ag     # Antigua
-  - ar     # Argentina
-  # - am     # Armenia
-  # - aw     # Aruba
-  - au     # Australia
-  - at     # Austria
-  # - az     # Azerbaijan
-  - bs     # Bahamas
-  # - bh     # Bahrain
-  # - bd     # Bangladesh
-  # - bb     # Barbados
-  # - by     # Belarus
-  - be     # Belgium
-  # - bz     # Belize
-  # - bj     # Benin
-  # - bm     # Bermuda
-  # - bt     # Bhutan
-  # - bo     # Bolivia
-  # - bq     # Bonaire
-  # - ba     # Bosnia and Herzegovina
-  # - bw     # Botswana
-  # - bv     # Bouvet Island
-  - br     # Brazil
-  # - bn     # Brunei
-  - bg     # Bulgaria
-  # - bf     # Burkina Faso
-  # - bi     # Burundi
-  # - cv     # Cabo Verde
-  # - kh     # Cambodia
-  # - cm     # Cameroon
-  - ca     # Canada
-  # - ky     # Cayman Islands
-  # - cf     # Central African Republic
-  # - td     # Chad
-  - cl     # Chile
-  - cn     # China
-  # - cx     # Christmas Island
-  # - cc     # Cocos (Keeling) Islands
-  # - co     # Colombia
-  # - km     # Comoros
-  # - cg     # Congo
-  # - ck     # Cook Islands
-  - cr     # Costa Rica
-  # - ci     # Côte d'Ivoire
-  - hr     # Croatia
-  # - cu     # Cuba
-  # - cw     # Curaçao
-  # - cy     # Cyprus
-  - cz     # Czech Republic
-  - dk     # Denmark
-  # - dj     # Djibouti
-  # - dm     # Dominica
-  - do     # Dominican Republic
-  # - ec     # Ecuador
-  - eg     # Egypt
-  # - sv     # El Salvador
-  # - gq     # Equatorial Guinea
-  # - er     # Eritrea
-  - ee     # Estonia
-  # - sz     # Eswatini
-  # - et     # Ethiopia
-  # - fk     # Falkland Islands
-  # - fo     # Faroe Islands
-  # - fj     # Fiji
-  - fi     # Finland
-  - fr     # France
-  # - gf     # French Guiana
-  # - pf     # French Polynesia
-  # - ga     # Gabon
-  # - gm     # Gambia
-  # - ge     # Georgia
-  - de     # Germany
-  # - gh     # Ghana
-  # - gi     # Gibraltar
-  - gr     # Greece
-  # - gl     # Greenland
-  # - gd     # Grenada
-  # - gp     # Guadeloupe
-  # - gu     # Guam
-  # - gt     # Guatemala
-  # - gg     # Guernsey
-  # - gn     # Guinea
-  # - gw     # Guinea-Bissau
-  # - gy     # Guyana
-  # - ht     # Haiti
-  # - va     # Holy See
-  # - hn     # Honduras
-  - hk     # Hong Kong
-  - hu     # Hungary
-  - is     # Iceland
-  - in     # India
-  - id     # Indonesia
-  - ir     # Iran
-  # - iq     # Iraq
-  - ie     # Ireland
-  # - im     # Isle of Man
-  - il     # Israel
-  - it     # Italy
-  # - jm     # Jamaica
-  - jp     # Japan
-  # - je     # Jersey
-  # - jo     # Jordan
-  # - kz     # Kazakhstan
-  # - ke     # Kenya
-  # - ki     # Kiribati
-  - kr     # Korea
-  # - kw     # Kuwait
-  # - kg     # Kyrgyzstan
-  # - la     # Lao
-  - lv     # Latvia
-  # - lb     # Lebanon
-  # - ls     # Lesotho
-  # - lr     # Liberia
-  # - ly     # Libya
-  # - li     # Liechtenstein
-  # - lt     # Lithuania
-  - lu     # Luxembourg
-  # - mo     # Macao
-  # - mg     # Madagascar
-  # - mw     # Malawi
-  - my     # Malaysia
-  # - mv     # Maldives
-  # - ml     # Mali
-  # - mt     # Malta
-  # - mh     # Marshall Islands
-  # - mq     # Martinique
-  # - mr     # Mauritania
-  # - mu     # Mauritius
-  # - yt     # Mayotte
-  - mx     # Mexico
-  # - fm     # Micronesia
-  # - md     # Moldova
-  # - mc     # Monaco
-  # - mn     # Mongolia
-  # - me     # Montenegro
-  # - ms     # Montserrat
-  - ma     # Morocco
-  # - mz     # Mozambique
-  # - mm     # Myanmar
-  # - na     # Namibia
-  # - nr     # Nauru
-  # - np     # Nepal
-  - nl     # Netherlands
-  # - nc     # New Caledonia
-  - nz     # New Zealand
-  # - ni     # Nicaragua
-  # - ne     # Niger
-  # - ng     # Nigeria
-  # - nu     # Niue
-  # - nf     # Norfolk Island
-  # - mk     # Macedonia
-  - no     # Norway
-  # - om     # Oman
-  - pk     # Pakistan
-  # - pw     # Palau
-  # - ps     # Palestine
-  - pa     # Panama
-  # - pg     # New Guinea
-  # - py     # Paraguay
-  - pe     # Peru
-  - ph     # Philippines
-  # - pn     # Pitcairn
-  - pl     # Poland
-  - pt     # Portugal
-  # - pr     # Puerto Rico
-  - qa     # Qatar
-  # - re     # Réunion
-  - ro     # Romania
-  - ru     # Russia
-  # - rw     # Rwanda
-  # - bl     # Saint Barthélemy
-  # - lc     # Saint Lucia
-  # - ws     # Samoa
-  # - sm     # San Marino
-  # - st     # Sao Tome and Principe
-  - sa     # Saudi Arabia
-  # - sn     # Senegal
-  - rs     # Serbia
-  # - sc     # Seychelles
-  # - sl     # Sierra Leone
-  - sg     # Singapore
-  # - sk     # Slovakia
-  # - si     # Slovenia
-  # - sb     # Solomon Islands
-  # - so     # Somalia
-  - za     # South Africa
-  # - ss     # South Sudan
-  - es     # Spain
-  - lk     # Sri Lanka
-  # - sd     # Sudan
-  # - sr     # Suriname
-  - se     # Sweden
-  - ch     # Switzerland
-  # - sy     # Syria
-  # - tw     # Taiwan
-  # - tj     # Tajikistan
-  # - tz     # Tanzania
-  - th     # Thailand
-  # - tl     # Timor-Leste
-  # - tg     # Togo
-  # - tk     # Tokelau
-  # - to     # Tonga
-  # - tt     # Trinidad and Tobago
-  # - tn     # Tunisia
-  - tr     # Turkey
-  # - tm     # Turkmenistan
-  # - tc     # Turks and Caicos
-  # - tv     # Tuvalu
-  # - ug     # Uganda
-  - ua     # Ukraine
-  - ae     # United Arab Emirates
-  - gb     # United Kingdom
-  - us     # United States of America
-  # - uy     # Uruguay
-  # - uz     # Uzbekistan
-  # - vu     # Vanuatu
-  # - ve     # Venezuela
-  - vn     # Vietnam
-  # - ye     # Yemen
-  # - zm     # Zambia
-  # - zw     # Zimbabwe
+      # Northern Africa:
+        - dz                    # Algeria
+        - eg                    # Egypt
+        - ly                    # Libya
+        - ma                    # Morocco
+        - sd                    # Sudan
+        - tn                    # Tunisia
+        - eh                    # Western Sahara
+      # Eastern Africa:
+        - io                    # British Indian Ocean Territory
+        - bi                    # Burundi
+        - km                    # Comoros
+        - dj                    # Djibouti
+        - er                    # Eritrea
+        - et                    # Ethiopia
+        - tf                    # French Southern Territories
+        - ke                    # Kenya
+        - mg                    # Madagascar
+        - mw                    # Malawi
+        - mu                    # Mauritius
+        - yt                    # Mayotte
+        - mz                    # Mozambique
+        - re                    # Réunion
+        - rw                    # Rwanda
+        - sc                    # Seychelles
+        - so                    # Somalia
+        - ss                    # South Sudan
+        - ug                    # Uganda
+        - tz                    # Tanzania [United Republic of Tanzania]
+        - zm                    # Zambia
+        - zw                    # Zimbabwe
+      # Central Africa:
+        - ao                    # Angola
+        - cm                    # Cameroon
+        - cf                    # Central African Republic
+        - td                    # Chad
+        - cg                    # Republic of the Congo [Congo]
+        - cd                    # Democratic Republic of the Congo
+        - gq                    # Equatorial Guinea
+        - ga                    # Gabon
+        - st                    # São Tomé and Príncipe [Sao Tome and Principe]
+      # Southern Africa:
+        - bw                    # Botswana
+        - sz                    # Eswatini [Swaziland]
+        - ls                    # Lesotho
+        - na                    # Namibia
+        - za                    # South Africa
+      # Western Africa:
+        - bj                    # Benin
+        - bf                    # Burkina Faso
+        - cv                    # Cape Verde [Cabo Verde]
+        - ci                    # Côte d'Ivoire [Côte d’Ivoire] [Ivory Coast]
+        - gm                    # Gambia
+        - gh                    # Ghana
+        - gn                    # Guinea
+        - gw                    # Guinea-Bissau
+        - lr                    # Liberia
+        - ml                    # Mali
+        - mr                    # Mauritania
+        - ne                    # Niger
+        - ng                    # Nigeria
+        - sh                    # Saint Helena, Ascension and Tristan da Cunha [Ascension] [Tristan da Cunha] [Saint Helena]
+        - sn                    # Senegal
+        - sl                    # Sierra Leone
+        - tg                    # Togo
+      # Caribbean:
+        - ai                    # Anguilla
+        - ag                    # Antigua and Barbuda [Antigua] [Barbuda]
+        - aw                    # Aruba
+        - bs                    # Bahamas
+        - bb                    # Barbados
+        - bq                    # Bonaire, Sint Eustatius and Saba [Bonaire] [Sint Eustatius] [Saba]
+        - an                    # Netherlands Antilles
+        - vg                    # British Virgin Islands
+        - ky                    # Cayman Islands
+        - cu                    # Cuba
+        - cw                    # Curaçao
+        - dm                    # Dominica
+        - do                    # Dominican Republic
+        - gd                    # Grenada
+        - gp                    # Guadeloupe
+        - ht                    # Haiti
+        - jm                    # Jamaica
+        - mq                    # Martinique
+        - ms                    # Montserrat
+        - pr                    # Puerto Rico
+        - bl                    # Saint Barthélemy
+        - kn                    # Saint Kitts and Nevis
+        - lc                    # Saint Lucia
+        - mf                    # Saint Martin
+        - vc                    # Saint Vincent and the Grenadines
+        - sx                    # Sint Maarten
+        - tt                    # Trinidad and Tobago
+        - tc                    # Turks and Caicos Islands
+        - vi                    # US Virgin Islands [U.S. Virgin Islands] [United States Virgin Islands]
+      # Central America:
+        - bz                    # Belize
+        - cr                    # Costa Rica
+        - sv                    # El Salvador
+        - gt                    # Guatemala
+        - hn                    # Honduras
+        - mx                    # Mexico
+        - ni                    # Nicaragua
+        - pa                    # Panama
+      # South America:
+        - ar                    # Argentina
+        - bo                    # Bolivia [Plurinational State of Bolivia]
+        - bv                    # Bouvet Island
+        - br                    # Brazil
+        - cl                    # Chile
+        - co                    # Colombia
+        - ec                    # Ecuador
+        - fk                    # Falkland Islands [Malvinas]
+        - gf                    # French Guiana
+        - gy                    # Guyana
+        - py                    # Paraguay
+        - pe                    # Peru
+        - gs                    # South Georgia and the South Sandwich Islands [South Georgia] [South Sandwich Islands]
+        - sr                    # Suriname
+        - uy                    # Uruguay
+        - ve                    # Venezuela [Bolivarian Republic of Venezuela]
+      # North America:
+        - bm                    # Bermuda
+        - ca                    # Canada
+        - gl                    # Greenland
+        - pm                    # Saint Pierre and Miquelon
+        - us                    # United States [United States of America]
+      # Antarctica:
+        - aq                    # Antarctica
+      # Central Asia:
+        - kz                    # Kazakhstan
+        - kg                    # Kyrgyzstan
+        - tj                    # Tajikistan
+        - tm                    # Turkmenistan
+        - uz                    # Uzbekistan
+      # Eastern Asia:
+        - cn                    # China
+        - hk                    # Hong Kong
+        - mo                    # Macao
+        - kp                    # North Korea [Democratic People's Republic of Korea]
+        - jp                    # Japan
+        - mn                    # Mongolia
+        - kr                    # South Korea [Republic of Korea] [Korea]
+        - tw                    # Taiwan [Taiwan, Province of China]
+      # South-Eastern Asia:
+        - bn                    # Brunei [Brunei Darussalam]
+        - kh                    # Cambodia
+        - id                    # Indonesia
+        - la                    # Laos [Lao People's Democratic Republic] [Lao]
+        - my                    # Malaysia
+        - mm                    # Myanmar
+        - ph                    # Philippines
+        - sg                    # Singapore
+        - th                    # Thailand
+        - tp                    # East Timor
+        - vn                    # Vietnam [Viet Nam]
+      # Southern Asia:
+        - af                    # Afghanistan
+        - bd                    # Bangladesh
+        - bt                    # Bhutan
+        - in                    # India
+        - ir                    # Iran [Islamic Republic of Iran]
+        - mv                    # Maldives
+        - np                    # Nepal
+        - pk                    # Pakistan
+        - lk                    # Sri Lanka
+      # Western Asia:
+        - am                    # Armenia
+        - az                    # Azerbaijan
+        - bh                    # Bahrain
+        - cy                    # Cyprus
+        - ge                    # Georgia
+        - iq                    # Iraq
+        - il                    # Israel
+        - jo                    # Jordan
+        - kw                    # Kuwait
+        - lb                    # Lebanon
+        - om                    # Oman
+        - qa                    # Qatar
+        - sa                    # Saudi Arabia
+        - ps                    # Palestine [State of Palestine]
+        - sy                    # Syria [Syrian Arab Republic]
+        - tr                    # Turkey [Türkiye]
+        - ae                    # United Arab Emirates
+        - ye                    # Yemen
+      # Eastern Europe:
+        - by                    # Belarus
+        - bg                    # Bulgaria
+        - cz                    # Czech Republic [Czechia]
+        - hu                    # Hungary
+        - pl                    # Poland
+        - md                    # Moldova [Republic of Moldova]
+        - ro                    # Romania
+        - ru                    # Russia [Russian Federation]
+        - sk                    # Slovakia
+        - ua                    # Ukraine
+      # Northern Europe:
+        - ax                    # Åland Islands
+        - gg                    # Guernsey
+        - je                    # Jersey
+        - cq                    # Sark
+        - dk                    # Denmark
+        - ee                    # Estonia
+        - fo                    # Faroe Islands
+        - fi                    # Finland
+        - is                    # Iceland
+        - ie                    # Ireland
+        - im                    # Isle of Man
+        - lv                    # Latvia
+        - lt                    # Lithuania
+        - no                    # Norway
+        - sj                    # Svalbard and Jan Mayen Islands [Svalbard and Jan Mayen]
+        - se                    # Sweden
+        - gb                    # United Kingdom
+      # Southern Europe:
+        - al                    # Albania
+        - ad                    # Andorra
+        - ba                    # Bosnia and Herzegovina
+        - hr                    # Croatia
+        - gi                    # Gibraltar
+        - gr                    # Greece
+        - xk                    # Kosovo
+        - va                    # Vatican City [Holy See]
+        - it                    # Italy
+        - mt                    # Malta
+        - me                    # Montenegro
+        - mk                    # North Macedonia [Macedonia] [Republic of North Macedonia]
+        - pt                    # Portugal
+        - sm                    # San Marino
+        - rs                    # Serbia
+        - si                    # Slovenia
+        - es                    # Spain
+        - yu                    # Yugoslavia
+      # Western Europe:
+        - at                    # Austria
+        - be                    # Belgium
+        - fr                    # France [French Republic]
+        - de                    # Germany
+        - li                    # Liechtenstein
+        - lu                    # Luxembourg
+        - mc                    # Monaco
+        - nl                    # Netherlands
+        - ch                    # Switzerland
+      # Australia and New Zealand:
+        - au                    # Australia
+        - cx                    # Christmas Island
+        - cc                    # Cocos (Keeling) Islands
+        - hm                    # Heard Island and McDonald Islands
+        - nz                    # New Zealand
+        - nf                    # Norfolk Island
+      # Melanesia:
+        - fj                    # Fiji
+        - nc                    # New Caledonia
+        - pg                    # Papua New Guinea [New Guinea]
+        - sb                    # Solomon Islands
+        - vu                    # Vanuatu
+      # Micronesia:
+        - gu                    # Guam
+        - ki                    # Kiribati
+        - mh                    # Marshall Islands
+        - fm                    # Micronesia [Federated States of Micronesia]
+        - nr                    # Nauru
+        - mp                    # Northern Mariana Islands
+        - pw                    # Palau
+        - um                    # US Minor Outlying Islands
+      # Polynesia:
+        - as                    # American Samoa
+        - ck                    # Cook Islands
+        - pf                    # French Polynesia
+        - nu                    # Niue
+        - pn                    # Pitcairn [Pitcairn Islands]
+        - ws                    # Samoa
+        - tk                    # Tokelau
+        - to                    # Tonga
+        - tv                    # Tuvalu
+        - wf                    # Wallis and Futuna Islands
 ```
 
-### Default `key_name_override`
+### Default `addons`
 
 ```yaml
-key_name_override:
-  kr: Korea
+    addons:
+      cd:                       # Democratic Republic of the Congo
+        - zr                    # Zaire
+      mm:                       # Myanmar
+        - bu                    # Burma
+      tp:                       # East Timor
+        - tl                    # Timor-Leste
+      cz:                       # Czech Republic
+        - cs                    # Czechoslovakia
+      ru:                       # Russia
+        - su                    # Soviet Union
+      de:                       # Germany
+        - dd                    # East Germany
 ```

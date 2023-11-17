@@ -75,6 +75,7 @@ class MyAnimeListObj:
         self.rank = self._data["rank"]
         self.popularity = self._data["popularity"]
         self.genres = [] if not self._data["genres"] else self._data["genres"].split("|") if cache else [g["name"] for g in self._data["genres"]]
+        self.studio = self._data["studio"] if cache else self._data["studios"][0]["name"] if self._data["studios"] else None
 
 
 class MyAnimeList:
@@ -87,9 +88,13 @@ class MyAnimeList:
         self.expiration = params["cache_expiration"]
         self.authorization = params["authorization"]
         logger.secret(self.client_secret)
-        if not self._save(self.authorization):
-            if not self._refresh():
-                self._authorization()
+        try:
+            if not self._save(self.authorization):
+                if not self._refresh():
+                    self._authorization()
+        except Exception:
+            logger.stacktrace()
+            raise Failed("MyAnimeList Error: Failed to Connect")
         self._genres = {}
         self._studios = {}
         self._delay = None

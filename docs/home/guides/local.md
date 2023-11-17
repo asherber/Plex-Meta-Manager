@@ -8,7 +8,7 @@ This article will walk you through getting Plex-Meta-Manager [PMM] set up and ru
 4. Setting up a metadata file and creating a couple sample collections.
 
 The specific steps you will be taking:
-1. Verify that Python 3.7 or better is installed and install it if not
+1. Verify that Python 3.8 or better is installed and install it if not
 2. Verify that the Git tools are installed and install them if not
 3. Use `git` to retrieve the code
 4. Install requirements [extra bits of code required for PMM]
@@ -79,7 +79,7 @@ First let's check if it's installed already [type this into your terminal]:
 python3 --version
 ```
 
-If this doesn't return `3.7.0` or higher, you'll need to get Python 3 installed.
+If this doesn't return `3.8.0` or higher, you'll need to get Python 3 installed.
 
 ````{tab} Linux
 Describing a python install for any arbitrary linux is out of scope here, but if you're using Ubuntu, [this](https://techviewleo.com/how-to-install-python-on-ubuntu-linux/) might be useful.
@@ -88,6 +88,14 @@ Describing a python install for any arbitrary linux is out of scope here, but if
 Follow the instructions here: [Installing Python 3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
 ````
 ````{tab} Windows
+
+Before installing Python, try again without the `3`:
+
+```
+python --version
+```
+Depending on the version of Python, you may need to use one or the other.  If this works, you're ready to go, jsut substitute `python` for `python3` in the couple places it appears below.
+
 Go to http://www.python.org/download and download the next-to-latest minor version of Python for Windows in 32 or 64-bit as appropriate for your system [probably 64-bit].  As this is written, that's 3.10, while the latest is 3.11.
 
 #### Why the next-to-latest?

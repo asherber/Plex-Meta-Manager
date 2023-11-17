@@ -2,11 +2,15 @@
 
 The `country` Default Metadata File is used to dynamically create collections based on the countries available in your library.
 
-**This file works with Movie Libraries, but has a Show Library [Counterpart](../show/country).**
+**This file has a Show Library [Counterpart](../show/country).**
 
 ![](../images/country1.png)
 
-## Collections Section 09
+## Requirements & Recommendations
+
+Supported Library Types: Movie
+
+## Collections Section 080
 
 | Collection                              | Key                                     | Description                                                                 |
 |:----------------------------------------|:----------------------------------------|:----------------------------------------------------------------------------|
@@ -52,11 +56,11 @@ This file contains a [Separator](../separators) so all [Shared Separator Variabl
 | `exclude`                     | **Description:** Exclude these Countries from creating a Dynamic Collection.<br>**Values:** List of Countries found in your library                                                                                                                               |
 | `addons`                      | **Description:** Overrides the [default addons dictionary](#default-addons). Defines how multiple keys can be combined under a parent key. The parent key doesn't have to already exist in Plex<br>**Values:** Dictionary List of Countries found in your library |
 | `append_include`              | **Description:** Appends to the [default include list](#default-include).<br>**Values:** List of Countries found in your library                                                                                                                                  |
+| `remove_include`              | **Description:** Removes from the [default include list](#default-include).<br>**Values:** List of Countries found in your library                                                                                                                                |
 | `append_addons`               | **Description:** Appends to the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of Countries found in your library                                                                                                                   |
-| `country_name`                | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                         |
-| `country_other_name`          | **Description:** Changes the Other Collection name.<br>**Default:** `Other Countries`<br>**Values:** Any string.                                                                                                                                                  |
-| `country_summary`             | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s filmed in <<key_name>>.`<br>**Values:** Any string.                                                                                            |
-| `country_other_summary`       | **Description:** Changes the Other Collection summary.<br>**Default:** `<<library_translationU>>s filmed in other uncommon Countries.`<br>**Values:** Any string.                                                                                                 |
+| `remove_addons`               | **Description:** Removes from the [default addons dictionary](#default-addons).<br>**Values:** Dictionary List of Countries found in your library                                                                                                                 |
+| `name_format`                 | **Description:** Changes the title format of the Dynamic Collections.<br>**Default:** `<<key_name>>`<br>**Values:** Any string with `<<key_name>>` in it.                                                                                                         |
+| `summary_format`              | **Description:** Changes the summary format of the Dynamic Collections.<br>**Default:** `<<library_translationU>>s filmed in <<key_name>>.`<br>**Values:** Any string.                                                                                            |
 
 1. Each default collection has a `key` that when calling to effect a specific collection you must replace `<<key>>` with when calling.
 
@@ -70,6 +74,7 @@ libraries:
         template_variables:
           use_other: false
           use_separator: false
+          style: color
           sep_style: purple
           exclude:
             - France
@@ -83,243 +88,407 @@ These are lists provided for reference to show what values will be in use if you
 ### Default `include`
 
 ```yaml
-include:
-  # - Afghanistan                   # af
-  # - Åland Islands                 # ax
-  # - Albania                       # al
-  # - Algeria                       # dz
-  # - Andorra                       # ad
-  # - Angola                        # ao
-  # - Anguilla                      # ai
-  # - Antarctica                    # aq
-  # - Antigua                       # ag
-  - Argentina                     # ar
-  # - Armenia                       # am
-  # - Aruba                         # aw
-  - Australia                     # au
-  - Austria                       # at
-  # - Azerbaijan                    # az
-  - Bahamas                       # bs
-  # - Bahrain                       # bh
-  # - Bangladesh                    # bd
-  # - Barbados                      # bb
-  # - Belarus                       # by
-  - Belgium                       # be
-  # - Belize                        # bz
-  # - Benin                         # bj
-  # - Bermuda                       # bm
-  # - Bhutan                        # bt
-  # - Bolivia                       # bo
-  # - Bonaire                       # bq
-  # - Bosnia and Herzegovina        # ba
-  # - Botswana                      # bw
-  # - Bouvet Island                 # bv
-  - Brazil                        # br
-  # - Brunei                        # bn
-  - Bulgaria                      # bg
-  # - Burkina Faso                  # bf
-  # - Burundi                       # bi
-  # - Cabo Verde                    # cv
-  # - Cambodia                      # kh
-  # - Cameroon                      # cm
-  - Canada                        # ca
-  # - Cayman Islands                # ky
-  # - Central African Republic      # cf
-  # - Chad                          # td
-  - Chile                         # cl
-  - China                         # cn
-  # - Christmas Island              # cx
-  # - Cocos (Keeling) Islands       # cc
-  # - Colombia                      # co
-  # - Comoros                       # km
-  # - Congo                         # cg
-  # - Cook Islands                  # ck
-  - Costa Rica                    # cr
-  # - Côte d'Ivoire                 # ci
-  - Croatia                       # hr
-  # - Cuba                          # cu
-  # - Curaçao                       # cw
-  # - Cyprus                        # cy
-  - Czech Republic                # cz
-  - Denmark                       # dk
-  # - Djibouti                      # dj
-  # - Dominica                      # dm
-  - Dominican Republic            # do
-  # - Ecuador                       # ec
-  - Egypt                         # eg
-  # - El Salvador                   # sv
-  # - Equatorial Guinea             # gq
-  # - Eritrea                       # er
-  - Estonia                       # ee
-  # - Eswatini                      # sz
-  # - Ethiopia                      # et
-  # - Falkland Islands              # fk
-  # - Faroe Islands                 # fo
-  # - Fiji                          # fj
-  - Finland                       # fi
-  - France                        # fr
-  # - French Guiana                 # gf
-  # - French Polynesia              # pf
-  # - Gabon                         # ga
-  # - Gambia                        # gm
-  # - Georgia                       # ge
-  - Germany                       # de
-  # - Ghana                         # gh
-  # - Gibraltar                     # gi
-  - Greece                        # gr
-  # - Greenland                     # gl
-  # - Grenada                       # gd
-  # - Guadeloupe                    # gp
-  # - Guam                          # gu
-  # - Guatemala                     # gt
-  # - Guernsey                      # gg
-  # - Guinea                        # gn
-  # - Guinea-Bissau                 # gw
-  # - Guyana                        # gy
-  # - Haiti                         # ht
-  # - Holy See                      # va
-  # - Honduras                      # hn
-  - Hong Kong                     # hk
-  - Hungary                       # hu
-  - Iceland                       # is
-  - India                         # in
-  - Indonesia                     # id
-  - Iran                          # ir
-  # - Iraq                          # iq
-  - Ireland                       # ie
-  # - Isle of Man                   # im
-  - Israel                        # il
-  - Italy                         # it
-  # - Jamaica                       # jm
-  - Japan                         # jp
-  # - Jersey                        # je
-  # - Jordan                        # jo
-  # - Kazakhstan                    # kz
-  # - Kenya                         # ke
-  # - Kiribati                      # ki
-  - Korea                         # kr
-  # - Kuwait                        # kw
-  # - Kyrgyzstan                    # kg
-  # - Lao                           # la
-  - Latvia                        # lv
-  # - Lebanon                       # lb
-  # - Lesotho                       # ls
-  # - Liberia                       # lr
-  # - Libya                         # ly
-  # - Liechtenstein                 # li
-  # - Lithuania                     # lt
-  - Luxembourg                    # lu
-  # - Macao                         # mo
-  # - Madagascar                    # mg
-  # - Malawi                        # mw
-  - Malaysia                      # my
-  # - Maldives                      # mv
-  # - Mali                          # ml
-  # - Malta                         # mt
-  # - Marshall Islands              # mh
-  # - Martinique                    # mq
-  # - Mauritania                    # mr
-  # - Mauritius                     # mu
-  # - Mayotte                       # yt
-  - Mexico                        # mx
-  # - Micronesia                    # fm
-  # - Moldova                       # md
-  # - Monaco                        # mc
-  # - Mongolia                      # mn
-  # - Montenegro                    # me
-  # - Montserrat                    # ms
-  - Morocco                       # ma
-  # - Mozambique                    # mz
-  # - Myanmar                       # mm
-  # - Namibia                       # na
-  # - Nauru                         # nr
-  # - Nepal                         # np
-  - Netherlands                   # nl
-  # - New Caledonia                 # nc
-  - New Zealand                   # nz
-  # - Nicaragua                     # ni
-  # - Niger                         # ne
-  # - Nigeria                       # ng
-  # - Niue                          # nu
-  # - Norfolk Island                # nf
-  # - Macedonia                     # mk
-  - Norway                        # no
-  # - Oman                          # om
-  - Pakistan                      # pk
-  # - Palau                         # pw
-  # - Palestine                     # ps
-  - Panama                        # pa
-  # - New Guinea                    # pg
-  # - Paraguay                      # py
-  - Peru                          # pe
-  - Philippines                   # ph
-  # - Pitcairn                      # pn
-  - Poland                        # pl
-  - Portugal                      # pt
-  # - Puerto Rico                   # pr
-  - Qatar                         # qa
-  # - Réunion                       # re
-  - Romania                       # ro
-  - Russia                        # ru
-  # - Rwanda                        # rw
-  # - Saint Barthélemy              # bl
-  # - Saint Lucia                   # lc
-  # - Samoa                         # ws
-  # - San Marino                    # sm
-  # - Sao Tome and Principe         # st
-  - Saudi Arabia                  # sa
-  # - Senegal                       # sn
-  - Serbia                        # rs
-  # - Seychelles                    # sc
-  # - Sierra Leone                  # sl
-  - Singapore                     # sg
-  # - Slovakia                      # sk
-  # - Slovenia                      # si
-  # - Solomon Islands               # sb
-  # - Somalia                       # so
-  - South Africa                  # za
-  # - South Sudan                   # ss
-  - Spain                         # es
-  - Sri Lanka                     # lk
-  # - Sudan                         # sd
-  # - Suriname                      # sr
-  - Sweden                        # se
-  - Switzerland                   # ch
-  # - Syria                         # sy
-  # - Taiwan                        # tw
-  # - Tajikistan                    # tj
-  # - Tanzania                      # tz
-  - Thailand                      # th
-  # - Timor-Leste                   # tl
-  # - Togo                          # tg
-  # - Tokelau                       # tk
-  # - Tonga                         # to
-  # - Trinidad and Tobago           # tt
-  # - Tunisia                       # tn
-  - Turkey                        # tr
-  # - Turkmenistan                  # tm
-  # - Turks and Caicos              # tc
-  # - Tuvalu                        # tv
-  # - Uganda                        # ug
-  - Ukraine                       # ua
-  - United Arab Emirates          # ae
-  - United Kingdom                # gb
-  - United States of America      # us
-  # - Uruguay                       # uy
-  # - Uzbekistan                    # uz
-  # - Vanuatu                       # vu
-  # - Venezuela                     # ve
-  - Vietnam                       # vn
-  # - Yemen                         # ye
-  # - Zambia                        # zm
-  # - Zimbabwe                      # zw
+    include:
+      # Northern Africa:
+        - Algeria
+        - Egypt
+        - Libya
+        - Morocco
+        - Sudan
+        - Tunisia
+        - Western Sahara
+      # Eastern Africa:
+        - British Indian Ocean Territory
+        - Burundi
+        - Comoros
+        - Djibouti
+        - Eritrea
+        - Ethiopia
+        - French Southern Territories
+        - Kenya
+        - Madagascar
+        - Malawi
+        - Mauritius
+        - Mayotte
+        - Mozambique
+        - Réunion
+        - Rwanda
+        - Seychelles
+        - Somalia
+        - South Sudan
+        - Uganda
+        - Tanzania
+        - Zambia
+        - Zimbabwe
+      # Central Africa:
+        - Angola
+        - Cameroon
+        - Central African Republic
+        - Chad
+        - Republic of the Congo
+        - Democratic Republic of the Congo
+        - Equatorial Guinea
+        - Gabon
+        - São Tomé and Príncipe
+      # Southern Africa:
+        - Botswana
+        - Eswatini
+        - Lesotho
+        - Namibia
+        - South Africa
+      # Western Africa:
+        - Benin
+        - Burkina Faso
+        - Cape Verde
+        - Côte d'Ivoire
+        - Gambia
+        - Ghana
+        - Guinea
+        - Guinea-Bissau
+        - Liberia
+        - Mali
+        - Mauritania
+        - Niger
+        - Nigeria
+        - Saint Helena, Ascension and Tristan da Cunha
+        - Senegal
+        - Sierra Leone
+        - Togo
+      # Caribbean:
+        - Anguilla
+        - Antigua and Barbuda
+        - Aruba
+        - Bahamas
+        - Barbados
+        - Bonaire, Sint Eustatius and Saba
+        - Netherlands Antilles
+        - British Virgin Islands
+        - Cayman Islands
+        - Cuba
+        - Curaçao
+        - Dominica
+        - Dominican Republic
+        - Grenada
+        - Guadeloupe
+        - Haiti
+        - Jamaica
+        - Martinique
+        - Montserrat
+        - Puerto Rico
+        - Saint Barthélemy
+        - Saint Kitts and Nevis
+        - Saint Lucia
+        - Saint Martin
+        - Saint Vincent and the Grenadines
+        - Sint Maarten
+        - Trinidad and Tobago
+        - Turks and Caicos Islands
+        - US Virgin Islands
+      # Central America:
+        - Belize
+        - Costa Rica
+        - El Salvador
+        - Guatemala
+        - Honduras
+        - Mexico
+        - Nicaragua
+        - Panama
+      # South America:
+        - Argentina
+        - Bolivia
+        - Bouvet Island
+        - Brazil
+        - Chile
+        - Colombia
+        - Ecuador
+        - Falkland Islands
+        - French Guiana
+        - Guyana
+        - Paraguay
+        - Peru
+        - South Georgia and the South Sandwich Islands
+        - Suriname
+        - Uruguay
+        - Venezuela
+      # North America:
+        - Bermuda
+        - Canada
+        - Greenland
+        - Saint Pierre and Miquelon
+        - United States
+      # Antarctica:
+        - Antarctica
+      # Central Asia:
+        - Kazakhstan
+        - Kyrgyzstan
+        - Tajikistan
+        - Turkmenistan
+        - Uzbekistan
+      # Eastern Asia:
+        - China
+        - Hong Kong
+        - Macao
+        - North Korea
+        - Japan
+        - Mongolia
+        - South Korea
+        - Taiwan
+      # South-Eastern Asia:
+        - Brunei
+        - Cambodia
+        - Indonesia
+        - Laos
+        - Malaysia
+        - Myanmar
+        - Philippines
+        - Singapore
+        - Thailand
+        - East Timor
+        - Vietnam
+      # Southern Asia:
+        - Afghanistan
+        - Bangladesh
+        - Bhutan
+        - India
+        - Iran
+        - Maldives
+        - Nepal
+        - Pakistan
+        - Sri Lanka
+      # Western Asia:
+        - Armenia
+        - Azerbaijan
+        - Bahrain
+        - Cyprus
+        - Georgia
+        - Iraq
+        - Israel
+        - Jordan
+        - Kuwait
+        - Lebanon
+        - Oman
+        - Qatar
+        - Saudi Arabia
+        - Palestine
+        - Syria
+        - Turkey
+        - United Arab Emirates
+        - Yemen
+      # Eastern Europe:
+        - Belarus
+        - Bulgaria
+        - Czech Republic
+        - Hungary
+        - Poland
+        - Moldova
+        - Romania
+        - Russia
+        - Slovakia
+        - Ukraine
+      # Northern Europe:
+        - Åland Islands
+        - Guernsey
+        - Jersey
+        - Sark
+        - Denmark
+        - Estonia
+        - Faroe Islands
+        - Finland
+        - Iceland
+        - Ireland
+        - Northern Ireland
+        - Isle of Man
+        - Latvia
+        - Lithuania
+        - Norway
+        - Svalbard and Jan Mayen Islands
+        - Sweden
+        - United Kingdom
+      # Southern Europe:
+        - Albania
+        - Andorra
+        - Bosnia and Herzegovina
+        - Croatia
+        - Gibraltar
+        - Greece
+        - Kosovo
+        - Vatican City
+        - Italy
+        - Malta
+        - Montenegro
+        - North Macedonia
+        - Portugal
+        - San Marino
+        - Serbia
+        - Serbia and Montenegro
+        - Slovenia
+        - Spain
+        - Yugoslavia
+      # Western Europe:
+        - Austria
+        - Belgium
+        - France
+        - Germany
+        - Liechtenstein
+        - Luxembourg
+        - Monaco
+        - Netherlands
+        - Switzerland
+      #Australia and New Zealand:
+        - Australia
+        - Christmas Island
+        - Cocos (Keeling) Islands
+        - Heard Island and McDonald Islands
+        - New Zealand
+        - Norfolk Island
+      # Melanesia:
+        - Fiji
+        - New Caledonia
+        - Papua New Guinea
+        - Solomon Islands
+        - Vanuatu
+      # Micronesia:
+        - Guam
+        - Kiribati
+        - Marshall Islands
+        - Micronesia
+        - Nauru
+        - Northern Mariana Islands
+        - Palau
+        - US Minor Outlying Islands
+      # Polynesia:
+        - American Samoa
+        - Cook Islands
+        - French Polynesia
+        - Niue
+        - Pitcairn Islands
+        - Samoa
+        - Tokelau
+        - Tonga
+        - Tuvalu
+        - Wallis and Futuna Islands
 ```
 
 ### Default `addons`
 
 ```yaml
-addons:
-  Korea:
-    - Republic of Korea
-    - South Korea
+    addons:
+      Tanzania:
+        - United Republic of Tanzania
+      Republic of the Congo:
+        - Congo
+      Democratic Republic of the Congo:
+        - Zaire
+      São Tomé and Príncipe:
+        - Sao Tome and Principe
+      Eswatini:
+        - Swaziland
+      Cape Verde:
+        - Cabo Verde
+      Côte d'Ivoire:
+        - Côte d’Ivoire
+        - Ivory Coast
+      Saint Helena, Ascension and Tristan da Cunha:
+        - Saint Helena
+        - St. Helena
+        - Ascension
+        - Tristan da Cunha
+      Antigua and Barbuda:
+        - Antigua
+        - Barbuda
+      Bonaire, Sint Eustatius and Saba:
+        - Bonaire
+        - Sint Eustatius
+        - Saba
+      Saint Kitts and Nevis:
+        - St. Kitts and Nevis
+      Saint Lucia:
+        - St. Lucia
+      Saint Vincent and the Grenadines:
+        - Saint Vincent and Grenadines
+        - St. Vincent and the Grenadines
+        - St. Vincent and Grenadines
+      US Virgin Islands:
+        - U.S. Virgin Islands
+        - United States Virgin Islands
+      Bolivia:
+        - Plurinational State of Bolivia
+      Falkland Islands:
+        - Malvinas
+      South Georgia and the South Sandwich Islands:
+        - South Georgia and South Sandwich Islands
+        - South Georgia
+        - South Sandwich Islands
+      Venezuela:
+        - Bolivarian Republic of Venezuela
+      Saint Pierre and Miquelon:
+        - St. Pierre and Miquelon
+      United States:
+        - United States of America
+      Hong Kong:
+        - Hong Kong SAR China
+      Macao:
+        - Macau
+        - Macau SAR China
+      North Korea:
+        - Democratic People's Republic of Korea
+      South Korea:
+        - Republic of Korea
+        - Korea
+      Taiwan:
+        - Taiwan, Province of China
+      Brunei:
+        - Brunei Darussalam
+      Laos:
+        - Lao People's Democratic Republic
+        - Lao
+      Myanmar:
+        - Burma
+      East Timor:
+        - Timor-Leste
+      Vietnam:
+        - Viet Nam
+      Iran:
+        - Islamic Republic of Iran
+      Palestine:
+        - State of Palestine
+      Syria:
+        - Syrian Arab Republic
+      Turkey:
+        - Türkiye
+      Czech Republic:
+        - Czechia
+        - Czechoslovakia
+      Moldova:
+        - Republic of Moldova
+      Russia:
+        - Russian Federation
+        - Soviet Union
+      Svalbard and Jan Mayen Islands:
+        - Svalbard and Jan Mayen
+      Vatican City:
+        - Holy See
+      North Macedonia:
+        - Macedonia
+        - Republic of North Macedonia
+      France:
+        - French Republic
+      Germany:
+        - East Germany
+      Heard Island and McDonald Islands:
+        - Heard and McDonald Islands
+      Papua New Guinea:
+        - New Guinea
+      Micronesia:
+        - Federated States of Micronesia
+      US Minor Outlying Islands:
+        - United States Minor Outlying Islands
+        - United States Outlying Islands
+        - U.S. Minor Outlying Islands
+        - U.S. Outlying Islands
+        - US Outlying Islands
+      Pitcairn Islands:
+        - Pitcairn
+      Wallis and Futuna Islands:
+        - Wallis and Futuna
 ```

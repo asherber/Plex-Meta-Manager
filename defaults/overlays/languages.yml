@@ -32,17 +32,24 @@ external_templates:
             value: 26
           - style: square
             value:
+      pmm_<<key>>:
+        conditions:
+          - file.exists: false
+            url.exists: false
+            git.exists: false
+            repo.exists: false
+            value: flag/<<final_style>>/<<country_<<key>>>>
     default:
       style: round
       country: <<key>>
       country_<<key>>: <<country>>
       offset: 10
+      width: 190
     queue: flags
-    pmm_<<key>>: flag/<<final_style>>/<<country_<<key>>>>
     addon_position: <<final_align>>
     addon_offset: <<offset>>
     back_color: "#00000099"
-    back_width: 190
+    back_width: <<width>>
     back_align: <<final_align>>
     font: fonts/Inter-Bold.ttf
     font_size: 50
@@ -116,6 +123,8 @@ queues:
         vertical_position:
           default: top3
           conditions:
+            - builder_level: episode
+              value: top2
             - overlay_level: episode
               value: top2
       position: <<group_alignment>>_<<vertical_position>>_<<horizontal_position>>
@@ -284,7 +293,7 @@ templates:
           - use_subtitles: true
             value: subtitle_language
     ignore_blank_results: true
-    allowed_library_types:
+    run_definition:
       - <<use_<<key>>>>
     plex_search:
       all:
@@ -428,9 +437,13 @@ overlays:
     variables: {key: fi, text: FI, weight: 280}
     template: [name: flags, name: standard]
 
-  filipino:
-    variables: {key: fl, text: FL, weight: 270, country: ph}
+  tagalog:
+    variables: {key: tl, text: FL, weight: 270, country: ph}
     template: [name: flags, name: standard]
+    
+  filipino:
+    variables: {key: fil, text: FIL, weight: 265, country: ph, width: 230}
+    template: [name: flags, name: standard]  
 
   galician:
     variables: {key: gl, text: GL, weight: 260, country: es}
@@ -523,6 +536,10 @@ overlays:
   swahili:
     variables: {key: sw, text: SW, weight: 40, country: tz}
     template: [name: flags, name: standard]
+  
+  somali:
+    variables: {key: so, text: SO, weight: 35, country: so}
+    template: [name: flags, name: standard]
 
   tamil:
     variables: {key: ta, text: TA, weight: 30, country: in}
@@ -533,5 +550,45 @@ overlays:
     template: [name: flags, name: standard]
 
   vietnamese:
-    variables: {key: vi, text: VI, weight: 10, country: vn}
+    variables: {key: vi, text: VI, weight: 15, country: vn}
+    template: [name: flags, name: standard]
+
+  wolof:
+    variables: {key: wo, text: WO, weight: 10, country: sn}
+    template: [name: flags, name: standard]
+
+  mayan:
+    variables: {key: myn, text: MYN, weight: 8, country: mx, width: 230}
+    template: [name: flags, name: standard]
+
+  inuktitut:
+    variables: {key: iu, text: IK, weight: 7, country: ca}
+    template: [name: flags, name: standard]
+    
+  romani:
+    variables: {key: rom, text: ROM, weight: 6, country: ro, width: 230}
+    template: [name: flags, name: standard]    
+    
+  amharic:
+    variables: {key: am, text: AM, weight: 5, country: et}
+    template: [name: flags, name: standard]    
+  
+  sundanese:
+    variables: {key: su, text: SU, weight: 4, country: id}
+    template: [name: flags, name: standard]    
+
+  zulu:
+    variables: {key: zu, text: ZU, weight: 3, country: za}
+    template: [name: flags, name: standard]
+
+  luxembourgish:
+    variables: {key: lb, text: LB, weight: 2, country: lu}
+    template: [name: flags, name: standard]  
+
+  mossi:
+    variables: {key: mos, text: MOS, weight: 1, country: bf, width: 230}
+    template: [name: flags, name: standard]
+
+  lingala:
+    variables: {key: ln, text: LN, weight: 11, country: cd}
     template: [name: flags, name: standard]

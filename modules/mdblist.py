@@ -9,7 +9,8 @@ logger = util.logger
 builders = ["mdblist_list"]
 sort_names = [
     "rank", "score", "score_average", "released", "imdbrating", "imdbvotes", "imdbpopular", "tmdbpopular",
-    "rogerebert", "rtomatoes", "metacritic", "myanimelist", "budget", "revenue", "added"
+    "rogerebert", "rtomatoes", "rtaudience", "metacritic", "myanimelist", "letterrating", "lettervotes", 
+    "updated", "last_air_date", "watched", "rating", "usort", "added", "runtime", "budget", "revenue", "title"
 ]
 list_sorts = [f"{s}.asc" for s in sort_names] + [f"{s}.desc" for s in sort_names]
 base_url = "https://mdblist.com/lists"
@@ -188,7 +189,7 @@ class Mdblist:
                 logger.info(f"Limit: {data['limit']} items")
                 params["limit"] = data["limit"]
             parsed_url = urlparse(data["url"])
-            url_base = str(parsed_url._replace(query=None).geturl())
+            url_base = str(parsed_url._replace(query=None).geturl()) # noqa
             url_base = url_base if url_base.endswith("/") else f"{url_base}/"
             url_base = url_base if url_base.endswith("json/") else f"{url_base}json/"
             try:

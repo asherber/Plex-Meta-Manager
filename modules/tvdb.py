@@ -87,7 +87,7 @@ class TVDbObj:
                 released = parse_page("//strong[text()='First Aired']/parent::li/span/text()[normalize-space()]")
 
             try:
-                self.release_date = datetime.strptime(released, "%B %d, %Y") if released else released
+                self.release_date = datetime.strptime(released, "%B %d, %Y") if released else released # noqa
             except ValueError:
                 self.release_date = None
 
@@ -105,7 +105,6 @@ class TVDb:
     def get_tvdb_obj(self, tvdb_url, is_movie=False):
         tvdb_id, _, _ = self.get_id_from_url(tvdb_url, is_movie=is_movie)
         return TVDbObj(self, tvdb_id, is_movie=is_movie)
-
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
     def get_request(self, tvdb_url):

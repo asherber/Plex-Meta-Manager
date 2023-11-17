@@ -159,6 +159,7 @@ data:
       url: http://PLEX_IP_HERE:32400
       token: YOUR_TOKEN_HERE
       timeout: 60
+      db_cache: 
       clean_bundles: false
       empty_trash: false
       optimize: false
@@ -361,7 +362,7 @@ spec:
 
 ### Templatizing your configuration
 
-This example will (re)generate the IMBD list URL and include the current date as the end date for the `release_date` value.
+This example will (re)generate the IMDb list URL and include the current date as the end date for the `release_date` value.
 `https://www.imdb.com/search/title/?title_type=tv_series,tv_miniseries&release_date=1980-01-01,{{ now().strftime('%Y-%m-%d') }}`
 
 `{{ now().strftime('%Y-%m-%d') }}` is the Jinja code, which when rendered will be replaced with the current date in

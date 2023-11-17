@@ -9,27 +9,58 @@
 external_templates:
   pmm: templates
   template_variables:
+    default:
+      vertical_align: top
     conditionals:
-      vertical_offset:
-        default: 1050
-        conditions:
-          - overlay_level: episode
-            value: 15
-      horizontal_offset:
-        default: 15
-        conditions:
-          - overlay_level: episode
-            value: 235
       horizontal_align:
         default: right
         conditions:
+          - builder_level: episode
+            value: center
           - overlay_level: episode
             value: center
-    vertical_align: top
+      vertical_offset:
+        default: 15
+        conditions:
+          - vertical_align.exists: false
+            builder_level.not: episode
+            value: 1060
+          - vertical_align.exists: false
+            overlay_level.not: episode
+            value: 1060
+          - vertical_align: center
+            value: 0
+          - vertical_align: top
+            value: 15
+          - vertical_align: bottom
+            value: 30
+      horizontal_offset:
+        default: 15
+        conditions:
+          - horizontal_align.exists: false
+            builder_level: episode
+            value: 235
+          - horizontal_align.exists: false
+            overlay_level: episode
+            value: 235
+          - horizontal_align: center
+            value: 0
+          - horizontal_align: [left, right]
+            value: 15
+      pmm:
+        conditions:
+          - file.exists: false
+            file_<<key>>.exists: false
+            url.exists: false
+            url_<<key>>.exists: false
+            git.exists: false
+            git_<<key>>.exists: false
+            repo.exists: false
+            repo_<<key>>.exists: false
+            value: <<overlay_name>>
     back_color: "#00000099"
     back_width: 105
     back_height: 105
-    pmm: <<overlay_name>>
 
 templates:
   versions:
@@ -37,7 +68,7 @@ templates:
       version_style:
         default: "duplicate"
         conditions:
-         - overlay_level: ['show', 'season', 'episode']
+         - library_type: "show"
            value: "episode_duplicate"
     plex_search:
       all:

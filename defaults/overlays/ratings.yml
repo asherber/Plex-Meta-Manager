@@ -8,6 +8,7 @@
 templates:
   Rating:
     default:
+      builder_level: <<overlay_level>>
       rating<<rating_num>>_file: <<file>>
       rating<<rating_num>>_url: <<url>>
       rating<<rating_num>>_git: <<git>>
@@ -38,6 +39,9 @@ templates:
       addon_offset: 15
       rating<<rating_num>>_addon_offset: <<addon_offset>>
       rating<<rating_num>>_addon_position: <<addon_position>>
+      minimum_rating: 0.0
+      fresh_rating: 6.0
+      maximum_rating: 10.0
       side: left
       horizontal_position: left
       vertical_position: center
@@ -88,6 +92,9 @@ templates:
             rating<<rating_num>>_image: [anidb, letterboxd, rt_popcorn, mdb, tmdb, trakt, mal, star]
             value: false
           - image_level: Top
+            builder_level: episode
+            value: false
+          - image_level: Top
             overlay_level: episode
             value: false
           - rating<<rating_num>>: none
@@ -95,10 +102,15 @@ templates:
       rating<<rating_num>>_style:
         default: ""
         conditions:
+          - rating<<rating_num>>_image: [rt_popcorn, rt_tomato, tmdb, metacritic, mdb]
+            value: "%"
+          - rating<<rating_num>>_image: [letterboxd]
+            value: "/"
+      rating<<rating_num>>_extra:
+        default: ""
+        conditions:
           - rating<<rating_num>>_image: [rt_popcorn, rt_tomato, tmdb]
             value: "%"
-          - rating<<rating_num>>_image: [metacritic, mdb]
-            value: "0"
       image_extra:
         default: ""
         conditions:
@@ -399,15 +411,15 @@ templates:
           - rating_alignment: horizontal
             value: left
       gte:
-        default: 0.0
+        default: <<minimum_rating>>
         conditions:
           - image_level: Fresh
-            value: 6.0
+            value: <<fresh_rating>>
       lte:
-        default: 6.0
+        default: <<fresh_rating>>
         conditions:
           - image_level: Fresh
-            value: 10.0
+            value: <<maximum_rating>>
       gsuffix:
         conditions:
           - rating<<rating_num>>: [critic, audience, user]
@@ -421,17 +433,28 @@ templates:
           - rating<<rating_num>>: [critic, audience, user]
             image_level: Rotten
             value: lt
+      rating<<rating_num>>_pmm:
+        conditions:
+          - file.exists: false
+            url.exists: false
+            git.exists: false
+            repo.exists: false
+            rating<<rating_num>>_file.exists: false
+            rating<<rating_num>>_url.exists: false
+            rating<<rating_num>>_git.exists: false
+            rating<<rating_num>>_repo.exists: false
+            value: rating/<<rating<<rating_num>>_image_url>><<image_extra>>
     plex_search:
       all:
         <<rating<<rating_num>>>>_rating.<<gsuffix>>: <<gte>>
         <<rating<<rating_num>>>>_rating.<<lsuffix>>: <<lte>>
     mdblist_list: <<mdblist_top>>
     imdb_chart: <<imdb_top>>
-    overlay_level: <<overlay_level>>
-    allowed_library_types: <<run_this>>
+    builder_level: <<builder_level>>
+    run_definition: <<run_this>>
     ignore_blank_results: true
     overlay:
-      name: text(<<rating<<rating_num>>>>_rating<<rating<<rating_num>>_style>>)
+      name: text(<<<<rating<<rating_num>>>>_rating<<rating<<rating_num>>_style>>>><<rating<<rating_num>>_extra>>)
       file: <<rating<<rating_num>>_file>>
       url: <<rating<<rating_num>>_url>>
       git: <<rating<<rating_num>>_git>>

@@ -8,17 +8,13 @@
 external_templates:
   pmm: templates
   template_variables:
-    collection_section: 11
-
-translations:
-  pmm: translations
+    collection_section: "095"
 
 collections:
   Subtitle Language Collections:
     template:
       - name: separator
         separator: subtitle_language
-      - name: translation
         key_name: Subtitle Language
         translation_key: separator
 
@@ -29,12 +25,10 @@ dynamic_collections:
     other_name: Other Subtitles
     template:
       - smart_filter
-      - translation
       - shared
     other_template:
       - other_collection
       - smart_filter
-      - translation
       - shared
     template_variables:
       search_term:
@@ -44,6 +38,8 @@ dynamic_collections:
       translation_key:
         default: subtitle_language
         other: subtitle_language_other
+      dynamic:
+        default: true
     include:
       - ab     # Abkhazian
       - aa     # Afar
@@ -153,6 +149,7 @@ dynamic_collections:
       - mi     # Maori
       - mr     # Marathi
       - mh     # Marshallese
+      - myn    # Mayan
       - mn     # Mongolian
       - na     # Nauru
       - nv     # Navajo, Navaho
@@ -177,6 +174,7 @@ dynamic_collections:
       - qu     # Quechua
       - ro     # Romanian, Moldavian, Moldovan
       - rm     # Romansh
+      - rom    # Romany
       - rn     # Rundi
       - ru     # Russian
       - sm     # Samoan
@@ -200,6 +198,7 @@ dynamic_collections:
       - sv     # Swedish
       - tl     # Tagalog
       - ty     # Tahitian
+      - tai    # Tai
       - tg     # Tajik
       - ta     # Tamil
       - tt     # Tatar
@@ -229,4 +228,6 @@ dynamic_collections:
       - yo     # Yoruba
       - za     # Zhuang, Chuang
       - zu     # Zulu
+    key_name_override:
+      myn: Mayan  
 

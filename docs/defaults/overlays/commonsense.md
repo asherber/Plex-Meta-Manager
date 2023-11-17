@@ -2,11 +2,13 @@
 
 The `commonsense` Default Overlay File is used to create an overlay based on the CommonSense Age Rating on each item within your library.
 
-Use the [Mass Content Rating Update Library Operation](../../config/operations.md#mass-content-rating-update) with either `mdb_commonsense` or `mdb_commonsense0` to update Plex to the Common Sense Rating.
-
-**This file works with Movie and Show Libraries.**
-
 ![](images/commonsense.png)
+
+## Requirements & Recommendations
+
+Supported library types: Movie & Show
+
+Requirements: Use the [Mass Content Rating Update Library Operation](../../config/operations.md#mass-content-rating-update) with either `mdb_commonsense` or `mdb_commonsense0` to update Plex to the Common Sense Rating.
 
 ## Supported CommonSense Age Rating
 
@@ -46,10 +48,10 @@ libraries:
       - pmm: commonsense
       - pmm: commonsense
         template_variables:
-          overlay_level: season
+          builder_level: season
       - pmm: commonsense
         template_variables:
-          overlay_level: episode
+          builder_level: episode
 ```
 
 ## Template Variables
@@ -85,7 +87,7 @@ All [Shared Overlay Variables](../overlay_variables) are available with the defa
 | `post_text`      | **Description:** Choose the text after the key for the Overlay.<br>**Default:** `+`<br>**Values:** Any String                                                       |
 | `pre_nr_text`    | **Description:** Choose the text before the `nr` key for the Overlay.<br>**Values:** Any String                                                                     |
 | `post_nr_text`   | **Description:** Choose the text after the `nr` key for the Overlay.<br>**Values:** Any String                                                                      |
-| `overlay_level`  | **Description:** Choose the Overlay Level.<br>**Values:** `season` or `episode`                                                                                     |
+| `builder_level`  | **Description:** Choose the Overlay Level.<br>**Values:** `season` or `episode`                                                                                     |
 
 The below is an example config.yml extract with some Template Variables added in to change how the file works.
 

@@ -19,6 +19,7 @@ class Webhooks:
         logger.trace("")
         logger.separator("Webhooks", space=False, border=False, trace=True)
         logger.trace("")
+        json["library_mapping_name"] = self.library.mapping_name if self.library else ""
         logger.trace(f"JSON: {json}")
         for webhook in list(set(webhooks)):
             response = None
@@ -35,7 +36,7 @@ class Webhooks:
                 elif webhook.startswith("https://hooks.slack.com/services"):
                     json = self.slack(json)
                 response = self.config.post(webhook, json=json)
-            if response:
+            if response is not None:
                 try:
                     response_json = response.json()
                     logger.trace(f"Response: {response_json}")
@@ -109,7 +110,7 @@ class Webhooks:
 
     def delete_hooks(self, message, server=None, library=None):
         if self.delete_webhooks:
-            json = {"event": "delete", "message": message}
+            json = {"event": "delete", "message": str(message)}
             if server:          json["server_name"] = str(server)
             if library:         json["library_name"] = str(library)
             self._request(self.delete_webhooks, json)
@@ -231,9 +232,9 @@ class Webhooks:
                         for col in row:
                             section["fields"].append({"type": "mrkdwn", "text": col[0]})
                             section["fields"].append({"type": "plain_text", "text": col[1]})
-                        new_json["blocks"].append(section)
+                        new_json["blocks"].append(section) # noqa
                 else:
-                    new_json["blocks"].append({"type": "divider"})
+                    new_json["blocks"].append({"type": "divider"}) # noqa
         return new_json
 
     def discord(self, json):
@@ -244,7 +245,11 @@ class Webhooks:
             rows = [
                 [("Start Time", json["start_time"]), ("End Time", json["end_time"]), ("Run Time", json["run_time"])],
                 [("Collections", None)],
-                [("Created", json["collections_created"]), ("Modified", json["collections_modified"]), ("Deleted", json["collections_deleted"])]
+                [
+                    ("Created", json["collections_created"] if json["collections_created"] else "0"),
+                    ("Modified", json["collections_modified"] if json["collections_modified"] else "0"),
+                    ("Deleted", json["collections_deleted"] if json["collections_deleted"] else "0")
+                ]
             ]
             if json["added_to_radarr"]:
                 rows.append([(f"{json['added_to_radarr']} Movies Added To Radarr", None)])
@@ -301,7 +306,7 @@ class Webhooks:
             "embeds": [
                 {
                     "title": title,
-                    "color": 844716
+                    "color": 0x00bc8c
                 }
             ],
             "username": "Metabot",
@@ -315,9 +320,7 @@ class Webhooks:
             for row in rows:
                 for col in row:
                     col_name, col_value = col
-                    field = {"name": col_name}
-                    if col_value:
-                        field["value"] = col_value
+                    field = {"name": col_name, "value": col_value if col_value else ""}
                     if len(row) > 1:
                         field["inline"] = True
                     fields.append(field)

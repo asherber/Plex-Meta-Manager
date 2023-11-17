@@ -153,9 +153,9 @@ class TMDbShow(TMDBObj):
         self.type = data["type"] if isinstance(data, dict) else data.type
         self.studio = data["studio"] if isinstance(data, dict) else data.networks[0].name if data.networks else None
         self.tvdb_id = data["tvdb_id"] if isinstance(data, dict) else data.tvdb_id
-        loop = data.origin_countries if not isinstance(data, dict) else data["countries"].split("|") if data["countries"] else []
+        loop = data.origin_countries if not isinstance(data, dict) else data["countries"].split("|") if data["countries"] else [] # noqa
         self.countries = [TMDbCountry(c) for c in loop]
-        loop = data.seasons if not isinstance(data, dict) else data["seasons"].split("|") if data["seasons"] else []
+        loop = data.seasons if not isinstance(data, dict) else data["seasons"].split("|") if data["seasons"] else [] # noqa
         self.seasons = [TMDbSeason(s) for s in loop]
 
         if self._tmdb.config.Cache and not ignore_cache:
@@ -180,7 +180,7 @@ class TMDb:
             self.TMDb = TMDbAPIs(self.apikey, language=self.language, session=self.config.session)
         except TMDbException as e:
             raise Failed(f"TMDb Error: {e}")
-        self.iso_3166_1 = {iso: i.name for iso, i in self.TMDb._iso_3166_1.items()}
+        self.iso_3166_1 = {iso: i.name for iso, i in self.TMDb._iso_3166_1.items()} # noqa
 
     def convert_from(self, tmdb_id, convert_to, is_movie):
         item = self.get_movie(tmdb_id) if is_movie else self.get_show(tmdb_id)
@@ -440,6 +440,8 @@ class TMDb:
             attr = None
             if filter_attr == "tmdb_vote_count":
                 attr = item.vote_count
+            elif filter_attr == "tmdb_vote_average":
+                attr = item.vote_average
             elif filter_attr == "tmdb_year":
                 attr = item.release_date.year if is_movie else item.first_air_date.year
             if util.is_number_filter(attr, modifier, filter_data):
@@ -460,6 +462,11 @@ class TMDb:
                         if re.compile(reg).search(name):
                             has_match = True
                 if has_match is False:
+                    return False
+            elif modifier in [".count_gt", ".count_gte", ".count_lt", ".count_lte"]:
+                test_number = len(attrs) if attrs else 0
+                modifier = f".{modifier[7:]}"
+                if test_number is None or util.is_number_filter(test_number, modifier, filter_data):
                     return False
             elif (not list(set(filter_data) & set(attrs)) and modifier == "") \
                     or (list(set(filter_data) & set(attrs)) and modifier == ".not"):

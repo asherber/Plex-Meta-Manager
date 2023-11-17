@@ -23,7 +23,7 @@ class Radarr:
         try:
             self.api = RadarrAPI(self.url, self.token, session=self.config.session)
             self.api.respect_list_exclusions_when_adding()
-            self.api._validate_add_options(params["root_folder_path"], params["quality_profile"])
+            self.api._validate_add_options(params["root_folder_path"], params["quality_profile"]) # noqa
             self.profiles = self.api.quality_profile()
         except ArrException as e:
             raise Failed(e)
@@ -38,6 +38,7 @@ class Radarr:
         self.search = params["search"]
         self.radarr_path = params["radarr_path"] if params["radarr_path"] and params["plex_path"] else ""
         self.plex_path = params["plex_path"] if params["radarr_path"] and params["plex_path"] else ""
+        self.ignore_cache = params["ignore_cache"]
 
     def add_tmdb(self, tmdb_ids, **options):
         _ids = []
@@ -55,6 +56,7 @@ class Radarr:
             logger.debug(tmdb_id)
         logger.trace("")
         upgrade_existing = options["upgrade_existing"] if "upgrade_existing" in options else self.upgrade_existing
+        ignore_cache = options["ignore_cache"] if "ignore_cache" in options else self.ignore_cache
         folder = options["folder"] if "folder" in options else self.root_folder_path
         monitor = options["monitor"] if "monitor" in options else self.monitor
         availability = availability_translation[options["availability"] if "availability" in options else self.availability]
@@ -62,6 +64,7 @@ class Radarr:
         tags = options["tag"] if "tag" in options else self.tag
         search = options["search"] if "search" in options else self.search
         logger.trace(f"Upgrade Existing: {upgrade_existing}")
+        logger.trace(f"Ignore Cache: {ignore_cache}")
         logger.trace(f"Folder: {folder}")
         logger.trace(f"Monitor: {monitor}")
         logger.trace(f"Availability: {availability}")
@@ -96,7 +99,7 @@ class Radarr:
             tmdb_id = item[0] if isinstance(item, tuple) else item
             logger.ghost(f"Loading TMDb ID {i}/{len(tmdb_ids)} ({tmdb_id})")
             try:
-                if self.config.Cache:
+                if self.config.Cache and not ignore_cache:
                     _id = self.config.Cache.query_radarr_adds(tmdb_id, self.library.original_mapping_name)
                     if _id:
                         skipped.append(item)

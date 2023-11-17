@@ -29,6 +29,8 @@ terms = {
     "pre": ["pre", "voorbeschouwing"],
     "post": ["post", "nabeschouwing"],
     "quali": ["quali", "kwalificatie"],
+    "shootout": ["shootout"],
+    "notebook": ["notebook", "notitieboekje"],
     "preview": ["preview", "seizoensvoorbeschouwing"],
     "summary": ["summary", "samenvatting"],
     "highlight": ["highlight", "hoogtepunten"],
@@ -40,9 +42,10 @@ names = {
         "Free Practice 1": "Vrije Training 1",
         "Free Practice 2": "Vrije Training 2",
         "Free Practice 3": "Vrije Training 3",
-        "Pre-Sprint Build-up": "Sprint Voorbeschouwing",
-        "Post-Sprint Analysis": "Sprint Nabeschouwing",
-        "Sprint Qualifying": "Sprint Kwalificatie",
+        "Pre-Sprint Race Build-up": "Sprint Race Voorbeschouwing",
+        "Post-Sprint Race Analysis": "Sprint Race Nabeschouwing",
+        "Sprint Race Session": "Sprint Race",
+        "Ted's Sprint Notebook": "Ted's Sprint Notitieboekje",
         "Pre-Qualifying Build-up": "Kwalificatie Voorbeschouwing",
         "Post-Qualifying Analysis": "Kwalificatie Nabeschouwing",
         "Qualifying Session": "Kwalificatie",
@@ -52,6 +55,11 @@ names = {
         "Live from the Grid": "Vanaf de grid",
         "Highlights": "Samenvatting",
         "Race Session": "Race",
+        "Ted's Race Notebook": "Ted's Race Notitieboekje",
+        "Ted's Qualifying Notebook": "Ted's Kwalificatie Notitieboekje",
+        "Pre-Sprint Shootout Build-up": "Sprint Shootout Voorbeschouwing",
+        "Post-Sprint Shootout Analysis": "Sprint Shootout Nabeschouwing",
+        "Sprint Shootout Session": "Sprint Shootout",
     }
 }
 
@@ -88,18 +96,29 @@ class Race:
             output = "Free Practice 2"
         elif any([x in title for x in terms["free practice 3"]]):
             output = "Free Practice 3"
+        elif "shootout" in title:
+            if any([x in title for x in terms["pre"]]):
+                output = "Pre-Sprint Shootout Build-up"
+            elif any([x in title for x in terms["post"]]):
+                output = "Post-Sprint Shootout Analysis"
+            else:
+                output = "Sprint Shootout Session"
         elif "sprint" in title:
             if any([x in title for x in terms["pre"]]):
-                output = "Pre-Sprint Build-up"
+                output = "Pre-Sprint Race Build-up"
             elif any([x in title for x in terms["post"]]):
-                output = "Post-Sprint Analysis"
+                output = "Post-Sprint Race Analysis"
+            elif any([x in title for x in terms["notebook"]]):
+                output = "Ted's Sprint Notebook"
             else:
-                output = "Sprint Qualifying"
+                output = "Sprint Race Session"
         elif any([x in title for x in terms["quali"]]):
             if any([x in title for x in terms["pre"]]):
                 output = "Pre-Qualifying Build-up"
             elif any([x in title for x in terms["post"]]):
                 output = "Post-Qualifying Analysis"
+            elif any ([x in title for x in terms["notebook"]]):
+                output = "Ted's Qualifying Notebook"
             else:
                 output = "Qualifying Session"
         elif any([x in title for x in terms["preview"]]):
@@ -112,6 +131,8 @@ class Race:
             output = "Live from the Grid"
         elif any([x in title for x in terms["summary"] + terms["highlight"]]):
             output = "Highlights"
+        elif any([x in title for x in terms["notebook"]]):
+            output = "Ted's Race Notebook"
         else:
             output = "Race Session"
         if "2160" in title or "4K" in title:

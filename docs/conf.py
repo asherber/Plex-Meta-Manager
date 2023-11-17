@@ -46,11 +46,14 @@ extensions = [
     'myst_parser',
     'sphinx_inline_tabs',
     'sphinx_copybutton',
-    'sphinx_reredirects'
+    'sphinx_reredirects',
+    'sphinx_design',
+    'notfound.extension'
 ]
 
 source_suffix = ['.rst', '.md']
 myst_heading_anchors = 4
+myst_enable_extensions = ["colon_fence"]
 
 # -- Napoleon Settings -----------------------------------------------------
 napoleon_google_docstring = True
@@ -103,6 +106,10 @@ redirects = {
     "home/guides/defaults": "../../defaults/guide.html",
     "metadata/details/setting": "definition.html",
     "metadata/details/details": "update.html",
+    "malauth": "https://replit.com/@chazlarson/MALAuth",
+    "traktauth": "https://replit.com/@chazlarson/TraktAuth",
+    "defaults/movie/universe": "../../both/universe.html",
+    "discord": "https://discord.gg/FNqqw5jRSz",
 }
 
 # Theme options are theme-specific and customize the look and feel of a
@@ -138,8 +145,15 @@ html_theme_options = {
             ("Log Files", "home/logs"),
             ("Run Commands & Environment Variables", "home/environmental"),
             ("Knowledgebase/FAQ", "home/kb"),
+            ("_menu", "Companion Scripts", "home/scripts", [
+                ("Companion Scripts", "home/scripts"),
+                ("_divider", ),
+                ("PMM Overlay Reset", "home/scripts/overlay-reset"),
+                ("Plex Image Cleanup", "home/scripts/image-cleanup"),
+            ]),
             ("_divider", ),
             ("YAML File Guide", "home/guides/yaml"),
+            ("Ratings Explained", "home/guides/ratings"),
             ("Scheduling Guide", "home/guides/scheduling"),
             ("Image Asset Directory Guide", "home/guides/assets"),
             ("Formula 1 Metadata Guide", "home/guides/formula"),
@@ -147,7 +161,7 @@ html_theme_options = {
             ("Feature Requests", "https://features.metamanager.wiki/"),
             ("Bugs/Issues", "https://github.com/meisnate12/Plex-Meta-Manager/issues"),
             ("User Configs Repository", "https://github.com/meisnate12/Plex-Meta-Manager-Configs"),
-            ("Discord Server", "https://discord.gg/NfH6mGFuAB"),
+            ("Discord Server", "https://discord.gg/plexmetamanager"),
             ("Donate/Sponsor", "https://github.com/sponsors/meisnate12"),
             ("Acknowledgements", "home/acknowledgements"),
         ]),
@@ -163,6 +177,7 @@ html_theme_options = {
                 ("Mass Genre Update", "config/operations", "#mass-genre-update"),
                 ("Mass Content Rating Update", "config/operations", "#mass-content-rating-update"),
                 ("Mass Original Title Update", "config/operations", "#mass-original-title-update"),
+                ("Mass Studio Update", "config/operations", "#mass-studio-update"),
                 ("Mass Originally Available Update", "config/operations", "#mass-originally-available-update"),
                 ("Mass * Rating Update", "config/operations", "#mass--rating-update"),
                 ("Mass Episode * Rating Update", "config/operations", "#mass-episode--rating-update"),
@@ -194,6 +209,7 @@ html_theme_options = {
             ("Trakt", "config/trakt"),
             ("MdbList", "config/mdblist"),
             ("OMDb", "config/omdb"),
+            ("GitHub", "config/github"),
             ("AniDB", "config/anidb"),
             ("MyAnimeList", "config/myanimelist"),
         ]),
@@ -206,75 +222,79 @@ html_theme_options = {
                 ("Shared Variables", "defaults/collection_variables"),
                 ("_divider", ),
                 ("Separators", "defaults/separators"),
-                ("_menu", "Award", "defaults/defaults", "#award-collections", [
+                ("_menu", "Award", "defaults/collections", "#award-collections", [
                     ("Awards Separator", "defaults/award/separator"),
                     ("_divider",),
                     ("Academy Awards (Oscars)", "defaults/award/oscars"),
                     ("British Academy of Film Awards", "defaults/award/bafta"),
-                    ("Cannes File Festival Awards", "defaults/award/cannes"),
+                    ("Cannes Film Festival Awards", "defaults/award/cannes"),
                     ("Critics Choice Awards", "defaults/award/choice"),
                     ("Emmy Awards", "defaults/award/emmy"),
                     ("Golden Globe Awards", "defaults/award/golden"),
                     ("Independent Spirit Awards", "defaults/award/spirit"),
-                    ("Sundance File Festival Awards", "defaults/award/sundance"),
+                    ("Sundance Film Festival Awards", "defaults/award/sundance"),
                     ("Other Awards", "defaults/award/other"),
                 ]),
-                ("_menu", "Chart", "defaults/defaults", "#chart-collections", [
+                ("_menu", "Chart", "defaults/collections", "#chart-collections", [
                     ("Chart Separator", "defaults/chart/separator"),
                     ("_divider",),
                     ("Basic Charts", "defaults/chart/basic"),
-                    ("AniList Charts", "defaults/chart/anilist"),
-                    ("Flixpatrol Charts", "defaults/chart/flixpatrol"),
-                    ("IMDb Charts", "defaults/chart/imdb"),
-                    ("MyAnimeList Charts", "defaults/chart/myanimelist"),
                     ("Tautulli Charts", "defaults/chart/tautulli"),
+                    ("IMDb Charts", "defaults/chart/imdb"),
                     ("TMDb Charts", "defaults/chart/tmdb"),
                     ("Trakt Charts", "defaults/chart/trakt"),
+                    ("Flixpatrol Charts", "defaults/chart/flixpatrol"),
+                    ("AniList Charts", "defaults/chart/anilist"),
+                    ("MyAnimeList Charts", "defaults/chart/myanimelist"),
                     ("Other Charts", "defaults/chart/other"),
                 ]),
-                ("_menu", "Movie", "defaults/defaults", "#general-collections", [
-                    ("Actors", "defaults/both/actor"),
-                    ("Audio Languages", "defaults/both/audio_language"),
-                    ("Collectionless", "defaults/both/collectionless"),
-                    ("Common Sense Media Content Ratings", "defaults/both/content_rating_cs"),
-                    ("MyAnimeList Content Ratings", "defaults/both/content_rating_mal"),
-                    ("Content Ratings (US)", "defaults/movie/content_rating_us"),
-                    ("Content Ratings (UK)", "defaults/both/content_rating_uk"),
-                    ("Countries", "defaults/movie/country"),
-                    ("Decades", "defaults/movie/decade"),
-                    ("Directors", "defaults/movie/director"),
-                    ("Franchises", "defaults/movie/franchise"),
+                ("_menu", "Content", "defaults/collections", "#content-collections", [
                     ("Genres", "defaults/both/genre"),
-                    ("Producers", "defaults/movie/producer"),
-                    ("Resolutions", "defaults/both/resolution"),
-                    ("Seasonal", "defaults/movie/seasonal"),
-                    ("Streaming", "defaults/both/streaming"),
-                    ("Studios", "defaults/both/studio"),
-                    ("Anime Studios", "defaults/both/studio_anime"),
-                    ("Subtitle Languages", "defaults/both/subtitle_language"),
-                    ("Universes", "defaults/movie/universe"),
-                    ("Writers", "defaults/movie/writer"),
-                    ("Years", "defaults/both/year"),
+                    ("Franchises (Movie)", "defaults/movie/franchise"),
+                    ("Franchises (TV)", "defaults/show/franchise"),
+                    ("Universes", "defaults/both/universe"),
+                    ("Based On...", "defaults/both/based"),
                 ]),
-                ("_menu", "Show", "defaults/defaults", "#general-collections", [
-                    ("Actors", "defaults/both/actor"),
-                    ("Audio Languages", "defaults/both/audio_language"),
-                    ("Collectionless", "defaults/both/collectionless"),
-                    ("Common Sense Media Content Ratings", "defaults/both/content_rating_cs"),
-                    ("MyAnimeList Content Ratings", "defaults/both/content_rating_mal"),
-                    ("US Content Ratings", "defaults/show/content_rating_us"),
+                ("_menu", "Content Rating", "defaults/collections", "#content-rating-collections", [
+                    ("US Content Ratings (Movie)", "defaults/movie/content_rating_us"),
+                    ("US Content Ratings (TV)", "defaults/show/content_rating_us"),
                     ("UK Content Ratings", "defaults/both/content_rating_uk"),
-                    ("Countries", "defaults/show/country"),
-                    ("Decades", "defaults/show/decade"),
-                    ("Franchises", "defaults/show/franchise"),
-                    ("Genres", "defaults/both/genre"),
-                    ("Networks", "defaults/show/network"),
+                    ("MyAnimeList Content Ratings", "defaults/both/content_rating_mal"),
+                    ("Common Sense Media Content Ratings", "defaults/both/content_rating_cs"),
+                ]),
+                ("_menu", "Location", "defaults/collections", "#location-collections", [
+                    ("Countries (Movie)", "defaults/movie/country"),
+                    ("Countries (TV)", "defaults/show/country"),
+                    ("Regions (Movie)", "defaults/movie/region"),
+                    ("Regions (TV)", "defaults/show/region"),
+                    ("Continents (Movie)", "defaults/movie/continent"),
+                    ("Continents (TV)", "defaults/show/continent"),
+                ]),
+                ("_menu", "Media", "defaults/collections", "#media-collections", [
+                    ("Aspect Ratios", "defaults/both/aspect"),
                     ("Resolutions", "defaults/both/resolution"),
+                    ("Audio Languages", "defaults/both/audio_language"),
+                    ("Subtitle Languages", "defaults/both/subtitle_language"),
+                ]),
+                ("_menu", "Production", "defaults/collections", "#production-collections", [
+                    ("Networks", "defaults/show/network"),
                     ("Streaming", "defaults/both/streaming"),
                     ("Studios", "defaults/both/studio"),
-                    ("Anime Studios", "defaults/both/studio_anime"),
-                    ("Subtitle Languages", "defaults/both/subtitle_language"),
+                ]),
+                ("_menu", "People", "defaults/collections", "#people-collections", [
+                    ("Actors", "defaults/both/actor"),
+                    ("Directors", "defaults/movie/director"),
+                    ("Producers", "defaults/movie/producer"),
+                    ("Writers", "defaults/movie/writer"),
+                ]),
+                ("_menu", "Time", "defaults/collections", "#time-collections", [
+                    ("Seasonal", "defaults/movie/seasonal"),
                     ("Years", "defaults/both/year"),
+                    ("Decades (Movie)", "defaults/movie/decade"),
+                    ("Decades (TV)", "defaults/show/decade"),
+                ]),
+                ("_menu", "Utility", "defaults/collections", "#utility-collections", [
+                    ("Collectionless", "defaults/both/collectionless"),
                 ]),
             ]),
             ("Playlists", "defaults/playlist"),
@@ -282,23 +302,40 @@ html_theme_options = {
                 ("Overlays", "defaults/overlays"),
                 ("Shared Variables", "defaults/overlay_variables"),
                 ("_divider", ),
-                ("Audio Codec", "defaults/overlays/audio_codec"),
-                ("Common Sense Age Ratings", "defaults/overlays/commonsense"),
-                ("Direct Play Only", "defaults/overlays/direct_play"),
-                ("Episode Info", "defaults/overlays/episode_info"),
-                ("FlixPatrol Top", "defaults/overlays/flixpatrol"),
-                ("Audio/Subtitle Language Count", "defaults/overlays/language_count"),
-                ("Audio/Subtitle Language Flags", "defaults/overlays/languages"),
-                ("Languages", "defaults/overlays/languages"),
-                ("MediaStinger", "defaults/overlays/mediastinger"),
-                ("Ratings", "defaults/overlays/ratings"),
-                ("Resolution/Edition", "defaults/overlays/resolution"),
-                ("Ribbon", "defaults/overlays/ribbon"),
-                ("Runtimes", "defaults/overlays/runtimes"),
-                ("Status", "defaults/overlays/status"),
-                ("Streaming", "defaults/overlays/streaming"),
-                ("Versions", "defaults/overlays/versions"),
-                ("Video Format", "defaults/overlays/video_format"),
+                ("_menu", "Chart", "defaults/overlays", "#chart-overlays", [
+                    ("FlixPatrol Top", "defaults/overlays/flixpatrol"),
+                    ("Ribbon", "defaults/overlays/ribbon"),
+                ]),
+                ("_menu", "Content", "defaults/overlays", "#content-overlays", [
+                    ("Episode Info", "defaults/overlays/episode_info"),
+                    ("MediaStinger", "defaults/overlays/mediastinger"),
+                    ("Ratings", "defaults/overlays/ratings"),
+                    ("Status", "defaults/overlays/status"),
+                ]),
+                ("_menu", "Content Rating", "defaults/overlays", "#content-rating-overlays", [
+                    ("US Content Ratings (Movie)", "defaults/overlays/content_rating_us_movie"),
+                    ("US Content Ratings (Show)", "defaults/overlays/content_rating_us_show"),
+                    ("UK Content Ratings", "defaults/overlays/content_rating_uk"),
+                    ("Common Sense Age Ratings", "defaults/overlays/commonsense"),
+                ]),
+                ("_menu", "Media", "defaults/overlays", "#media-overlays", [
+                    ("Aspect Ratio", "defaults/overlays/aspect"),
+                    ("Audio Codec", "defaults/overlays/audio_codec"),
+                    ("Audio/Subtitle Language Count", "defaults/overlays/language_count"),
+                    ("Audio/Subtitle Language Flags", "defaults/overlays/languages"),
+                    ("Resolution/Edition", "defaults/overlays/resolution"),
+                    ("Runtimes", "defaults/overlays/runtimes"),
+                    ("Versions", "defaults/overlays/versions"),
+                    ("Video Format", "defaults/overlays/video_format"),
+                ]),
+                ("_menu", "Production", "defaults/overlays", "#production-overlays", [
+                    ("Networks", "defaults/overlays/network"),
+                    ("Streaming", "defaults/overlays/streaming"),
+                    ("Studios", "defaults/overlays/studio"),
+                ]),
+                ("_menu", "Utility", "defaults/overlays", "#utility-overlays", [
+                    ("Direct Play Only", "defaults/overlays/direct_play"),
+                ]),
             ]),
         ]),
         ("_menu", "Files", [
@@ -543,7 +580,10 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_css_files = ["custom.css"]
+html_css_files = [
+    "custom.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+]
 
 def setup(app):
     app.add_css_file("custom.css")

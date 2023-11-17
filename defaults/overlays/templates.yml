@@ -16,9 +16,11 @@ templates:
       font_size_<<key>>: <<font_size>>
       font_color_<<key>>: <<font_color>>
       font_style_<<key>>: <<font_style>>
-      horizontal_offset_<<key>>: <<horizontal_offset>>
+      final_horizontal_offset: <<horizontal_offset>>
+      horizontal_offset_<<key>>: <<final_horizontal_offset>>
       horizontal_align_<<key>>: <<horizontal_align>>
-      vertical_offset_<<key>>: <<vertical_offset>>
+      final_vertical_offset: <<vertical_offset>>
+      vertical_offset_<<key>>: <<final_vertical_offset>>
       vertical_align_<<key>>: <<vertical_align>>
       stroke_width_<<key>>: <<stroke_width>>
       stroke_color_<<key>>: <<stroke_color>>
@@ -31,6 +33,7 @@ templates:
       back_line_color_<<key>>: <<back_line_color>>
       back_line_width_<<key>>: <<back_line_width>>
       final_name: <<overlay_name>>
+      builder_level: <<overlay_level>>
     optional:
       - overlay_level
       - use_<<key>>
@@ -61,9 +64,16 @@ templates:
       - back_line_width
       - addon_offset
       - addon_position
-    overlay_level: <<overlay_level>>
-    allowed_library_types:
-      - <<use_<<key>>>>
+    conditionals:
+      final_use:
+        conditions:
+          - use_<<key>>.exists: true
+            value: <<use_<<key>>>>
+          - use_all: false
+            value: false
+    builder_level: <<builder_level>>
+    run_definition:
+      - <<final_use>>
       - <<use_<<alt>>>>
       - <<allowed_libraries>>
     suppress_overlays: <<suppress_overlays>>

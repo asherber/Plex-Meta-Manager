@@ -19,7 +19,7 @@ There's a [Docker Walkthrough](docker) with more detailed instructions on settin
 ```
 docker run -d \
   --restart=unless-stopped \
-  -e TZ=<TIMEZONE>
+  -e TZ=<TIMEZONE> \
   -v /path/to/config:/config:rw \
   meisnate12/plex-meta-manager
 ```
@@ -53,6 +53,8 @@ These guides assume the user has followed the Windows instructions in the [Local
 This method will start Plex Meta Manager at system startup and will keep the script running in the background indefinitely. The user can then define set days and times for the Configuration File to be processed, and Plex Meta Manager will handle processing as and when required.
 
 This is the recommended approach as it allows the user additional control over how and when Plex Meta Manager processes.
+
+If you don't specify a time, the script will run at 5AM each day.  You can change this with the [time-to-run](../environmental.html#time-to-run) runtime flag.
 
 <details>
   <summary>Background Run Scheduled Task</summary>

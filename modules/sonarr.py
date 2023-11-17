@@ -39,7 +39,7 @@ class Sonarr:
         try:
             self.api = SonarrAPI(self.url, self.token, session=self.config.session)
             self.api.respect_list_exclusions_when_adding()
-            self.api._validate_add_options(params["root_folder_path"], params["quality_profile"], params["language_profile"])
+            self.api._validate_add_options(params["root_folder_path"], params["quality_profile"], params["language_profile"]) # noqa
             self.profiles = self.api.quality_profile()
         except ArrException as e:
             raise Failed(e)
@@ -58,6 +58,7 @@ class Sonarr:
         self.cutoff_search = params["cutoff_search"]
         self.sonarr_path = params["sonarr_path"] if params["sonarr_path"] and params["plex_path"] else ""
         self.plex_path = params["plex_path"] if params["sonarr_path"] and params["plex_path"] else ""
+        self.ignore_cache = params["ignore_cache"]
 
     def add_tvdb(self, tvdb_ids, **options):
         _ids = []
@@ -74,17 +75,19 @@ class Sonarr:
         for tvdb_id in _paths:
             logger.debug(tvdb_id)
         upgrade_existing = options["upgrade_existing"] if "upgrade_existing" in options else self.upgrade_existing
+        ignore_cache = options["ignore_cache"] if "ignore_cache" in options else self.ignore_cache
         folder = options["folder"] if "folder" in options else self.root_folder_path
         monitor = monitor_translation[options["monitor"] if "monitor" in options else self.monitor]
         quality_profile = options["quality"] if "quality" in options else self.quality_profile
         language_profile = options["language"] if "language" in options else self.language_profile
-        language_profile = language_profile if self.api._raw.v3 else 1
+        language_profile = language_profile if self.api._raw.v3 else 1 # noqa
         series_type = options["series"] if "series" in options else self.series_type
         season = options["season"] if "season" in options else self.season_folder
         tags = options["tag"] if "tag" in options else self.tag
         search = options["search"] if "search" in options else self.search
         cutoff_search = options["cutoff_search"] if "cutoff_search" in options else self.cutoff_search
         logger.trace(f"Upgrade Existing: {upgrade_existing}")
+        logger.trace(f"Ignore Cache: {ignore_cache}")
         logger.trace(f"Folder: {folder}")
         logger.trace(f"Monitor: {monitor}")
         logger.trace(f"Quality Profile: {quality_profile}")
@@ -120,7 +123,7 @@ class Sonarr:
             tvdb_id = item[0] if isinstance(item, tuple) else item
             logger.ghost(f"Loading TVDb ID {i}/{len(tvdb_ids)} ({tvdb_id})")
             try:
-                if self.config.Cache:
+                if self.config.Cache and not ignore_cache:
                     _id = self.config.Cache.query_sonarr_adds(tvdb_id, self.library.original_mapping_name)
                     if _id:
                         skipped.append(item)
