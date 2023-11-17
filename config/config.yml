@@ -46,13 +46,14 @@ settings:
   show_unconfigured: true
   playlist_exclude_users:
 plex:                                           # Can be individually specified per library as well; REQUIRED for the script to run
-  url: http://192.168.1.2:32400
+  url: http://localhost:32400
   # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
   token: MXHaoTu7Y6PHkTg8Nvr3
   timeout: 60
   clean_bundles: false
   empty_trash: false
   optimize: false
+  db_cache:
 tmdb:                                           # REQUIRED for the script to run
   apikey: 33f39cc6764ce593ca230db46f8b0bef
   language: en
