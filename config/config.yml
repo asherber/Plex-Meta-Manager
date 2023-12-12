@@ -48,7 +48,7 @@ settings:
 plex:                                           # Can be individually specified per library as well; REQUIRED for the script to run
   url: http://localhost:32400
   # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
-  token: MXHaoTu7Y6PHkTg8Nvr3
+  token: TTcba1Dev6sXZTQhBsjL
   timeout: 60
   clean_bundles: false
   empty_trash: false
