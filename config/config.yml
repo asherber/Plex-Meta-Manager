@@ -2,7 +2,7 @@
 
 libraries:                                      # This is called out once within the config.yml file                                       
   Other Videos:                                       # Each library must match the Plex library name
-    metadata_path:
+    collection_files:
     - file: config/Other Videos.yml                   # This is a local file on the system
 settings:
   cache: true
@@ -42,6 +42,13 @@ settings:
   check_nightly: false
   show_unconfigured: true
   playlist_exclude_users:
+  run_order:
+  - operations
+  - metadata
+  - collections
+  - overlays
+  overlay_artwork_filetype: jpg
+  overlay_artwork_quality:
 plex:                                           # Can be individually specified per library as well; REQUIRED for the script to run
   url: http://localhost:32400
   # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
@@ -51,6 +58,7 @@ plex:                                           # Can be individually specified 
   empty_trash: false
   optimize: false
   db_cache:
+  verify_ssl:
 tmdb:                                           # REQUIRED for the script to run
   apikey: 33f39cc6764ce593ca230db46f8b0bef
   language: en

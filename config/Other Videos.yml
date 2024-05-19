@@ -27,7 +27,6 @@ collections:
     template: { name: Tree }
   TNGF:
     template: { name: Tree, folder_name: Girlfriend } 
-    collection_order: alpha
   Blacked:
     template: { name: Tree }
   I Feel Myself:
