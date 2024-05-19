@@ -2,16 +2,16 @@
 #                       UK Content Rating Collections                        #
 #                 Created by Yozora, Bullmoose20, & Sohjiro                  #
 #          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
-#  https://metamanager.wiki/en/latest/defaults/both/content_rating_uk.html   #
+#       https://kometa.wiki/en/latest/defaults/both/content_rating_uk        #
 ##############################################################################
 
 external_templates:
-  pmm: templates
+  default: templates
   template_variables:
     collection_section: "110"
 
 collections:
-  Ratings Collections:
+  UK Ratings Collections:
     template:
       - name: separator
         separator: content_rating
@@ -52,12 +52,16 @@ dynamic_collections:
     addons:
       U:
         - gb/U
+        - gb/Uc
         - gb/0+
+        - gb/6+
+        - gb/Kids & Family
         - G
         - TV-Y
         - TV-G
         - E
         - gb/E
+        - 0
         - 1
         - 2
         - 3
@@ -76,10 +80,11 @@ dynamic_collections:
       PG:
         - gb/PG
         - gb/9+
+        - gb/7
+        - gb/7+
         - TV-PG
         - TV-Y7
         - TV-Y7-FV
-        - PG
         - 7
         - 8
         - 9
@@ -97,7 +102,9 @@ dynamic_collections:
         - no/07
       12:
         - gb/12
-        - 12
+        - gb/A
+        - gb/Caution
+        - gb/G
         - PG-13 - Teens 13 or older
         - no/9
         - no/09
@@ -119,22 +126,24 @@ dynamic_collections:
       15:
         - gb/15
         - gb/14+
+        - gb/16
+        - gb/16+
+        - gb/AA
         - TV-14
         - 13
         - 14
-        - 15
         - PG-13 - Teens 13 or older
         - no/15
         - no/16
       18:
         - gb/18
+        - gb/18+ 
         - MA-17
         - TVMA
         - TV-MA
         - R
         - 16
         - 17
-        - 18
         - R - 17+ (violence & profanity)
         - no/18
       R18:

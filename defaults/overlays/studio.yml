@@ -2,11 +2,11 @@
 #                               Studio Overlay                               #
 #       Created by Yozora, Bullmoose20, anon_fawkes Arial-Z & Sohjiro        #
 #          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
-#     https://metamanager.wiki/en/latest/defaults/overlays/studios.html      #
+#          https://kometa.wiki/en/latest/defaults/overlays/studios           #
 ##############################################################################
 
 external_templates:
-  pmm: templates
+  default: templates
   template_variables:
     default:
       width_value: 470
@@ -44,7 +44,7 @@ external_templates:
             value: 0
           - horizontal_align: [left, right]
             value: 15
-      pmm:
+      default:
         conditions:
           - file.exists: false
             file_<<key>>.exists: false
@@ -63,6 +63,7 @@ templates:
     default:
       key: <<overlay_name>>
       search: <<key>>
+    ignore_blank_results: true
     plex_search:
       validate: false
       any:
@@ -442,8 +443,14 @@ overlays:
   Signal.MD:
     template: [name: standard, {name: studios, search: [Signal.MD, Signal MD]}]
 
+  Silver:
+    template: [name: standard, {name: studios, search: [Silver, Studio Silver]}]
+
   SILVER LINK.:
     template: [name: standard, {name: studios, search: [SILVER LINK., Silver Link]}]
+
+  Square Enix:
+    template: [name: standard, name: studios]
 
   Staple Entertainment:
     template: [name: standard, name: studios]
@@ -539,7 +546,7 @@ overlays:
     template: [name: standard, name: studios]
 
   Toei Animation:
-    template: [name: standard, name: studios]
+    template: [name: standard, {name: studios, search: [Toei Animation, Toei]}]
 
   Topcraft:
     template: [name: standard, name: studios]
@@ -666,6 +673,9 @@ overlays:
   AMC Studios:
     template: [name: standard, name: studios]
 
+  Anima Sola Productions:
+    template: [name: standard, name: studios]
+
   Annapurna Pictures:
     template: [name: standard, name: studios]
 
@@ -711,6 +721,9 @@ overlays:
   Blade:
     template: [name: standard, name: studios]
 
+  Bleecker Street:
+    template: [name: standard, name: studios]
+
   Blown Deadline Productions:
     template: [name: standard, name: studios]
 
@@ -753,6 +766,9 @@ overlays:
   Brandywine Productions:
     template: [name: standard, name: studios]
 
+  Broken Lizard Industries:
+    template: [name: standard, name: studios]
+
   Broken Road Productions:
     template: [name: standard, name: studios]
 
@@ -766,6 +782,9 @@ overlays:
     template: [name: standard, name: studios]
 
   Carolco:
+    template: [name: standard, name: studios]
+
+  Cartoon Saloon:
     template: [name: standard, name: studios]
 
   Carsey-Werner Company:
@@ -798,6 +817,9 @@ overlays:
   Cinergi Pictures Entertainment:
     template: [name: standard, name: studios]
 
+  Codeblack Entertainment:
+    template: [name: standard, name: studios]
+
   Columbia Pictures:
     template: [name: standard, {name: studios, search: [Columbia Pictures, Columbia TriStar]}]
 
@@ -818,6 +840,9 @@ overlays:
 
   DC Comics:
     template: [name: standard, {name: studios, search: [DC Comics, DC Films, DC Entertainment]}]
+
+  Dimension Films:
+    template: [name: standard, name: studios]
 
   Dino De Laurentiis Company:
     template: [name: standard, name: studios]
@@ -882,6 +907,9 @@ overlays:
   Focus Features:
     template: [name: standard, name: studios]
 
+  Food Network:
+    template: [name: standard, name: studios]
+
   Fortiche Production:
     template: [name: standard, name: studios]
 
@@ -939,10 +967,13 @@ overlays:
   Hasbro:
     template: [name: standard, name: studios]
 
+  HBO:
+    template: [name: standard, name: studios]
+
   Heyday Films:
     template: [name: standard, name: studios]
 
-  HBO:
+  Hughes Entertainment:
     template: [name: standard, name: studios]
 
   Hurwitz & Schlossberg Productions:
@@ -954,8 +985,11 @@ overlays:
   Icon Entertainment International:
     template: [name: standard, name: studios]
 
+  IFC Films:
+    template: [name: standard, name: studios]
+
   Illumination Entertainment:
-    template: [name: standard, {name: studios, search: [Illumination Entertainment, Illumination Films]}]
+    template: [name: standard, {name: studios, search: [Illumination, Illumination Entertainment, Illumination Films]}]
 
   Imagin:
     template: [name: standard, name: studios]
@@ -999,6 +1033,9 @@ overlays:
   Kurtzman Orci:
     template: [name: standard, name: studios]
 
+  Laika Entertainment:
+    template: [name: standard, name: studios]
+
   Landscape Entertainment:
     template: [name: standard, name: studios]
 
@@ -1014,7 +1051,13 @@ overlays:
   Let's Not Turn This Into a Whole Big Production:
     template: [name: standard, name: studios]
 
+  Lifetime:
+    template: [name: standard, name: studios]
+
   Levity Entertainment Group:
+    template: [name: standard, name: studios]
+
+  Lightstorm Entertainment:
     template: [name: standard, name: studios]
 
   Likely Story:
@@ -1032,6 +1075,9 @@ overlays:
   Lucasfilm Ltd:
     template: [name: standard, {name: studios, search: [Lucasfilm Ltd, Lucasfilm Ltd., Lucasfilm, Lucasfilm Animation]}]
 
+  Magic Light Pictures:
+    template: [name: standard, name: studios]
+
   Magnolia Pictures:
     template: [name: standard, name: studios]
 
@@ -1047,7 +1093,7 @@ overlays:
   Mandarin Motion Pictures Limited:
     template: [name: standard, name: studios]
 
-  marv:
+  Marv Films:
     template: [name: standard, name: studios]
 
   Marvel Animation:
@@ -1075,6 +1121,9 @@ overlays:
     template: [name: standard, name: studios]
 
   Miramax:
+    template: [name: standard, name: studios]
+
+  NEON:
     template: [name: standard, name: studios]
 
   Netflix:
@@ -1164,6 +1213,9 @@ overlays:
   Railsplitter Pictures:
     template: [name: standard, name: studios]
 
+  Rankin Bass Productions:
+    template: [name: standard, {name: studios, search: [Rankin/Bass Productions, Videocraft International]}]
+
   RatPac Entertainment:
     template: [name: standard, {name: studios, search: [Dune Entertainment, RatPac Entertainment]}]
 
@@ -1199,6 +1251,9 @@ overlays:
 
   Sean Daniel Company:
     template: [name: standard, name: studios]
+
+  Searchlight Pictures:
+    template: [name: standard, {name: studios, search: [Searchlight Pictures, Fox Searchlight Pictures]}]
 
   Secret Hideout:
     template: [name: standard, name: studios]
@@ -1251,6 +1306,9 @@ overlays:
   Spyglass Entertainment:
     template: [name: standard, name: studios]
 
+  Stöð 2:
+    template: [name: standard, name: studios]
+
   Star Thrower Entertainment:
     template: [name: standard, name: studios]
 
@@ -1268,6 +1326,9 @@ overlays:
 
   Studio Dragon:
     template: [name: standard, name: studios]
+
+  STX Entertainment:
+    template: [name: standard, {name: studios, search: [STX Entertainment, STX Films]}]
 
   Summit Entertainment:
     template: [name: standard, name: studios]
@@ -1317,6 +1378,12 @@ overlays:
   The Weinstein Company:
     template: [name: standard, name: studios]
 
+  Tim Burton Productions:
+    template: [name: standard, name: studios]
+
+  TOHO:
+    template: [name: standard, {name: studios, search: [TOHO, Toho Pictures, "Toho Pictures, Inc."]}]
+
   Thunder Road:
     template: [name: standard, name: studios]
 
@@ -1344,6 +1411,9 @@ overlays:
   TriStar Pictures:
     template: [name: standard, {name: studios, search: [TriStar, TriStar Pictures]}]
 
+  TSG Entertainment:
+    template: [name: standard, name: studios]
+
   Twisted Pictures:
     template: [name: standard, name: studios]
 
@@ -1368,9 +1438,6 @@ overlays:
   Vertigo Entertainment:
     template: [name: standard, name: studios]
 
-  Videocraft International:
-    template: [name: standard, name: studios]
-
   Village Roadshow Pictures:
     template: [name: standard, name: studios]
 
@@ -1385,6 +1452,9 @@ overlays:
 
   Walt Disney Pictures:
     template: [name: standard, {name: studios, search: [Disney, Walt Disney Pictures]}]
+
+  Walt Disney Productions:
+    template: [name: standard, name: studios]
 
   Warner Animation Group:
     template: [name: standard, {name: studios, search: [Warner Animation Group, Warner Bros. Cartoon Studios, Warner Animation]}]
@@ -1405,6 +1475,9 @@ overlays:
     template: [name: standard, name: studios]
 
   Wayfare Entertainment:
+    template: [name: standard, name: studios]
+
+  Williams Street:
     template: [name: standard, name: studios]
 
   Whitaker Entertainment:

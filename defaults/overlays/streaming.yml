@@ -3,18 +3,12 @@
 #                 Created by Yozora, Bullmoose20, & Sohjiro                  #
 #                     Credit to Magic815 for base images                     #
 #          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
-#    https://metamanager.wiki/en/latest/defaults/overlays/streaming.html     #
+#         https://kometa.wiki/en/latest/defaults/overlays/streaming          #
 ##############################################################################
 
 external_templates:
-  pmm: templates
+  default: templates
   template_variables:
-    originals_only:
-      default: false
-    run_definition:
-      - <<use_<<key>>>>
-      - <<use_<<alt>>>>
-      - <<allowed_libraries>>
     group: streaming
     default:
       horizontal_align: left
@@ -38,7 +32,7 @@ external_templates:
             value: 0
           - horizontal_align: [left, right]
             value: 15
-      pmm:
+      default:
         conditions:
           - file.exists: false
             file_<<key>>.exists: false
@@ -55,131 +49,133 @@ external_templates:
 
 templates:
   mdb_streaming:
+    default:
+      region: "US"
+      limit: "10000"
+      originals_only: false
+    optional:
+      - use_<<key>>
+      - use_<<tmdb_key>>
+      - allowed_libraries
     run_definition:
+      - <<use_<<key>>>>
+      - <<use_<<tmdb_key>>>>
+      - <<allowed_libraries>>
       - <<allowed_streaming>>
     ignore_blank_results: true
-    mdblist_list: https://mdblist.com/lists/plexmetamanager/<<key>>-<<url_part>>s<<watch_region>>
     conditionals:
-      url_part:
-        default: <<library_type>>
+      originals:
         conditions:
           - originals_only: true
-            key: [appletv, disney, max, hulu, netflix, paramount, peacock, amazon]
-            value: "original"
+            value: originals
+      discover_limit:
+        conditions:
+          - originals_only: false
+            value: <<limit>>
+      discover_with:
+        conditions:
+          - originals_only: false
+            value: <<final_tmdb_key>>
+      discover_region:
+        conditions:
+          - originals_only: false
+            value: <<region>>
+      final_tmdb_key:
+        default: <<tmdb_key>>
+        conditions:
+          - region: CA
+            tmdb_key: [9]
+            value: 119
       allowed_streaming:
         conditions:
           - originals_only: true
-            key: [all4, bet, britbox, crave, crunchyroll, discovery, hayu, now, showtime]
+            tmdb_key: [103, 1759, 151, 230, 283, 510, 39, 37, 188]
             value: False
-          - region.not: uk
-            key: [all4, britbox, hayu, now]
+          - region.not: GB
+            tmdb_key: [103, 151, 39]
             value: False
-          - region.not: ca
-            key: [crave]
+          - region.not: CA
+            tmdb_key: [230]
             value: False
-          - region: ca
-            key: [max, showtime]
+          - region: CA
+            tmdb_key: [1899, 37]
             value: False
-      watch_region:
-        default: ""
-        conditions:
-          - originals_only: true
-            value: ""
-          - region: ca
-            key: [amazon, disney, netflix]
-            value: "-ca"
-          - region: da
-            key: [amazon, disney, netflix]
-            value: "-da"
-          - region: de
-            key: [amazon, disney, netflix]
-            value: "-de"
-          - region: es
-            key: [amazon, disney, netflix]
-            value: "-es"
-          - region: fr
-            key: [amazon, disney, netflix]
-            value: "-fr"
-          - region: it
-            key: [amazon, disney, netflix]
-            value: "-it"
-          - region: pt-br
-            key: [amazon, disney, netflix]
-            value: "-pt-br"
-          - region: uk
-            key: [amazon, disney, netflix]
-            value: "-uk"
+    mdblist_list: https://mdblist.com/lists/k0meta/<<key>>-<<originals>>
+    tmdb_discover:
+      limit: <<discover_limit>>
+      with_watch_providers: <<discover_with>>
+      watch_region: <<discover_region>>
 
 overlays:
 
   Netflix:
-    variables: {key: netflix, weight: 160}
+    variables: {key: netflix, tmdb_key: 8, weight: 160}
     template: [name: standard, name: mdb_streaming]
 
   Prime:
-    variables: {key: amazon, weight: 150}
+    variables: {key: amazon, tmdb_key: 9, weight: 150}
     template: [name: standard, name: mdb_streaming]
 
   Disney:
-    variables: {key: disney, weight: 140}
+    variables: {key: disney, tmdb_key: 337, weight: 140}
     template: [name: standard, name: mdb_streaming]
 
   Max:
-    variables: {key: max, weight: 130}
+    variables: {key: max, tmdb_key: 1899, weight: 130}
     template: [name: standard, name: mdb_streaming]
 
   Crunchyroll:
-    variables: {key: crunchyroll, weight: 120, allowed_libraries: show}
+    variables: {key: crunchyroll, tmdb_key: 283, weight: 120, allowed_libraries: show}
     template: [name: standard, name: mdb_streaming]
 
   YouTube:
-    variables: {key: youtube, weight: 110}
+    variables: {key: youtube, tmdb_key: 188, weight: 110}
     template: [name: standard, name: mdb_streaming]
 
   Hulu:
-    variables: {key: hulu, weight: 100}
+    variables: {key: hulu, tmdb_key: 15, weight: 100}
     template: [name: standard, name: mdb_streaming]
 
   Paramount:
-    variables: {key: paramount, weight: 90}
+    variables: {key: paramount, tmdb_key: 531, weight: 90}
     template: [name: standard, name: mdb_streaming]
 
   AppleTV:
-    variables: {key: appletv, weight: 80}
+    variables: {key: appletv, tmdb_key: 350, weight: 80}
     template: [name: standard, name: mdb_streaming]
 
   Peacock:
-    variables: {key: peacock, weight: 70}
+    variables: {key: peacock, tmdb_key: 387, weight: 70}
     template: [name: standard, name: mdb_streaming]
 
   Showtime:
-    variables: {key: showtime, weight: 60}
+    variables: {key: showtime, tmdb_key: 37, weight: 60}
     template: [name: standard, name: mdb_streaming]
 
   discovery+:
-    variables: {key: discovery, weight: 58, allowed_libraries: show}
+    variables: {key: discovery, tmdb_key: 510, weight: 58, allowed_libraries: show}
     template: [name: standard, name: mdb_streaming]
 
   Crave:
-    variables: {key: crave, weight: 55}
+    variables: {key: crave, tmdb_key: 230, weight: 55}
     template: [name: standard, name: mdb_streaming]
 
   NOW:
-    variables: {key: now, weight: 50}
+    variables: {key: now, tmdb_key: 39, weight: 50}
     template: [name: standard, name: mdb_streaming]
 
   All 4:
-    variables: {key: all4, weight: 40}
+    variables: {key: all4, tmdb_key: 103, weight: 40}
     template: [name: standard, name: mdb_streaming]
 
   britbox:
-    variables: {key: britbox, weight: 30}
+    variables: {key: britbox, tmdb_key: 151, weight: 30}
     template: [name: standard, name: mdb_streaming]
 
   BET+:
-    variables: {key: bet, weight: 20}
+    variables: {key: bet, tmdb_key: 1759, weight: 20}
     template: [name: standard, name: mdb_streaming]
 
   hayu:
-    variables: {key: hayu, weight: 10, allowed_libraries: show}
+    variables: {key: hayu, tmdb_key: 223, weight: 10, allowed_libraries: show}
     template: [name: standard, name: mdb_streaming]

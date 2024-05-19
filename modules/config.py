@@ -7,21 +7,22 @@ from modules.anilist import AniList
 from modules.cache import Cache
 from modules.convert import Convert
 from modules.ergast import Ergast
-from modules.flixpatrol import FlixPatrol
 from modules.icheckmovies import ICheckMovies
 from modules.imdb import IMDb
 from modules.github import GitHub
 from modules.letterboxd import Letterboxd
 from modules.mal import MyAnimeList
 from modules.meta import PlaylistFile
+from modules.mojo import BoxOfficeMojo
 from modules.notifiarr import Notifiarr
+from modules.gotify import Gotify
 from modules.omdb import OMDb
 from modules.overlays import Overlays
 from modules.plex import Plex
 from modules.radarr import Radarr
 from modules.sonarr import Sonarr
 from modules.reciperr import Reciperr
-from modules.mdblist import Mdblist
+from modules.mdblist import MDBList
 from modules.tautulli import Tautulli
 from modules.tmdb import TMDb
 from modules.trakt import Trakt
@@ -32,9 +33,21 @@ from retrying import retry
 
 logger = util.logger
 
-mediastingers_url = "https://raw.githubusercontent.com/meisnate12/PMM-Mediastingers/master/stingers.yml"
+mediastingers_url = "https://raw.githubusercontent.com/Kometa-Team/Mediastingers/master/stingers.yml"
+run_order_options = {
+    "collections": "Represents Collection Updates",
+    "metadata": "Represents Metadata Updates",
+    "overlays": "Represents Overlay Updates",
+    "operations": "Represents Operations Updates"
+}
 sync_modes = {"append": "Only Add Items to the Collection or Playlist", "sync": "Add & Remove Items from the Collection or Playlist"}
+filetype_list = {
+    "jpg": "Use JPG files for saving Overlays",
+    "png": "Use PNG files for saving Overlays",
+    "webp": "Use WEBP files for saving Overlays"
+}
 imdb_label_options = {
+    "remove": "Remove All IMDb Parental Labels",
     "none": "Add IMDb Parental Labels for None, Mild, Moderate, or Severe",
     "mild": "Add IMDb Parental Labels for Mild, Moderate, or Severe",
     "moderate": "Add IMDb Parental Labels for Moderate or Severe",
@@ -43,12 +56,28 @@ imdb_label_options = {
 mass_genre_options = {
     "lock": "Lock Genre", "unlock": "Unlock Genre", "remove": "Remove and Lock Genre", "reset": "Remove and Unlock Genre",
     "tmdb": "Use TMDb Genres", "imdb": "Use IMDb Genres", "omdb": "Use IMDb Genres through OMDb", "tvdb": "Use TVDb Genres",
-    "anidb": "Use AniDB Main Tags", "anidb_all": "Use All AniDB Tags", "mal": "Use MyAnimeList Genres"
+    "mal": "Use MyAnimeList Genres", "anidb": "Use AniDB Main Tags",
+    "anidb_3_0": "Use AniDB Main Tags and All 3 Star Tags and above", "anidb_2_5": "Use AniDB Main Tags and All 2.5 Star Tags and above",
+    "anidb_2_0": "Use AniDB Main Tags and All 2 Star Tags and above", "anidb_1_5": "Use AniDB Main Tags and All 1.5 Star Tags and above",
+    "anidb_1_0": "Use AniDB Main Tags and All 1 Star Tags and above", "anidb_0_5": "Use AniDB Main Tags and All 0.5 Star Tags and above"
 }
 mass_content_options = {
     "lock": "Lock Rating", "unlock": "Unlock Rating", "remove": "Remove and Lock Rating", "reset": "Remove and Unlock Rating",
-    "omdb": "Use IMDb Rating through OMDb", "mdb": "Use MdbList Rating", "mdb_commonsense": "Use Commonsense Rating through MDbList",
-    "mdb_commonsense0": "Use Commonsense Rating with Zero Padding through MDbList", "mal": "Use MyAnimeList Rating"
+    "omdb": "Use IMDb Rating through OMDb", "mdb": "Use MDBList Rating",
+    "mdb_commonsense": "Use Commonsense Rating through MDBList", "mdb_commonsense0": "Use Commonsense Rating with Zero Padding through MDBList",
+    "mdb_age_rating": "Use MDBList Age Rating", "mdb_age_rating0": "Use MDBList Age Rating with Zero Padding",
+    "mal": "Use MyAnimeList Rating"
+}
+mass_collection_content_options = {
+    "lock": "Lock Rating", "unlock": "Unlock Rating", "remove": "Remove and Lock Rating", "reset": "Remove and Unlock Rating",
+    "highest": "Highest Rating in the collection", "lowest": "Lowest Rating in the collection",
+    "average": "Highest Rating in the collection"
+}
+content_rating_default = {
+    1: [
+
+    ]
+
 }
 mass_studio_options = {
     "lock": "Lock Rating", "unlock": "Unlock Rating", "remove": "Remove and Lock Rating", "reset": "Remove and Unlock Rating",
@@ -61,7 +90,7 @@ mass_original_title_options = {
 }
 mass_available_options = {
     "lock": "Lock Originally Available", "unlock": "Unlock Originally Available", "remove": "Remove and Lock Originally Available", "reset": "Remove and Unlock Originally Available",
-    "tmdb": "Use TMDb Release", "omdb": "Use IMDb Release through OMDb", "mdb": "Use MdbList Release", "tvdb": "Use TVDb Release",
+    "tmdb": "Use TMDb Release", "omdb": "Use IMDb Release through OMDb", "mdb": "Use MDBList Release", "mdb_digital": "Use MDBList Digital Release", "tvdb": "Use TVDb Release",
     "anidb": "Use AniDB Release", "mal": "Use MyAnimeList Release"
 }
 mass_image_options = {
@@ -80,17 +109,17 @@ mass_rating_options = {
     "imdb": "Use IMDb Rating",
     "trakt_user": "Use Trakt User Rating",
     "omdb": "Use IMDb Rating through OMDb",
-    "mdb": "Use MdbList Score",
-    "mdb_average": "Use MdbList Average Score",
-    "mdb_imdb": "Use IMDb Rating through MDbList",
-    "mdb_metacritic": "Use Metacritic Rating through MDbList",
-    "mdb_metacriticuser": "Use Metacritic User Rating through MDbList",
-    "mdb_trakt": "Use Trakt Rating through MDbList",
-    "mdb_tomatoes": "Use Rotten Tomatoes Rating through MDbList",
-    "mdb_tomatoesaudience": "Use Rotten Tomatoes Audience Rating through MDbList",
-    "mdb_tmdb": "Use TMDb Rating through MDbList",
-    "mdb_letterboxd": "Use Letterboxd Rating through MDbList",
-    "mdb_myanimelist": "Use MyAnimeList Rating through MDbList",
+    "mdb": "Use MDBList Score",
+    "mdb_average": "Use MDBList Average Score",
+    "mdb_imdb": "Use IMDb Rating through MDBList",
+    "mdb_metacritic": "Use Metacritic Rating through MDBList",
+    "mdb_metacriticuser": "Use Metacritic User Rating through MDBList",
+    "mdb_trakt": "Use Trakt Rating through MDBList",
+    "mdb_tomatoes": "Use Rotten Tomatoes Rating through MDBList",
+    "mdb_tomatoesaudience": "Use Rotten Tomatoes Audience Rating through MDBList",
+    "mdb_tmdb": "Use TMDb Rating through MDBList",
+    "mdb_letterboxd": "Use Letterboxd Rating through MDBList",
+    "mdb_myanimelist": "Use MyAnimeList Rating through MDBList",
     "anidb_rating": "Use AniDB Rating",
     "anidb_average": "Use AniDB Average",
     "anidb_score": "Use AniDB Review Dcore",
@@ -100,12 +129,13 @@ reset_overlay_options = {"tmdb": "Reset to TMDb poster", "plex": "Reset to Plex 
 library_operations = {
     "assets_for_all": "bool", "split_duplicates": "bool", "update_blank_track_titles": "bool", "remove_title_parentheses": "bool",
     "radarr_add_all_existing": "bool", "radarr_remove_by_tag": "str", "sonarr_add_all_existing": "bool", "sonarr_remove_by_tag": "str",
-    "mass_genre_update": mass_genre_options, "mass_content_rating_update": mass_content_options, "mass_studio_update": mass_studio_options,
+    "mass_content_rating_update": mass_content_options, "mass_collection_content_rating_update": "dict",
+    "mass_genre_update": mass_genre_options, "mass_studio_update": mass_studio_options,
     "mass_audience_rating_update": mass_rating_options, "mass_episode_audience_rating_update": mass_episode_rating_options,
     "mass_critic_rating_update": mass_rating_options, "mass_episode_critic_rating_update": mass_episode_rating_options,
     "mass_user_rating_update": mass_rating_options, "mass_episode_user_rating_update": mass_episode_rating_options,
     "mass_original_title_update": mass_original_title_options, "mass_originally_available_update": mass_available_options,
-    "mass_imdb_parental_labels": imdb_label_options, "mass_episode_imdb_parental_labels": imdb_label_options,
+    "mass_imdb_parental_labels": imdb_label_options,
     "mass_collection_mode": "mass_collection_mode", "mass_poster_update": "dict", "mass_background_update": "dict",
     "metadata_backup": "dict", "delete_collections": "dict", "genre_mapper": "dict", "content_rating_mapper": "dict",
 }
@@ -138,29 +168,31 @@ class ConfigFile:
         self.requested_libraries = None
         if "libraries" in attrs and attrs["libraries"]:
             self.requested_libraries = [s.strip() for s in attrs["libraries"].split("|")]
-        self.requested_metadata_files = None
-        if "metadata_files" in attrs and attrs["metadata_files"]:
-            self.requested_metadata_files = []
-            for s in attrs["metadata_files"].split("|"):
+        self.requested_files = None
+        if "files" in attrs and attrs["files"]:
+            self.requested_files = []
+            for s in attrs["files"].split("|"):
                 s = s.strip()
                 if s:
                     if s.endswith(".yml"):
-                        self.requested_metadata_files.append(s[:-4])
+                        self.requested_files.append(s[:-4])
                     elif s.endswith(".yaml"):
-                        self.requested_metadata_files.append(s[:-5])
+                        self.requested_files.append(s[:-5])
                     else:
-                        self.requested_metadata_files.append(s)
+                        self.requested_files.append(s)
         self.collection_only = attrs["collection_only"] if "collection_only" in attrs else False
+        self.metadata_only = attrs["metadata_only"] if "metadata_only" in attrs else False
         self.operations_only = attrs["operations_only"] if "operations_only" in attrs else False
         self.overlays_only = attrs["overlays_only"] if "overlays_only" in attrs else False
         self.env_plex_url = attrs["plex_url"] if "plex_url" in attrs else ""
         self.env_plex_token = attrs["plex_token"] if "plex_token" in attrs else ""
+        self.tpdb_timer = None
         current_time = datetime.now()
 
         with open(self.config_path, encoding="utf-8") as fp:
             logger.separator("Redacted Config", space=False, border=False, debug=True)
             for line in fp.readlines():
-                logger.debug(re.sub(r"(token|client.*|url|api_*key|secret|error|run_start|run_end|version|changes|username|password): .+", r"\1: (redacted)", line.strip("\r\n")))
+                logger.debug(re.sub(r"(token|client.*|url|api_*key|secret|error|delete|run_start|run_end|version|changes|username|password): .+", r"\1: (redacted)", line.strip("\r\n")))
             logger.debug("")
 
         self.data = YAML(self.config_path).data
@@ -191,6 +223,16 @@ class ConfigFile:
             for library in self.data["libraries"]:
                 if not self.data["libraries"][library]:
                     continue
+                if "metadata_path" in self.data["libraries"][library]:
+                    logger.warning("Config Warning: metadata_path has been deprecated and split into collection_files and metadata_files, Please visit the wiki to learn more about this transition.")
+                    path_dict = self.data["libraries"][library].pop("metadata_path")
+                    if "collection_files" not in self.data["libraries"][library]:
+                        self.data["libraries"][library]["collection_files"] = path_dict
+                    if "metadata_files" not in self.data["libraries"][library]:
+                        self.data["libraries"][library]["metadata_files"] = path_dict
+                if "overlay_path" in self.data["libraries"][library]:
+                    logger.warning("Config Warning: overlay_path has been deprecated in favor of overlay_files, Please visit the wiki to learn more about this transition.")
+                    self.data["libraries"][library]["overlay_files"] = self.data["libraries"][library].pop("overlay_path")
                 if "radarr_add_all" in self.data["libraries"][library]:
                     self.data["libraries"][library]["radarr_add_all_existing"] = self.data["libraries"][library].pop("radarr_add_all")
                 if "sonarr_add_all" in self.data["libraries"][library]:
@@ -268,6 +310,7 @@ class ConfigFile:
         if "omdb" in self.data:                        self.data["omdb"] = self.data.pop("omdb")
         if "mdblist" in self.data:                     self.data["mdblist"] = self.data.pop("mdblist")
         if "notifiarr" in self.data:                   self.data["notifiarr"] = self.data.pop("notifiarr")
+        if "gotify" in self.data:                      self.data["gotify"] = self.data.pop("gotify")
         if "anidb" in self.data:                       self.data["anidb"] = self.data.pop("anidb")
         if "radarr" in self.data:
             if "monitor" in self.data["radarr"] and isinstance(self.data["radarr"]["monitor"], bool):
@@ -302,7 +345,7 @@ class ConfigFile:
         if self.secrets:
             check_next(self.data)
 
-        def check_for_attribute(data, attribute, parent=None, test_list=None, default=None, do_print=True, default_is_none=False, req_default=False, var_type="str", throw=False, save=True, int_min=0):
+        def check_for_attribute(data, attribute, parent=None, test_list=None, default=None, do_print=True, default_is_none=False, req_default=False, var_type="str", throw=False, save=True, int_min=0, int_max=None):
             endline = ""
             if parent is not None:
                 if data and parent in data:
@@ -323,9 +366,9 @@ class ConfigFile:
                     elif attribute not in yaml.data[parent]:                            yaml.data[parent][attribute] = default
                     else:                                                               endline = ""
                     yaml.save()
-                if default_is_none and var_type in ["list", "int_list", "comma_list"]: return default if default else []
+                if default_is_none and var_type in ["list", "int_list", "lower_list", "list_path"]: return default if default else []
             elif data[attribute] is None:
-                if default_is_none and var_type in ["list", "int_list", "comma_list"]: return default if default else []
+                if default_is_none and var_type in ["list", "int_list", "lower_list", "list_path"]: return default if default else []
                 elif default_is_none:                                               return None
                 else:                                                               message = f"{text} is blank"
             elif var_type == "url":
@@ -335,15 +378,23 @@ class ConfigFile:
                 if isinstance(data[attribute], bool):                               return data[attribute]
                 else:                                                               message = f"{text} must be either true or false"
             elif var_type == "int":
-                if isinstance(data[attribute], bool):                               message = f"{text} must an integer >= {int_min}"
-                elif isinstance(data[attribute], int) and data[attribute] >= int_min: return data[attribute]
-                else:                                                               message = f"{text} must an integer >= {int_min}"
+                if isinstance(data[attribute], int) and data[attribute] >= int_min and (not int_max or data[attribute] <= int_max):
+                    return data[attribute]
+                else:
+                    message = f"{text} must an integer greater than or equal to {int_min}{f' and less than or equal to {int_max}'}"
             elif var_type == "path":
                 if os.path.exists(os.path.abspath(data[attribute])):                return data[attribute]
                 else:                                                               message = f"Path {os.path.abspath(data[attribute])} does not exist"
-            elif var_type == "list":                                            return util.get_list(data[attribute], split=False)
-            elif var_type == "comma_list":                                      return util.get_list(data[attribute])
-            elif var_type == "int_list":                                        return util.get_list(data[attribute], int_list=True)
+            elif var_type in ["list", "lower_list", "int_list"]:
+                output_list = []
+                for output_item in util.get_list(data[attribute], lower=var_type == "lower_list", split=var_type != "list", int_list=var_type == "int_list"):
+                    if output_item not in output_list:
+                        output_list.append(output_item)
+                failed_items = [o for o in output_list if o not in test_list] if test_list else []
+                if failed_items:
+                    message = f"{text}: {', '.join(failed_items)} is an invalid input"
+                else:
+                    return output_list
             elif var_type == "list_path":
                 temp_list = []
                 warning_message = ""
@@ -358,7 +409,6 @@ class ConfigFile:
                     logger.warning(warning_message)
                 if len(temp_list) > 0:                                              return temp_list
                 else:                                                               message = "No Paths exist"
-            elif var_type == "lower_list":                                      return util.get_list(data[attribute], lower=True)
             elif test_list is None or data[attribute] in test_list:             return data[attribute]
             else:                                                               message = f"{text}: {data[attribute]} is an invalid input"
             if var_type == "path" and default and os.path.exists(os.path.abspath(default)):
@@ -391,6 +441,7 @@ class ConfigFile:
             return default
 
         self.general = {
+            "run_order": check_for_attribute(self.data, "run_order", parent="settings", var_type="lower_list", test_list=run_order_options, default=["operations", "metadata", "collections", "overlays"]),
             "cache": check_for_attribute(self.data, "cache", parent="settings", var_type="bool", default=True),
             "cache_expiration": check_for_attribute(self.data, "cache_expiration", parent="settings", var_type="int", default=60, int_min=1),
             "asset_directory": check_for_attribute(self.data, "asset_directory", parent="settings", var_type="list_path", default_is_none=True),
@@ -421,13 +472,14 @@ class ConfigFile:
             "save_report": check_for_attribute(self.data, "save_report", parent="settings", var_type="bool", default=False),
             "tvdb_language": check_for_attribute(self.data, "tvdb_language", parent="settings", default="default"),
             "ignore_ids": check_for_attribute(self.data, "ignore_ids", parent="settings", var_type="int_list", default_is_none=True),
-            "ignore_imdb_ids": check_for_attribute(self.data, "ignore_imdb_ids", parent="settings", var_type="list", default_is_none=True),
+            "ignore_imdb_ids": check_for_attribute(self.data, "ignore_imdb_ids", parent="settings", var_type="lower_list", default_is_none=True),
             "playlist_sync_to_users": check_for_attribute(self.data, "playlist_sync_to_users", parent="settings", default="all", default_is_none=True),
             "playlist_exclude_users": check_for_attribute(self.data, "playlist_exclude_users", parent="settings", default_is_none=True),
             "playlist_report": check_for_attribute(self.data, "playlist_report", parent="settings", var_type="bool", default=True),
             "verify_ssl": check_for_attribute(self.data, "verify_ssl", parent="settings", var_type="bool", default=True),
             "custom_repo": check_for_attribute(self.data, "custom_repo", parent="settings", default_is_none=True),
-            "check_nightly": check_for_attribute(self.data, "check_nightly", parent="settings", var_type="bool", default=False),
+            "overlay_artwork_filetype": check_for_attribute(self.data, "overlay_artwork_filetype", parent="settings", test_list=filetype_list, default="jpg"),
+            "overlay_artwork_quality": check_for_attribute(self.data, "overlay_artwork_quality", parent="settings", var_type="int", default_is_none=True, int_min=1, int_max=100),
             "assets_for_all": check_for_attribute(self.data, "assets_for_all", parent="settings", var_type="bool", default=False, save=False, do_print=False)
         }
         self.custom_repo = None
@@ -436,8 +488,35 @@ class ConfigFile:
             if "https://github.com/" in repo:
                 repo = repo.replace("https://github.com/", "https://raw.githubusercontent.com/").replace("/tree/", "/")
             self.custom_repo = repo
-        self.check_nightly = self.general["check_nightly"]
-        self.latest_version = util.current_version(self.version, branch=self.branch, nightly=self.check_nightly)
+        self.latest_version = util.current_version(self.version, branch=self.branch)
+
+        add_operations = True if "operations" not in self.general["run_order"] else False
+        add_metadata = True if "metadata" not in self.general["run_order"] else False
+        add_collection = True if "collections" not in self.general["run_order"] else False
+        add_overlays = True if "overlays" not in self.general["run_order"] else False
+        if add_operations or add_metadata or add_collection or add_overlays:
+            new_run_order = []
+            for run_order in self.general["run_order"]:
+                if add_operations and not new_run_order:
+                    new_run_order.append("operations")
+                    if add_metadata:
+                        new_run_order.append("metadata")
+                        if add_collection:
+                            new_run_order.append("collections")
+                new_run_order.append(run_order)
+                if add_metadata and run_order == "operations":
+                    new_run_order.append("metadata")
+                if add_collection and (run_order == "metadata" or (run_order == "operations" and add_metadata)):
+                    new_run_order.append("collections")
+            if add_overlays:
+                new_run_order.append("overlays")
+            self.general["run_order"] = new_run_order
+
+            yaml = YAML(self.config_path)
+            if "settings" not in yaml.data or not yaml.data["settings"]:
+                yaml.data["settings"] = {}
+            yaml.data["settings"]["run_order"] = new_run_order
+            yaml.save()
 
         self.session = requests.Session()
         if not self.general["verify_ssl"]:
@@ -470,6 +549,24 @@ class ConfigFile:
         else:
             logger.info("notifiarr attribute not found")
 
+        self.GotifyFactory = None
+        if "gotify" in self.data:
+            logger.info("Connecting to Gotify...")
+            try:
+                self.GotifyFactory = Gotify(self, {
+                    "url": check_for_attribute(self.data, "url", parent="gotify", throw=True),
+                    "token": check_for_attribute(self.data, "token", parent="gotify", throw=True)
+                })
+            except Failed as e:
+                if str(e).endswith("is blank"):
+                    logger.warning(e)
+                else:
+                    logger.stacktrace()
+                    logger.error(e)
+            logger.info(f"Gotify Connection {'Failed' if self.GotifyFactory is None else 'Successful'}")
+        else:
+            logger.info("gotify attribute not found")
+
         self.webhooks = {
             "error": check_for_attribute(self.data, "error", parent="webhooks", var_type="list", default_is_none=True),
             "version": check_for_attribute(self.data, "version", parent="webhooks", var_type="list", default_is_none=True),
@@ -478,7 +575,7 @@ class ConfigFile:
             "changes": check_for_attribute(self.data, "changes", parent="webhooks", var_type="list", default_is_none=True),
             "delete": check_for_attribute(self.data, "delete", parent="webhooks", var_type="list", default_is_none=True)
         }
-        self.Webhooks = Webhooks(self, self.webhooks, notifiarr=self.NotifiarrFactory)
+        self.Webhooks = Webhooks(self, self.webhooks, notifiarr=self.NotifiarrFactory, gotify=self.GotifyFactory)
         try:
             self.Webhooks.start_time_hooks(self.start_time)
             if self.version[0] != "Unknown" and self.latest_version[0] != "Unknown" and self.version[1] != self.latest_version[1] or (self.version[2] and self.version[2] < self.latest_version[2]):
@@ -527,21 +624,21 @@ class ConfigFile:
 
             logger.separator()
 
-            self.Mdblist = Mdblist(self)
+            self.MDBList = MDBList(self)
             if "mdblist" in self.data:
-                logger.info("Connecting to Mdblist...")
+                logger.info("Connecting to MDBList...")
                 try:
-                    self.Mdblist.add_key(
+                    self.MDBList.add_key(
                         check_for_attribute(self.data, "apikey", parent="mdblist", throw=True),
                         check_for_attribute(self.data, "cache_expiration", parent="mdblist", var_type="int", default=60, int_min=1)
                     )
-                    logger.info("Mdblist Connection Successful")
+                    logger.info("MDBList Connection Successful")
                 except Failed as e:
                     if str(e).endswith("is blank"):
                         logger.warning(e)
                     else:
                         logger.error(e)
-                    logger.info("Mdblist Connection Failed")
+                    logger.info("MDBList Connection Failed")
             else:
                 logger.info("mdblist attribute not found")
 
@@ -622,15 +719,14 @@ class ConfigFile:
 
             self.playlist_names = []
             self.playlist_files = []
-            if "playlist_files" in self.data:
+            if "playlist_files" not in self.data:
+                logger.info("playlist_files attribute not found")
+            elif not self.data["playlist_files"]:
+                logger.info("playlist_files attribute is blank")
+            else:
+                logger.info("")
                 logger.info("Reading in Playlist Files")
-                if self.data["playlist_files"]:
-                    paths_to_check = self.data["playlist_files"]
-                else:
-                    default_playlist_file = os.path.abspath(os.path.join(self.default_dir, "playlists.yml"))
-                    logger.warning(f"Config Warning: playlist_files attribute is blank using default: {default_playlist_file}")
-                    paths_to_check = [default_playlist_file]
-                files, had_scheduled = util.load_files(paths_to_check, "playlist_files", schedule=(current_time, self.run_hour, self.ignore_schedules))
+                files, had_scheduled = util.load_files(self.data["playlist_files"], "playlist_files", schedule=(current_time, self.run_hour, self.ignore_schedules))
                 if not files and not had_scheduled:
                     raise Failed("Config Error: No Paths Found for playlist_files")
                 for file_type, playlist_file, temp_vars, asset_directory in files:
@@ -639,18 +735,19 @@ class ConfigFile:
                         self.playlist_names.extend([p for p in playlist_obj.playlists])
                         self.playlist_files.append(playlist_obj)
                     except Failed as e:
-                        logger.info(f"Playlist File Failed To Load")
+                        logger.info("Playlist File Failed To Load")
                         logger.error(e)
-            else:
-                logger.info("playlist_files attribute not found")
+                    except NotScheduled as e:
+                        logger.info("")
+                        logger.separator(f"Skipping {e} Playlist File")
 
             self.TVDb = TVDb(self, self.general["tvdb_language"], self.general["cache_expiration"])
             self.IMDb = IMDb(self)
             self.Convert = Convert(self)
             self.AniList = AniList(self)
-            self.FlixPatrol = FlixPatrol(self)
             self.ICheckMovies = ICheckMovies(self)
             self.Letterboxd = Letterboxd(self)
+            self.BoxOfficeMojo = BoxOfficeMojo(self)
             self.Reciperr = Reciperr(self)
             self.Ergast = Ergast(self)
 
@@ -662,17 +759,25 @@ class ConfigFile:
                 "url": check_for_attribute(self.data, "url", parent="plex", var_type="url", default_is_none=True),
                 "token": check_for_attribute(self.data, "token", parent="plex", default_is_none=True),
                 "timeout": check_for_attribute(self.data, "timeout", parent="plex", var_type="int", default=60),
-                "db_cache": check_for_attribute(self.data, "db_cache", parent="plex", var_type="int", default_is_none=True),
-                "clean_bundles": check_for_attribute(self.data, "clean_bundles", parent="plex", var_type="bool", default=False),
-                "empty_trash": check_for_attribute(self.data, "empty_trash", parent="plex", var_type="bool", default=False),
-                "optimize": check_for_attribute(self.data, "optimize", parent="plex", var_type="bool", default=False)
+                "verify_ssl": check_for_attribute(self.data, "verify_ssl", parent="plex", var_type="bool", default_is_none=True),
+                "db_cache": check_for_attribute(self.data, "db_cache", parent="plex", var_type="int", default_is_none=True)
             }
+            for attr in ["clean_bundles", "empty_trash", "optimize"]:
+                try:
+                    self.general["plex"][attr] = check_for_attribute(self.data, attr, parent="plex", var_type="bool", default=False, throw=True)
+                except Failed as e:
+                    if "plex" in self.data and attr in self.data["plex"] and self.data["plex"][attr]:
+                        self.general["plex"][attr] = self.data["plex"][attr]
+                    else:
+                        self.general["plex"][attr] = False
+                        logger.warning(str(e).replace("Error", "Warning"))
             self.general["radarr"] = {
                 "url": check_for_attribute(self.data, "url", parent="radarr", var_type="url", default_is_none=True),
                 "token": check_for_attribute(self.data, "token", parent="radarr", default_is_none=True),
                 "add_missing": check_for_attribute(self.data, "add_missing", parent="radarr", var_type="bool", default=False),
                 "add_existing": check_for_attribute(self.data, "add_existing", parent="radarr", var_type="bool", default=False),
                 "upgrade_existing": check_for_attribute(self.data, "upgrade_existing", parent="radarr", var_type="bool", default=False),
+                "monitor_existing": check_for_attribute(self.data, "monitor_existing", parent="radarr", var_type="bool", default=False),
                 "ignore_cache": check_for_attribute(self.data, "ignore_cache", parent="radarr", var_type="bool", default=False),
                 "root_folder_path": check_for_attribute(self.data, "root_folder_path", parent="radarr", default_is_none=True),
                 "monitor": check_for_attribute(self.data, "monitor", parent="radarr", var_type="bool", default=True),
@@ -689,6 +794,7 @@ class ConfigFile:
                 "add_missing": check_for_attribute(self.data, "add_missing", parent="sonarr", var_type="bool", default=False),
                 "add_existing": check_for_attribute(self.data, "add_existing", parent="sonarr", var_type="bool", default=False),
                 "upgrade_existing": check_for_attribute(self.data, "upgrade_existing", parent="sonarr", var_type="bool", default=False),
+                "monitor_existing": check_for_attribute(self.data, "monitor_existing", parent="sonarr", var_type="bool", default=False),
                 "ignore_cache": check_for_attribute(self.data, "ignore_cache", parent="sonarr", var_type="bool", default=False),
                 "root_folder_path": check_for_attribute(self.data, "root_folder_path", parent="sonarr", default_is_none=True),
                 "monitor": check_for_attribute(self.data, "monitor", parent="sonarr", test_list=sonarr.monitor_descriptions, default="all"),
@@ -722,7 +828,8 @@ class ConfigFile:
                 logger.info("")
                 logger.info(f"Connecting to {display_name} Library...")
 
-                params["asset_directory"] = check_for_attribute(lib, "asset_directory", parent="settings", var_type="list_path", default=self.general["asset_directory"], default_is_none=True, save=False)
+                params["run_order"] = check_for_attribute(lib, "run_order", parent="settings", var_type="lower_list", default=self.general["run_order"], do_print=False, save=False)
+                params["asset_directory"] = check_for_attribute(lib, "asset_directory", parent="settings", var_type="list_path", default=self.general["asset_directory"], default_is_none=True, do_print=False, save=False)
                 params["asset_folders"] = check_for_attribute(lib, "asset_folders", parent="settings", var_type="bool", default=self.general["asset_folders"], do_print=False, save=False)
                 params["asset_depth"] = check_for_attribute(lib, "asset_depth", parent="settings", var_type="int", default=self.general["asset_depth"], do_print=False, save=False)
                 params["sync_mode"] = check_for_attribute(lib, "sync_mode", parent="settings", test_list=sync_modes, default=self.general["sync_mode"], do_print=False, save=False)
@@ -749,8 +856,10 @@ class ConfigFile:
                 params["delete_not_scheduled"] = check_for_attribute(lib, "delete_not_scheduled", parent="settings", var_type="bool", default=self.general["delete_not_scheduled"], do_print=False, save=False)
                 params["ignore_ids"] = check_for_attribute(lib, "ignore_ids", parent="settings", var_type="int_list", default_is_none=True, do_print=False, save=False)
                 params["ignore_ids"].extend([i for i in self.general["ignore_ids"] if i not in params["ignore_ids"]])
-                params["ignore_imdb_ids"] = check_for_attribute(lib, "ignore_imdb_ids", parent="settings", var_type="list", default_is_none=True, do_print=False, save=False)
+                params["ignore_imdb_ids"] = check_for_attribute(lib, "ignore_imdb_ids", parent="settings", var_type="lower_list", default_is_none=True, do_print=False, save=False)
                 params["ignore_imdb_ids"].extend([i for i in self.general["ignore_imdb_ids"] if i not in params["ignore_imdb_ids"]])
+                params["overlay_artwork_filetype"] = check_for_attribute(lib, "overlay_artwork_filetype", parent="settings", test_list=filetype_list, default=self.general["overlay_artwork_filetype"], do_print=False, save=False)
+                params["overlay_artwork_quality"] = check_for_attribute(lib, "overlay_artwork_quality", parent="settings", var_type="int", default=self.general["overlay_artwork_quality"], default_is_none=True, int_min=1, int_max=100, do_print=False, save=False)
                 params["changes_webhooks"] = check_for_attribute(lib, "changes", parent="webhooks", var_type="list", default=self.webhooks["changes"], do_print=False, save=False, default_is_none=True)
                 params["report_path"] = None
                 if lib and "report_path" in lib and lib["report_path"]:
@@ -759,98 +868,173 @@ class ConfigFile:
                     else:
                         logger.error(f"Config Error: Folder {os.path.dirname(os.path.abspath(lib['report_path']))} does not exist")
                 if lib and "operations" in lib and lib["operations"]:
-                    if isinstance(lib["operations"], dict):
-                        if "delete_collections" not in lib["operations"] and ("delete_unmanaged_collections" in lib["operations"] or "delete_collections_with_less" in lib["operations"]):
-                            lib["operations"]["delete_collections"] = {}
-                            if "delete_unmanaged_collections" in lib["operations"]:
-                                lib["operations"]["delete_collections"]["unmanaged"] = check_for_attribute(lib["operations"], "delete_unmanaged_collections", var_type="bool", default=False, save=False)
-                            if "delete_collections_with_less" in lib["operations"]:
-                                lib["operations"]["delete_collections"]["less"] = check_for_attribute(lib["operations"], "delete_collections_with_less", var_type="int", default_is_none=True, save=False)
+                    final_operations = {}
+                    logger.separator("Operation Configuration", space=False, border=False)
+                    config_ops = util.parse("Config", "operations", lib["operations"], datatype="listdict")
+                    op_size = len(config_ops)
+                    for i, config_op in enumerate(config_ops, 1):
+                        logger.info("")
+                        logger.info(f"Operation {i}/{op_size}")
+                        for k, v in config_op.items():
+                            logger.info(f"    {k}: {v}")
+                        if "schedule" in config_op and not self.ignore_schedules:
+                            if not config_op["schedule"]:
+                                logger.error("Config Error: schedule attribute is blank")
+                            else:
+                                try:
+                                    util.schedule_check("schedule", config_op["schedule"], current_time, self.run_hour)
+                                except NotScheduled:
+                                    logger.info(f"Skipping Operation Not Scheduled for {config_op['schedule']}")
+                                    continue
+                        if "delete_collections" not in config_op and ("delete_unmanaged_collections" in config_op or "delete_collections_with_less" in config_op):
+                            config_op["delete_collections"] = {}
+                            if "delete_unmanaged_collections" in config_op:
+                                config_op["delete_collections"]["unmanaged"] = check_for_attribute(config_op, "delete_unmanaged_collections", var_type="bool", default=False, save=False)
+                            if "delete_collections_with_less" in config_op:
+                                config_op["delete_collections"]["less"] = check_for_attribute(config_op, "delete_collections_with_less", var_type="int", default_is_none=True, save=False)
+                        section_final = {}
                         for op, data_type in library_operations.items():
-                            if op not in lib["operations"]:
+                            if op not in config_op:
                                 continue
-                            if isinstance(data_type, list):
-                                params[op] = check_for_attribute(lib["operations"], op, test_list=data_type, default_is_none=True, save=False)
+                            if op == "mass_imdb_parental_labels":
+                                section_final[op] = check_for_attribute(config_op, op, test_list=data_type, default_is_none=True, save=False)
+                            elif isinstance(data_type, dict):
+                                try:
+                                    if not config_op[op]:
+                                        raise Failed("is blank")
+                                    input_list = config_op[op] if isinstance(config_op[op], list) else [config_op[op]]
+                                    final_list = []
+                                    for list_attr in input_list:
+                                        if not list_attr:
+                                            raise Failed(f"has a blank value")
+                                        if str(list_attr).lower() in data_type:
+                                            final_list.append(str(list_attr).lower())
+                                        elif op in ["mass_content_rating_update", "mass_studio_update", "mass_original_title_update"]:
+                                            final_list.append(str(list_attr))
+                                        elif op == "mass_genre_update":
+                                            final_list.append(list_attr if isinstance(list_attr, list) else [list_attr])
+                                        elif op == "mass_originally_available_update":
+                                            final_list.append(util.validate_date(list_attr))
+                                        elif op.endswith("rating_update"):
+                                            final_list.append(util.check_int(list_attr, datatype="float", minimum=0, maximum=10, throw=True))
+                                        else:
+                                            raise Failed(f"has an invalid value: {list_attr}")
+                                    section_final[op] = final_list
+                                except Failed as e:
+                                    logger.error(f"Config Error: {op} {e}")
                             elif op == "mass_collection_mode":
-                                params[op] = util.check_collection_mode(lib["operations"][op])
+                                section_final[op] = util.check_collection_mode(config_op[op])
                             elif data_type == "dict":
-                                input_dict = lib["operations"][op]
-                                if op in ["mass_poster_update", "mass_background_update"] and input_dict and not isinstance(input_dict, dict):
+                                input_dict = config_op[op]
+                                if op in ["mass_poster_update", "mass_background_update", "mass_collection_content_rating_update"] and input_dict and not isinstance(input_dict, dict):
                                     input_dict = {"source": input_dict}
 
                                 if not input_dict or not isinstance(input_dict, dict):
                                     raise Failed(f"Config Error: {op} must be a dictionary")
-                                if op in ["mass_poster_update", "mass_background_update"]:
-                                    params[op] = {
+                                elif op in ["mass_poster_update", "mass_background_update"]:
+                                    section_final[op] = {
                                         "source": check_for_attribute(input_dict, "source", test_list=mass_image_options, default_is_none=True, save=False),
                                         "seasons": check_for_attribute(input_dict, "seasons", var_type="bool", default=True, save=False),
                                         "episodes": check_for_attribute(input_dict, "episodes", var_type="bool", default=True, save=False),
                                     }
-                                if op == "metadata_backup":
+                                elif op == "metadata_backup":
                                     default_path = os.path.join(default_dir, f"{str(library_name)}_Metadata_Backup.yml")
-                                    try:
-                                        default_path = check_for_attribute(input_dict, "path", var_type="path", save=False)
-                                    except Failed as e:
-                                        logger.debug(f"{e} using default {default_path}")
-                                    params[op] = {
+                                    if "path" not in input_dict:
+                                        logger.warning(f"Config Warning: path attribute not found using default: {default_path}")
+                                    elif "path" in input_dict and not input_dict["path"]:
+                                        logger.warning(f"Config Warning: path attribute blank using default: {default_path}")
+                                    else:
+                                        default_path = input_dict["path"]
+                                    section_final[op] = {
                                         "path": default_path,
-                                        "exclude": check_for_attribute(input_dict, "exclude", var_type="comma_list", default_is_none=True, save=False),
+                                        "exclude": check_for_attribute(input_dict, "exclude", var_type="lower_list", default_is_none=True, save=False),
                                         "sync_tags": check_for_attribute(input_dict, "sync_tags", var_type="bool", default=False, save=False),
                                         "add_blank_entries": check_for_attribute(input_dict, "add_blank_entries", var_type="bool", default=True, save=False)
                                     }
-                                if "mapper" in op:
-                                    params[op] = input_dict
+                                elif "mapper" in op:
+                                    section_final[op] = {}
                                     for old_value, new_value in input_dict.items():
-                                        if old_value == new_value:
+                                        if not old_value:
+                                            logger.warning("Config Warning: The key cannot be empty")
+                                        elif new_value and str(old_value) == str(new_value):
                                             logger.warning(f"Config Warning: {op} value '{new_value}' ignored as it cannot be mapped to itself")
                                         else:
-                                            params[op][old_value] = new_value if new_value else None
-                                if op == "delete_collections":
-                                    params[op] = {
+                                            section_final[op][str(old_value)] = str(new_value) if new_value else None # noqa
+                                elif op == "delete_collections":
+                                    section_final[op] = {
                                         "managed": check_for_attribute(input_dict, "managed", var_type="bool", default_is_none=True, save=False),
                                         "configured": check_for_attribute(input_dict, "configured", var_type="bool", default_is_none=True, save=False),
                                         "less": check_for_attribute(input_dict, "less", var_type="int", default_is_none=True, save=False, int_min=1),
                                     }
+                                elif op == "mass_collection_content_rating_update":
+                                    section_final[op] = {
+                                        "source": check_for_attribute(input_dict, "source", test_list=mass_collection_content_options, default_is_none=True, save=False),
+                                        "ranking": check_for_attribute(input_dict, "ranking", var_type="list", default=content_rating_default, save=False),
+                                    }
                             else:
-                                params[op] = check_for_attribute(lib["operations"], op, var_type=data_type, default=False, save=False)
-                    else:
-                        logger.error("Config Error: operations must be a dictionary")
+                                section_final[op] = check_for_attribute(config_op, op, var_type=data_type, default=False, save=False)
 
-                def error_check(err_attr, service):
-                    logger.error(f"Config Error: Operation {err_attr} cannot be {params[err_attr]} without a successful {service} Connection")
-                    params[err_attr] = None
+                        for k, v in section_final.items():
+                            if k not in final_operations:
+                                final_operations[k] = v
+                            else:
+                                logger.warning(f"Config Warning: Operation {k} already scheduled")
+                    for k, v in final_operations.items():
+                        params[k] = v
 
                 for mass_key in operations.meta_operations:
                     if not params[mass_key]:
                         continue
-                    source = params[mass_key]["source"] if isinstance(params[mass_key], dict) else params[mass_key]
-                    if source == "omdb" and self.OMDb is None:
-                        error_check(mass_key, "OMDb")
-                    if source and source.startswith("mdb") and not self.Mdblist.has_key:
-                        error_check(mass_key, "MdbList")
-                    if source and source.startswith("anidb") and not self.AniDB.is_authorized:
-                        error_check(mass_key, "AniDB")
-                    if source and source.startswith("mal") and self.MyAnimeList is None:
-                        error_check(mass_key, "MyAnimeList")
-                    if source and source.startswith("trakt") and self.Trakt is None:
-                        error_check(mass_key, "Trakt")
+                    sources = params[mass_key]["source"] if isinstance(params[mass_key], dict) else params[mass_key]
+                    if not isinstance(sources, list):
+                        sources = [sources]
+                    try:
+                        for source in sources:
+                            if source and source == "omdb" and self.OMDb is None:
+                                raise Failed(f"{source} without a successful OMDb Connection")
+                            if source and str(source).startswith("mdb") and not self.MDBList.has_key:
+                                raise Failed(f"{source} without a successful MDBList Connection")
+                            if source and str(source).startswith("anidb") and not self.AniDB.is_authorized:
+                                raise Failed(f"{source} without a successful AniDB Connection")
+                            if source and str(source).startswith("mal") and self.MyAnimeList is None:
+                                raise Failed(f"{source} without a successful MyAnimeList Connection")
+                            if source and str(source).startswith("trakt") and self.Trakt is None:
+                                raise Failed(f"{source} without a successful Trakt Connection")
+                    except Failed as e:
+                        logger.error(f"Config Error: {mass_key} cannot use {e}")
+                        params[mass_key] = None
 
                 lib_vars = {}
                 if lib and "template_variables" in lib and lib["template_variables"] and isinstance(lib["template_variables"], dict):
                     lib_vars = lib["template_variables"]
 
-                params["metadata_path"] = []
+                params["collection_files"] = []
                 try:
-                    if lib and "metadata_path" in lib:
-                        if not lib["metadata_path"]:
-                            raise Failed("Config Error: metadata_path attribute is blank")
-                        files, had_scheduled = util.load_files(lib["metadata_path"], "metadata_path", schedule=(current_time, self.run_hour, self.ignore_schedules), lib_vars=lib_vars)
+                    if lib and "collection_files" in lib:
+                        logger.info("")
+                        logger.info("Reading in Collection Files")
+                        if not lib["collection_files"]:
+                            raise Failed("Config Error: collection_files attribute is blank")
+                        files, had_scheduled = util.load_files(lib["collection_files"], "collection_files", schedule=(current_time, self.run_hour, self.ignore_schedules), lib_vars=lib_vars)
                         if files:
-                            params["metadata_path"] = files
+                            params["collection_files"] = files
                         elif not had_scheduled:
-                            raise Failed("Config Error: No Paths Found for metadata_path")
-                    elif os.path.exists(os.path.join(default_dir, f"{library_name}.yml")):
-                        params["metadata_path"] = [("File", os.path.join(default_dir, f"{library_name}.yml"), lib_vars, None)]
+                            raise Failed("Config Error: No Paths Found for collection_files")
+                except Failed as e:
+                    logger.error(e)
+
+                params["metadata_files"] = []
+                try:
+                    if lib and "metadata_files" in lib:
+                        logger.info("")
+                        logger.info("Reading in Metadata Files")
+                        if not lib["metadata_files"]:
+                            raise Failed("Config Error: metadata_files attribute is blank")
+                        files, had_scheduled = util.load_files(lib["metadata_files"], "metadata_files", schedule=(current_time, self.run_hour, self.ignore_schedules), lib_vars=lib_vars)
+                        if files:
+                            params["metadata_files"] = files
+                        elif not had_scheduled:
+                            raise Failed("Config Error: No Paths Found for metadata_files")
                 except Failed as e:
                     logger.error(e)
                 params["default_dir"] = default_dir
@@ -866,75 +1050,101 @@ class ConfigFile:
                         except NotScheduled:
                             params["skip_library"] = True
 
-                params["overlay_path"] = []
+                old_reset = None
+                old_schedule = None
+                params["overlay_files"] = []
                 params["remove_overlays"] = False
                 params["reapply_overlays"] = False
                 params["reset_overlays"] = None
-                if lib and "overlay_path" in lib:
+                if lib and "overlay_files" in lib:
                     try:
-                        if not lib["overlay_path"]:
-                            raise Failed("Config Error: overlay_path attribute is blank")
-                        files, _ = util.load_files(lib["overlay_path"], "overlay_path", lib_vars=lib_vars)
-                        for file in util.get_list(lib["overlay_path"], split=False):
+                        logger.info("")
+                        logger.info("Reading in Overlay Files")
+                        if not lib["overlay_files"]:
+                            raise Failed("Config Error: overlay_files attribute is blank")
+                        files, _ = util.load_files(lib["overlay_files"], "overlay_files", lib_vars=lib_vars)
+                        for file in util.get_list(lib["overlay_files"], split=False):
                             if isinstance(file, dict):
                                 if ("remove_overlays" in file and file["remove_overlays"] is True) \
                                         or ("remove_overlay" in file and file["remove_overlay"] is True) \
                                         or ("revert_overlays" in file and file["revert_overlays"] is True):
+                                    logger.warning("Config Warning: remove_overlays under overlay_files is deprecated it now goes directly under the library attribute.")
                                     params["remove_overlays"] = True
                                 if ("reapply_overlays" in file and file["reapply_overlays"] is True) \
                                         or ("reapply_overlay" in file and file["reapply_overlay"] is True):
+                                    logger.warning("Config Warning: reapply_overlays under overlay_files is deprecated it now goes directly under the library attribute.")
                                     params["reapply_overlays"] = True
                                 if "reset_overlays" in file or "reset_overlay" in file:
                                     attr = f"reset_overlay{'s' if 'reset_overlays' in file else ''}"
-                                    reset_options = file[attr] if isinstance(file[attr], list) else [file[attr]]
-                                    final_list = []
-                                    for reset_option in reset_options:
-                                        if reset_option and reset_option in reset_overlay_options:
-                                            final_list.append(reset_option)
-                                        else:
-                                            final_text = f"Config Error: reset_overlays attribute {reset_option} invalid. Options: "
-                                            for option, description in reset_overlay_options.items():
-                                                final_text = f"{final_text}\n    {option} ({description})"
-                                            logger.error(final_text)
-                                    if final_list:
-                                        params["reset_overlays"] = final_list
-                                    else:
-                                        final_text = f"Config Error: No proper reset_overlays option found. {file[attr]}. Options: "
-                                        for option, description in reset_overlay_options.items():
-                                            final_text = f"{final_text}\n    {option} ({description})"
-                                        logger.error(final_text)
+                                    logger.warning("Config Warning: reset_overlays under overlay_files is deprecated it now goes directly under the library attribute.")
+                                    old_reset = file[attr]
                                 if "schedule" in file and file["schedule"]:
-                                    logger.debug(f"Value: {file['schedule']}")
-                                    err = None
-                                    try:
-                                        util.schedule_check("schedule", file["schedule"], current_time, self.run_hour)
-                                    except NotScheduledRange as e:
-                                        err = e
-                                    except NotScheduled as e:
-                                        if not self.ignore_schedules:
-                                            err = e
-                                    if err:
-                                        raise NotScheduled(f"Overlay Schedule:{err}\n\nOverlays not scheduled to run")
-                        if not files and params["remove_overlays"] is False and params["reset_overlays"] is False:
-                            raise Failed("Config Error: No Paths Found for overlay_path")
-                        params["overlay_path"] = files
-                    except NotScheduled as e:
-                        logger.info("")
-                        logger.info(e)
-                        params["overlay_path"] = []
-                        params["remove_overlays"] = False
+                                    logger.warning("Config Warning: schedule under overlay_files is deprecated it now goes directly under the library attribute as schedule_overlays.")
+                                    old_schedule = file["schedule"]
+                        params["overlay_files"] = files
                     except Failed as e:
                         logger.error(e)
 
-                params["image_sets"] = []
+                if lib:
+                    if ("remove_overlays" in lib and lib["remove_overlays"] is True) \
+                            or ("remove_overlay" in lib and lib["remove_overlay"] is True) \
+                            or ("revert_overlays" in lib and lib["revert_overlays"] is True):
+                        params["remove_overlays"] = True
+                    if ("reapply_overlays" in lib and lib["reapply_overlays"] is True) \
+                            or ("reapply_overlay" in lib and lib["reapply_overlay"] is True):
+                        params["reapply_overlays"] = True
+                    if "reset_overlays" in lib or "reset_overlay" in lib:
+                        attr = f"reset_overlay{'s' if 'reset_overlays' in lib else ''}"
+                        old_reset = lib[attr]
+                    if old_reset is not None:
+                        reset_options = old_reset if isinstance(old_reset, list) else [old_reset]
+                        final_list = []
+                        for reset_option in reset_options:
+                            if reset_option and reset_option in reset_overlay_options:
+                                final_list.append(reset_option)
+                            else:
+                                final_text = f"Config Error: reset_overlays attribute {reset_option} invalid. Options: "
+                                for option, description in reset_overlay_options.items():
+                                    final_text = f"{final_text}\n    {option} ({description})"
+                                logger.error(final_text)
+                        if final_list:
+                            params["reset_overlays"] = final_list
+                        else:
+                            final_text = f"Config Error: No proper reset_overlays option found. {old_reset}. Options: "
+                            for option, description in reset_overlay_options.items():
+                                final_text = f"{final_text}\n    {option} ({description})"
+                            logger.error(final_text)
+                    if "schedule_overlays" in lib or "schedule_overlay" in lib:
+                        attr = f"schedule_overlay{'s' if 'schedule_overlays' in lib else ''}"
+                        old_schedule = lib[attr]
+                    if old_schedule is not None:
+                        logger.debug(f"Value: {old_schedule}")
+                        err = None
+                        try:
+                            util.schedule_check("schedule_overlays", old_schedule, current_time, self.run_hour)
+                        except NotScheduledRange as e:
+                            err = e
+                        except NotScheduled as e:
+                            if not self.ignore_schedules:
+                                err = e
+                        if err:
+                            logger.info("")
+                            logger.info(f"Overlay Schedule:{err}\n\nOverlays not scheduled to run")
+                            params["overlay_files"] = []
+                            params["remove_overlays"] = False
+
+                if lib and "overlay_files" in lib and not params["overlay_files"] and params["remove_overlays"] is False and params["reset_overlays"] is False:
+                    logger.error("Config Error: No Paths Found for overlay_files")
+
+                params["image_files"] = []
                 try:
-                    if lib and "image_sets" in lib:
-                        if not lib["image_sets"]:
-                            raise Failed("Config Error: image_sets attribute is blank")
-                        files, _ = util.load_files(lib["image_sets"], "image_sets")
+                    if lib and "image_files" in lib:
+                        if not lib["image_files"]:
+                            raise Failed("Config Error: image_files attribute is blank")
+                        files, _ = util.load_files(lib["image_files"], "image_files")
                         if not files:
-                            raise Failed("Config Error: No Paths Found for image_sets")
-                        params["image_sets"] = files
+                            raise Failed("Config Error: No Paths Found for image_files")
+                        params["image_files"] = files
                 except Failed as e:
                     logger.error(e)
 
@@ -945,11 +1155,22 @@ class ConfigFile:
                         "url": check_for_attribute(lib, "url", parent="plex", var_type="url", default=self.general["plex"]["url"], req_default=True, save=False),
                         "token": check_for_attribute(lib, "token", parent="plex", default=self.general["plex"]["token"], req_default=True, save=False),
                         "timeout": check_for_attribute(lib, "timeout", parent="plex", var_type="int", default=self.general["plex"]["timeout"], save=False),
-                        "db_cache": check_for_attribute(lib, "db_cache", parent="plex", var_type="int", default=self.general["plex"]["db_cache"], default_is_none=True, save=False),
-                        "clean_bundles": check_for_attribute(lib, "clean_bundles", parent="plex", var_type="bool", default=self.general["plex"]["clean_bundles"], save=False),
-                        "empty_trash": check_for_attribute(lib, "empty_trash", parent="plex", var_type="bool", default=self.general["plex"]["empty_trash"], save=False),
-                        "optimize": check_for_attribute(lib, "optimize", parent="plex", var_type="bool", default=self.general["plex"]["optimize"], save=False)
+                        "verify_ssl": check_for_attribute(lib, "verify_ssl", parent="plex", var_type="bool", default=self.general["plex"]["verify_ssl"], default_is_none=True, save=False),
+                        "db_cache": check_for_attribute(lib, "db_cache", parent="plex", var_type="int", default=self.general["plex"]["db_cache"], default_is_none=True, save=False)
                     }
+                    for attr in ["clean_bundles", "empty_trash", "optimize"]:
+                        try:
+                            params["plex"][attr] = check_for_attribute(lib, attr, parent="plex", var_type="bool", save=False, throw=True)
+                        except Failed as er:
+                            test = lib["plex"][attr] if "plex" in lib and attr in lib["plex"] and lib["plex"][attr] else self.general["plex"][attr]
+                            params["plex"][attr] = False
+                            if test is not True and test is not False:
+                                try:
+                                    util.schedule_check(attr, test, current_time, self.run_hour)
+                                    params["plex"][attr] = True
+                                except NotScheduled:
+                                    logger.info(f"Skipping Operation Not Scheduled for {test}")
+
                     if params["plex"]["url"].lower() == "env":
                         params["plex"]["url"] = self.env_plex_url
                     if params["plex"]["token"].lower() == "env":
@@ -958,10 +1179,10 @@ class ConfigFile:
                     logger.info("")
                     logger.info(f"{display_name} Library Connection Successful")
                     logger.info("")
-                    logger.separator("Scanning Metadata and Overlay Files", space=False, border=False)
-                    library.scan_files(self.operations_only, self.overlays_only, self.collection_only)
-                    if not library.metadata_files and not library.overlay_files and not library.library_operation and not library.images_files and not self.playlist_files:
-                        raise Failed("Config Error: No valid metadata files, overlay files, images files, playlist files, or library operations found")
+                    logger.separator("Scanning Files", space=False, border=False)
+                    library.scan_files(self.operations_only, self.overlays_only, self.collection_only, self.metadata_only)
+                    if not library.collection_files and not library.metadata_files and not library.overlay_files and not library.library_operation and not library.images_files and not self.playlist_files:
+                        raise Failed("Config Error: No valid collection file, metadata file, overlay file, image file, playlist file, or library operations found")
                 except Failed as e:
                     logger.stacktrace()
                     logger.error(e)
@@ -982,6 +1203,7 @@ class ConfigFile:
                             "add_missing": check_for_attribute(lib, "add_missing", parent="radarr", var_type="bool", default=self.general["radarr"]["add_missing"], save=False),
                             "add_existing": check_for_attribute(lib, "add_existing", parent="radarr", var_type="bool", default=self.general["radarr"]["add_existing"], save=False),
                             "upgrade_existing": check_for_attribute(lib, "upgrade_existing", parent="radarr", var_type="bool", default=self.general["radarr"]["upgrade_existing"], save=False),
+                            "monitor_existing": check_for_attribute(lib, "monitor_existing", parent="radarr", var_type="bool", default=self.general["radarr"]["monitor_existing"], save=False),
                             "ignore_cache": check_for_attribute(lib, "ignore_cache", parent="radarr", var_type="bool", default=self.general["radarr"]["ignore_cache"], save=False),
                             "root_folder_path": check_for_attribute(lib, "root_folder_path", parent="radarr", default=self.general["radarr"]["root_folder_path"], req_default=True, save=False),
                             "monitor": check_for_attribute(lib, "monitor", parent="radarr", var_type="bool", default=self.general["radarr"]["monitor"], save=False),
@@ -1011,6 +1233,7 @@ class ConfigFile:
                             "add_missing": check_for_attribute(lib, "add_missing", parent="sonarr", var_type="bool", default=self.general["sonarr"]["add_missing"], save=False),
                             "add_existing": check_for_attribute(lib, "add_existing", parent="sonarr", var_type="bool", default=self.general["sonarr"]["add_existing"], save=False),
                             "upgrade_existing": check_for_attribute(lib, "upgrade_existing", parent="sonarr", var_type="bool", default=self.general["sonarr"]["upgrade_existing"], save=False),
+                            "monitor_existing": check_for_attribute(lib, "monitor_existing", parent="sonarr", var_type="bool", default=self.general["sonarr"]["monitor_existing"], save=False),
                             "ignore_cache": check_for_attribute(lib, "ignore_cache", parent="sonarr", var_type="bool", default=self.general["sonarr"]["ignore_cache"], save=False),
                             "root_folder_path": check_for_attribute(lib, "root_folder_path", parent="sonarr", default=self.general["sonarr"]["root_folder_path"], req_default=True, save=False),
                             "monitor": check_for_attribute(lib, "monitor", parent="sonarr", test_list=sonarr.monitor_descriptions, default=self.general["sonarr"]["monitor"], save=False),
@@ -1047,7 +1270,7 @@ class ConfigFile:
                         logger.info("")
                     logger.info(f"{display_name} library's Tautulli Connection {'Failed' if library.Tautulli is None else 'Successful'}")
 
-                library.Webhooks = Webhooks(self, {}, library=library, notifiarr=self.NotifiarrFactory)
+                library.Webhooks = Webhooks(self, {}, library=library, notifiarr=self.NotifiarrFactory, gotify=self.GotifyFactory)
                 library.Overlays = Overlays(self, library)
 
                 logger.info("")
@@ -1121,8 +1344,11 @@ class ConfigFile:
     def post(self, url, data=None, json=None, headers=None):
         return self.session.post(url, data=data, json=json, headers=headers)
 
+    def load_yaml(self, url):
+        return YAML(input_data=self.get(url).content).data
+
     @property
     def mediastingers(self):
         if self._mediastingers is None:
-            self._mediastingers = YAML(input_data=self.get(mediastingers_url).content).data
+            self._mediastingers = self.load_yaml(mediastingers_url)
         return self._mediastingers

@@ -2,11 +2,11 @@
 #                            Network Collections                             #
 #                 Created by Yozora, Bullmoose20, & Sohjiro                  #
 #          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
-#       https://metamanager.wiki/en/latest/defaults/show/network.html        #
+#            https://kometa.wiki/en/latest/defaults/show/network             #
 ##############################################################################
 
 external_templates:
-  pmm: templates
+  default: templates
   template_variables:
     collection_section: "050"
 
@@ -31,13 +31,16 @@ dynamic_collections:
       search_term:
         default: network
       image:
-        default: network/<<key_encoded>>
+        default: network/<<style>>/<<key_encoded>>
+      style:
+        default: color
       translation_key:
         default: network
       dynamic:
         default: true
     include:
     - "#0"
+    - 7mate
     - ABC
     - ABC Family
     - ABC Kids
@@ -50,7 +53,10 @@ dynamic_collections:
     - ALTBalaji
     - Amazon Kids+
     - AMC
+    - AMC+
     - Animal Planet
+    - ANIMAX
+    - Angel Studios
     - Antena 3
     - Apple TV+
     - ARD
@@ -65,11 +71,13 @@ dynamic_collections:
     - BBC Four
     - BBC iPlayer
     - BBC One
+    - BBC Scotland
     - BBC Three
     - BBC Two
     - BET
     - BET+
     - bilibili
+    - Binge
     - BluTV
     - Boomerang
     - Bravo
@@ -93,6 +101,7 @@ dynamic_collections:
     - Comedy Central
     - Cooking Channel
     - Crackle
+    - Crave
     - Criterion Channel
     - Crunchyroll
     - CTV
@@ -108,11 +117,14 @@ dynamic_collections:
     - Disney XD
     - Disney+
     - DR1
+    - Dropout
     - Eden
     - Elisa Viihde
     - Elisa Viihde Viaplay
+    - ENA
     - Epix
     - ESPN
+    - EXXEN
     - E!
     - Facebook Watch
     - Family Channel
@@ -125,6 +137,7 @@ dynamic_collections:
     - Freeform
     - Freevee
     - Fuji TV
+    - funnyordie.com
     - FX
     - FXX
     - GAİN
@@ -148,9 +161,16 @@ dynamic_collections:
     - ITV
     - ITV Encore
     - ITV1
+    - ITV2
+    - ITV3
+    - ITV4
+    - ITVBe
     - ITVX
+    - JioCinema
     - joyn
+    - JTBC
     - Kan 11
+    - Kanal 5
     - KBS2
     - Kids WB
     - La 1
@@ -159,9 +179,11 @@ dynamic_collections:
     - Lifetime
     - Lionsgate+
     - Logo
+    - Magnolia Network
     - MasterClass
     - Max
     - MBC
+    - MBN
     - MGM+
     - mitele
     - Movistar Plus+
@@ -171,6 +193,7 @@ dynamic_collections:
     - NBC
     - Netflix
     - Network 10
+    - NFL Network
     - NHK
     - Nick
     - Nick Jr
@@ -202,6 +225,8 @@ dynamic_collections:
     - SAT.1
     - SBS
     - Science
+    - Seeso
+    - Seven Network
     - Shahid
     - Showcase
     - Showmax
@@ -212,10 +237,13 @@ dynamic_collections:
     - Space
     - Spectrum
     - Spike
+    - Stöð 2
     - Stan
     - Starz
     - STAR+
     - Sundance TV
+    - SVT
+    - SVT Play
     - SVT1
     - Syfy
     - Syndication
@@ -228,6 +256,7 @@ dynamic_collections:
     - Tencent Video
     - TF1
     - The CW
+    - The Daily Wire
     - The Roku Channel
     - The WB
     - TLC
@@ -243,10 +272,12 @@ dynamic_collections:
     - TV Tokyo
     - TV3
     - TV4
+    - TV4 Play
     - TVB Jade
     - tving
     - tvN
     - TVNZ 1
+    - TVNZ 2
     - TVP1
     - UKTV
     - UniMás
@@ -255,6 +286,7 @@ dynamic_collections:
     - Univision
     - UPN
     - USA Network
+    - U+ Mobile TV
     - VH1
     - Viaplay
     - Vice
@@ -262,9 +294,11 @@ dynamic_collections:
     - ViuTV
     - ViX+
     - VRT 1
+    - VRT Max
     - VTM
     - W
     - WE tv
+    - Xbox Live
     - YLE
     - Youku
     - YouTube
@@ -285,6 +319,8 @@ dynamic_collections:
       Animal Planet:
         - Animal Planet Brasil
         - Animal Planet Deutschland
+      Angel Studios:
+      - VidAngel
       BET:
         - BET Her
       Canal+:
@@ -322,6 +358,7 @@ dynamic_collections:
         - Discovery Life
         - Discovery World
         - Discovery Science
+        - Discovery Channel (UK)
       Disney Channel:
         - Toon Disney
         - Playhouse Disney
@@ -399,6 +436,7 @@ dynamic_collections:
         - National Geographic Brasil
         - National Geographic Latinoamerica
         - National Geographic India
+        - Nat Geo Wild
       NBC:
         - CNBC
         - MSNBC
@@ -421,6 +459,7 @@ dynamic_collections:
       Sky:
         - Sky One
         - Sky Atlantic
+        - Sky Atlantic (IT)
         - Sky Arts
         - Sky History
         - Sky Living
@@ -470,3 +509,5 @@ dynamic_collections:
         - Viceland
         - Vice TV
         - Vice.com
+      YouTube:
+        - YouTube Premium

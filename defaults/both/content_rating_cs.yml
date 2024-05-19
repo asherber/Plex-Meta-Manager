@@ -2,16 +2,16 @@
 #                   CommonSense Content Rating Collections                   #
 #                 Created by Yozora, Bullmoose20, & Sohjiro                  #
 #          EDITING THIS FILE MAY CAUSE PULLING NEW UPDATES TO FAIL           #
-#  https://metamanager.wiki/en/latest/defaults/both/content_rating_cs.html   #
+#       https://kometa.wiki/en/latest/defaults/both/content_rating_cs        #
 ##############################################################################
 
 external_templates:
-  pmm: templates
+  default: templates
   template_variables:
     collection_section: "110"
 
 collections:
-  Ratings Collections:
+  CS Ratings Collections:
     template:
       - name: separator
         separator: content_rating

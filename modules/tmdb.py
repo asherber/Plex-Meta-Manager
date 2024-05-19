@@ -79,11 +79,12 @@ class TMDbCountry:
 
 class TMDbSeason:
     def __init__(self, data):
-        self.season_number = data.split(":")[0] if isinstance(data, str) else data.season_number
-        self.name = data.split(":")[1] if isinstance(data, str) else data.name
+        self.season_number = int(data.split("%:%")[0]) if isinstance(data, str) else data.season_number
+        self.name = data.split("%:%")[1] if isinstance(data, str) else data.name
+        self.average = float(data.split("%:%")[2]) if isinstance(data, str) else data.vote_average
 
     def __repr__(self):
-        return f"{self.season_number}:{self.name}"
+        return f"{self.season_number}%:%{self.name}%:%{self.average}"
 
 
 class TMDBObj:
@@ -103,8 +104,8 @@ class TMDBObj:
         self.vote_average = data["vote_average"] if isinstance(data, dict) else data.vote_average
         self.language_iso = data["language_iso"] if isinstance(data, dict) else data.original_language.iso_639_1 if data.original_language else None
         self.language_name = data["language_name"] if isinstance(data, dict) else data.original_language.english_name if data.original_language else None
-        self.genres = data["genres"].split("|") if isinstance(data, dict) else [g.name for g in data.genres if g]
-        self.keywords = data["keywords"].split("|") if isinstance(data, dict) else [k.name for k in data.keywords if k]
+        self.genres = [g for g in data["genres"].split("|") if g] if isinstance(data, dict) else [g.name for g in data.genres if g]
+        self.keywords = [k for k in data["keywords"].split("|") if k] if isinstance(data, dict) else [k.name for k in data.keywords if k]
 
 
 class TMDbMovie(TMDBObj):
@@ -132,7 +133,10 @@ class TMDbMovie(TMDBObj):
         try:
             return self._tmdb.TMDb.movie(self.tmdb_id, partial="external_ids,keywords")
         except NotFound:
-            raise Failed(f"TMDb Error: No Movie found for TMDb ID {self.tmdb_id}")
+            raise Failed(f"TMDb Error: No Movie found for TMDb ID: {self.tmdb_id}")
+        except TMDbException as e:
+            logger.stacktrace()
+            raise TMDbException(f"TMDb Error: Unexpected Error with TMDb ID: {self.tmdb_id}: {e}")
 
 
 class TMDbShow(TMDBObj):
@@ -155,7 +159,7 @@ class TMDbShow(TMDBObj):
         self.tvdb_id = data["tvdb_id"] if isinstance(data, dict) else data.tvdb_id
         loop = data.origin_countries if not isinstance(data, dict) else data["countries"].split("|") if data["countries"] else [] # noqa
         self.countries = [TMDbCountry(c) for c in loop]
-        loop = data.seasons if not isinstance(data, dict) else data["seasons"].split("|") if data["seasons"] else [] # noqa
+        loop = data.seasons if not isinstance(data, dict) else data["seasons"].split("%|%") if data["seasons"] else [] # noqa
         self.seasons = [TMDbSeason(s) for s in loop]
 
         if self._tmdb.config.Cache and not ignore_cache:
@@ -166,7 +170,47 @@ class TMDbShow(TMDBObj):
         try:
             return self._tmdb.TMDb.tv_show(self.tmdb_id, partial="external_ids,keywords")
         except NotFound:
-            raise Failed(f"TMDb Error: No Show found for TMDb ID {self.tmdb_id}")
+            raise Failed(f"TMDb Error: No Show found for TMDb ID: {self.tmdb_id}")
+        except TMDbException as e:
+            logger.stacktrace()
+            raise TMDbException(f"TMDb Error: Unexpected Error with TMDb ID: {self.tmdb_id}: {e}")
+
+class TMDbEpisode:
+    def __init__(self, tmdb, tmdb_id, season_number, episode_number, ignore_cache=False):
+        self._tmdb = tmdb
+        self.tmdb_id = tmdb_id
+        self.season_number = season_number
+        self.episode_number = episode_number
+        self.ignore_cache = ignore_cache
+        expired = None
+        data = None
+        if self._tmdb.config.Cache and not ignore_cache:
+            data, expired = self._tmdb.config.Cache.query_tmdb_episode(self.tmdb_id, self.season_number, self.episode_number, self._tmdb.expiration)
+        if expired or not data:
+            data = self.load_episode()
+
+        self.title = data["title"] if isinstance(data, dict) else data.title
+        self.air_date = data["air_date"] if isinstance(data, dict) else data.air_date
+        self.overview = data["overview"] if isinstance(data, dict) else data.overview
+        self.still_url = data["still_url"] if isinstance(data, dict) else data.still_url
+        self.vote_count = data["vote_count"] if isinstance(data, dict) else data.vote_count
+        self.vote_average = data["vote_average"] if isinstance(data, dict) else data.vote_average
+        self.imdb_id = data["imdb_id"] if isinstance(data, dict) else data.imdb_id
+        self.tvdb_id = data["tvdb_id"] if isinstance(data, dict) else data.tvdb_id
+
+        if self._tmdb.config.Cache and not ignore_cache:
+            self._tmdb.config.Cache.update_tmdb_episode(expired, self, self._tmdb.expiration)
+
+    @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
+    def load_episode(self):
+        try:
+            return self._tmdb.TMDb.tv_episode(self.tmdb_id, self.season_number, self.episode_number)
+        except NotFound as e:
+            raise Failed(f"TMDb Error: No Episode found for TMDb ID {self.tmdb_id} Season {self.season_number} Episode {self.episode_number}: {e}")
+        except TMDbException as e:
+            logger.stacktrace()
+            raise TMDbException(f"TMDb Error: Unexpected Error with TMDb ID: {self.tmdb_id}: {e}")
+
 
 class TMDb:
     def __init__(self, config, params):
@@ -233,10 +277,8 @@ class TMDb:
         try:                            return self.TMDb.tv_season(tmdb_id, season_number, partial=partial)
         except NotFound as e:           raise Failed(f"TMDb Error: No Season found for TMDb ID {tmdb_id} Season {season_number}: {e}")
 
-    @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
-    def get_episode(self, tmdb_id, season_number, episode_number, partial=None):
-        try:                            return self.TMDb.tv_episode(tmdb_id, season_number, episode_number, partial=partial)
-        except NotFound as e:           raise Failed(f"TMDb Error: No Episode found for TMDb ID {tmdb_id} Season {season_number} Episode {episode_number}: {e}")
+    def get_episode(self, tmdb_id, season_number, episode_number, ignore_cache=False):
+        return TMDbEpisode(self, tmdb_id, season_number, episode_number, ignore_cache=ignore_cache)
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
     def get_collection(self, tmdb_id, partial=None):
@@ -338,7 +380,10 @@ class TMDb:
             limit = int(attrs.pop("limit"))
             for date_attr in date_methods:
                 if date_attr in attrs:
-                    attrs[date_attr] = util.validate_date(attrs[date_attr], f"tmdb_discover attribute {date_attr}", return_as="%Y-%m-%d")
+                    try:
+                        attrs[date_attr] = util.validate_date(attrs[date_attr], return_as="%Y-%m-%d")
+                    except Failed as e:
+                        raise Failed(f"Collection Error: tmdb_discover attribute {date_attr}: {e}")
             if is_movie and region and "region" not in attrs:
                 attrs["region"] = region
             logger.trace(f"Params: {attrs}")
@@ -356,7 +401,7 @@ class TMDb:
             if method == "tmdb_list":
                 results = self.get_list(tmdb_id)
                 tmdb_name = results.name
-                ids = [(i.id, "tmdb" if isinstance(i, Movie) else "tmdb_show") for i in results.get_results(results.total_results)]
+                ids = [(i.id, "tmdb" if isinstance(i, Movie) else "tmdb_show") for i in results.get_results()]
             elif method == "tmdb_movie":
                 tmdb_name = self.get_movie(tmdb_id).title
                 ids.append((tmdb_id, "tmdb"))

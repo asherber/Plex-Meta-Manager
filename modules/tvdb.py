@@ -1,5 +1,6 @@
-import requests, time
+import re, requests, time
 from datetime import datetime
+from lxml import html
 from lxml.etree import ParserError
 from modules import util
 from modules.util import Failed
@@ -50,7 +51,11 @@ class TVDbObj:
         if self._tvdb.config.Cache and not ignore_cache:
             data, expired = self._tvdb.config.Cache.query_tvdb(tvdb_id, is_movie, self._tvdb.expiration)
         if expired or not data:
-            data = self._tvdb.get_request(f"{urls['movie_id' if is_movie else 'series_id']}{tvdb_id}")
+            item_url = f"{urls['movie_id' if is_movie else 'series_id']}{tvdb_id}"
+            try:
+                data = self._tvdb.get_request(item_url)
+            except Failed:
+                raise Failed(f"TVDb Error: No {'Movie' if is_movie else 'Series'} found for TVDb ID: {tvdb_id} at {item_url}")
 
         def parse_page(xpath, is_list=False):
             parse_results = data.xpath(xpath)
@@ -69,6 +74,7 @@ class TVDbObj:
             self.poster_url = data["poster_url"]
             self.background_url = data["background_url"]
             self.release_date = data["release_date"]
+            self.status = data["status"]
             self.genres = data["genres"].split("|")
         else:
             self.title, self.summary = parse_title_summary(lang=self._tvdb.language)
@@ -90,6 +96,7 @@ class TVDbObj:
                 self.release_date = datetime.strptime(released, "%B %d, %Y") if released else released # noqa
             except ValueError:
                 self.release_date = None
+            self.status = parse_page("//strong[text()='Status']/parent::li/span/text()[normalize-space()]")
 
             self.genres = parse_page("//strong[text()='Genres']/parent::li/span/a/text()[normalize-space()]", is_list=True)
 
@@ -108,7 +115,10 @@ class TVDb:
 
     @retry(stop_max_attempt_number=6, wait_fixed=10000, retry_on_exception=util.retry_if_not_failed)
     def get_request(self, tvdb_url):
-        return self.config.get_html(tvdb_url, headers=util.header(self.language))
+        response = self.config.get(tvdb_url, headers=util.header(self.language))
+        if response.status_code >= 400:
+            raise Failed(f"({response.status_code}) {response.reason}")
+        return html.fromstring(response.content)
 
     def get_id_from_url(self, tvdb_url, is_movie=False, ignore_cache=False):
         try:
@@ -133,8 +143,8 @@ class TVDb:
         logger.trace(f"URL: {tvdb_url}")
         try:
             response = self.get_request(tvdb_url)
-        except ParserError:
-            raise Failed(f"TVDb Error: Could not parse {tvdb_url}")
+        except (ParserError, Failed):
+            raise Failed(f"TVDb Error: Failed not parse {tvdb_url}")
         results = response.xpath(f"//*[text()='TheTVDB.com {media_type} ID']/parent::node()/span/text()")
         if len(results) > 0:
             tvdb_id = int(results[0])
@@ -241,3 +251,30 @@ class TVDb:
             return self._ids_from_url(data)
         else:
             raise Failed(f"TVDb Error: Method {method} not supported")
+
+    def item_filter(self, item, filter_attr, modifier, filter_final, filter_data):
+        if filter_attr == "tvdb_title":
+            if util.is_string_filter([item.title], modifier, filter_data):
+                return False
+        elif filter_attr == "tvdb_status":
+            if util.is_string_filter([item.status], modifier, filter_data):
+                return False
+        elif filter_attr == "tvdb_genre":
+            attrs = item.genres
+            if modifier == ".regex":
+                has_match = False
+                for reg in filter_data:
+                    for name in attrs:
+                        if re.compile(reg).search(name):
+                            has_match = True
+                if has_match is False:
+                    return False
+            elif modifier in [".count_gt", ".count_gte", ".count_lt", ".count_lte"]:
+                test_number = len(attrs) if attrs else 0
+                modifier = f".{modifier[7:]}"
+                if test_number is None or util.is_number_filter(test_number, modifier, filter_data):
+                    return False
+            elif (not list(set(filter_data) & set(attrs)) and modifier == "") \
+                    or (list(set(filter_data) & set(attrs)) and modifier == ".not"):
+                return False
+        return True
